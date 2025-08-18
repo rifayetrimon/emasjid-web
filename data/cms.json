@@ -1,0 +1,105 @@
+{
+  "base_settings": {
+    "primary_color": "#HJG873",
+    "secondary_color": "#FF6374",
+    "text_color": "#00FGEHD"
+  },
+  "content": {
+    "banner": {
+      "logo": "www.google-icon/logo.svg",
+      "background_image": "www.google-image/image.png",
+      "menu_items": [
+        { "label": "Utama", "link": "/" },
+        { "label": "Info Masjid", "link": "/semakana" },
+        { "label": "Carian Masjid", "link": "/services" },
+        { "label": "Semakan Permohonan", "link": "/contact" },
+        { "label": "Soalan Lazim", "link": "/contact" }
+      ],
+      "title": {
+        "general": "Selamat Datang ke Portal",
+        "focus": { "text": "eMasjid", "link": "www.masjid.com" }
+      },
+      "supporting_text": "Maklumat ini disediakan sebagai panduan kepada mana-mana orang yang ingin membuat permohonan menggunakan Sistem",
+      "buttons": [
+        { "label": "log masuk", "link": "/log masuk" },
+        { "label": "kemaskini permohonan", "link": "/kemaskini permohonan" },
+        { "label": "permohonana baru", "link": "/permohonana baru" }
+      ]
+    },
+    "segments": [
+      {
+        "image": "image.jpg",
+        "text": "MAKLUMAN : Berkuat kuasa mulai 1 SEPTEMBER 2024,permohonan baharu eMasjid MAIS akan dilaksanakan berdasarkan Peraturan-Peraturan",
+        "button": { "label": "Details", "link": "url" }
+      }
+    ],
+    "fetures": {
+      "title": "Kelebihan e-Masjid",
+      "items": [
+        {
+          "icon": "icon.svg",
+          "title": "Selamat & Terjamin",
+          "text": "Data pengguna dilindungi dengan selamat"
+        },
+        {
+          "icon": "icon.svg",
+          "title": "Mesra Pengguna",
+          "text": "Akses lancar melalui telefon & tablet"
+        },
+        {
+          "icon": "icon.svg",
+          "title": "Akses 24/7",
+          "text": "Boleh digunakan bila-bila masa"
+        },
+        {
+          "icon": "icon.svg",
+          "title": "Kemaskini Automatik",
+          "text": "Pengawasan berterusan oleh MAIS"
+        }
+      ]
+    },
+    "faq": {
+      "title": "Soalan Lazim",
+      "items": [
+        {
+          "question": "Maklumat Umum",
+          "text": "Briefly talk about your firm's services here.",
+          "answer": "this is the answer of this question"
+        },
+        {
+          "question": "Permohonan eMasjid",
+          "text": "Briefly talk about your firm's services here.",
+          "answer": "this is the answer of this question"
+        },
+        {
+          "question": "Proses Permohonan",
+          "text": "Briefly talk about your firm's services here.",
+          "answer": "this is the answer of this question"
+        },
+        {
+          "question": "Bantuan Teknikal",
+          "text": "Briefly talk about your firm's services here.",
+          "answer": "this is the answer of this question"
+        }
+      ]
+    },
+    "image_section": ["image1.jpg", "image2.jpg"],
+    "footer": {
+      "image": { "image": "image", "link": "url" },
+      "footer_title": "text",
+      "text": "text",
+      "address": "text",
+      "phone": "019725478",
+      "email": "bsajdbf@awfatech.com",
+      "social_links": [
+        { "platform": "Facebook", "link": "https://facebook.com/company" },
+        { "platform": "Twitter", "link": "https://twitter.com/company" }
+      ],
+      "copyright": "© 2025 Your Company. All rights reserved."
+    },
+    "pernarship_image": {
+      "isset": "True",
+      "image": "imges.jpg"
+    }
+  }
+}
