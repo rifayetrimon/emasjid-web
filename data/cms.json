@@ -19,7 +19,7 @@
         "general": "Selamat Datang ke Portal",
         "focus": { "text": "eMasjid", "link": "www.masjid.com" }
       },
-      "supporting_text": "Maklumat ini disediakan sebagai panduan kepada mana-mana orang yang ingin membuat permohonan menggunakan Sistem",
+      "supporting_text": "Maklumat ini disediakan sebagai panduan kepada mana-mana orang yang inginmembuat permohonan menggunakan Sistem Pengurusan Smart Masjid MAIS",
       "buttons": [
         { "label": "log masuk", "link": "/log masuk" },
         { "label": "kemaskini permohonan", "link": "/kemaskini permohonan" },
@@ -29,8 +29,8 @@
     "segments": [
       {
         "image": "images/about/about.png",
-        "text": "MAKLUMAN : Berkuat kuasa mulai 1 SEPTEMBER 2024,permohonan baharu eMasjid MAIS akan dilaksanakan berdasarkan Peraturan-Peraturan",
-        "button": { "label": "Details", "link": "url" }
+        "text": "MAKLUMAN : Berkuat kuasa mulai 1 SEPTEMBER 2024,permohonan baharu eMasjid MAIS akan dilaksanakan berdasarkan Peraturan-Peraturan berpandukan Majlis Agama Islam (Negeri Selangor) 2025.",
+        "button": { "label": "Lihat Selanjutnya", "link": "url" }
       }
     ],
     "fetures": {
