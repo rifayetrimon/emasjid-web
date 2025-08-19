@@ -149,7 +149,7 @@
         }
       ]
     },
-    "image_section": ["image1.jpg", "image2.jpg"],
+    "branding": [{ "image": "/images/image1.jpg" }],
     "footer": {
       "image": { "image": "image", "link": "url" },
       "footer_title": "Majlis Agama Islam Selangor (MAIS)",

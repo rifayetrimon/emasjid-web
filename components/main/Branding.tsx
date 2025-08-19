@@ -1,16 +1,25 @@
+// components/main/Branding.tsx
 import Image from "next/image";
+import { assetPath } from "@/lib/assetPath";
+import { BrandingItem } from "@/types/cms";
 
-export default function Branding() {
+interface BrandingProps {
+  branding: BrandingItem[];
+}
+
+export default function Branding({ branding }: BrandingProps) {
   return (
-    <div className="branding">
-      <Image
-        src="/images/banner/icon.png"
-        alt="Logo"
-        height={50}
-        width={150}
-        className="logo"
-      />
-      <h1 className="title">eMasjid</h1>
+    <div className="branding w-full flex flex-col gap-4">
+      {branding.map((item, index) => (
+        <div key={index} className="relative w-full h-[500px]">
+          <Image
+            src={assetPath(item.image)}
+            alt={`Branding ${index}`}
+            fill
+            style={{ objectFit: "cover", objectPosition: "top" }}
+          />
+        </div>
+      ))}
     </div>
   );
 }

@@ -55,7 +55,7 @@ export interface SegmentButton {
 
 export interface Segment {
   image: string;
-  text: string;
+  text?: string; // optional in case missing
   button?: SegmentButton;
 }
 
@@ -65,7 +65,7 @@ export interface Segment {
 export interface FeatureItem {
   icon: string;
   title: string;
-  text: string;
+  text?: string;
 }
 
 export interface Features {
@@ -79,14 +79,21 @@ export interface Features {
 export interface FAQItem {
   short?: ReactNode;
   question: string;
-  text: string;
+  text?: string;
   answer: string;
 }
 
 export interface FAQ {
   title: string;
-  background_image: string; // Optional background image for FAQ section
+  background_image?: string;
   items: FAQItem[];
+}
+
+/* ------------------------------
+   Branding
+------------------------------ */
+export interface BrandingItem {
+  image: string;
 }
 
 /* ------------------------------
@@ -117,7 +124,7 @@ export interface Footer {
    Partnership
 ------------------------------ */
 export interface PartnershipImage {
-  isset: string; // can be boolean later
+  isset: string; // can change to boolean later
   image: string;
 }
 
@@ -127,9 +134,9 @@ export interface PartnershipImage {
 export interface Content {
   banner: Banner;
   segments: Segment[];
-  fetures: Features; // typo preserved
+  fetures: Features; // typo preserved to match JSON
   faq: FAQ;
-  image_section: string[];
+  branding: BrandingItem[];
   footer: Footer;
   pernarship_image: PartnershipImage; // typo preserved
 }
@@ -141,7 +148,7 @@ export interface CMSData {
 }
 
 /* ------------------------------
-   Props Interfaces (for components)
+   Props Interfaces
 ------------------------------ */
 export interface BannerProps {
   banner: Banner;
@@ -161,6 +168,10 @@ export interface FeaturesProps {
 
 export interface FAQProps {
   faq: FAQ;
+}
+
+export interface BrandingProps {
+  branding: BrandingItem[];
 }
 
 export interface PartnershipProps {
