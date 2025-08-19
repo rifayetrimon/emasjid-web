@@ -1,7 +1,7 @@
 {
   "base_settings": {
-    "primary_color": "#008000",
-    "secondary_color": "#FF6374",
+    "primary_color": "#78C841",
+    "secondary_color": "#154D71",
     "text_color": "#00FF00"
   },
   "content": {
@@ -151,15 +151,19 @@
     },
     "branding": [{ "image": "/images/image1.jpg" }],
     "footer": {
-      "image": { "image": "image", "link": "url" },
+      "image": { "image": "/images/banner/icon.png", "link": "url" },
       "footer_title": "Majlis Agama Islam Selangor (MAIS)",
       "text": "Urus setia Jawatankuasa Bahagian Pengurusan Masjid",
       "address": "Jabatan Agama Islam Selangor, Aras 7, Menara Selatan, Bangunan Sultan Idris Shah, 40000, Shah Alam, Selangor",
       "phone": "019725478",
       "email": "bsajdbf@awfatech.com",
       "social_links": [
-        { "platform": "Facebook", "link": "https://facebook.com/company" },
-        { "platform": "Twitter", "link": "https://twitter.com/company" }
+        { "platform": "/icons/fb.svg", "link": "https://facebook.com/company" },
+        {
+          "platform": "/icons/instagram.svg",
+          "link": "https://instagram.com/company"
+        },
+        { "platform": "/icons/x.svg", "link": "https://twitter.com/company" }
       ],
       "copyright": "© 2025 Your Company. All rights reserved."
     },
