@@ -1,5 +1,7 @@
 // types/cms.ts
 
+import { ReactNode } from "react";
+
 export interface BaseSettings {
   primary_color: string;
   secondary_color: string;
@@ -58,6 +60,7 @@ export interface Features {
 }
 
 export interface FAQItem {
+  short: ReactNode;
   question: string;
   text: string;
   answer: string;
@@ -97,17 +100,38 @@ export interface PartnershipImage {
 export interface Content {
   banner: Banner;
   segments: Segment[];
-  fetures: Features; // 👈 keep spelling as in JSON
+
+  // 👇 matches your JSON exactly (typo preserved)
+  fetures: Features;
+
   faq: FAQ;
   image_section: string[];
   footer: Footer;
-  pernarship_image: PartnershipImage; // 👈 keep spelling as in JSON
+
+  // 👇 matches your JSON exactly (typo preserved)
+  pernarship_image: PartnershipImage;
 }
 
 export interface CMSData {
   base_settings: BaseSettings;
   content: Content;
 
-  // 👇 normalized so you can use cms.features everywhere
+  // 👇 normalized so frontend can always use cms.features
   features: FeatureItem[];
+}
+
+// Footer
+export interface FooterData {
+  image: { image: string; link: string };
+  footer_title: string;
+  text: string;
+  address: string;
+  phone: string;
+  email: string;
+  social_links: { platform: string; link: string }[];
+  copyright: string;
+}
+
+export interface FooterProps {
+  footer: FooterData;
 }

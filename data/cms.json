@@ -86,9 +86,9 @@
     "image_section": ["image1.jpg", "image2.jpg"],
     "footer": {
       "image": { "image": "image", "link": "url" },
-      "footer_title": "text",
-      "text": "text",
-      "address": "text",
+      "footer_title": "Majlis Agama Islam Selangor (MAIS)",
+      "text": "Urus setia Jawatankuasa Bahagian Pengurusan Masjid",
+      "address": "Jabatan Agama Islam Selangor, Aras 7, Menara Selatan, Bangunan Sultan Idris Shah, 40000, Shah Alam, Selangor",
       "phone": "019725478",
       "email": "bsajdbf@awfatech.com",
       "social_links": [

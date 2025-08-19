@@ -12,7 +12,7 @@ export default function Features() {
 
   return (
     <section className="py-20 px-6 md:px-20 bg-gray-50">
-      <h2 className="text-3xl font-bold text-center mb-12">
+      <h2 className="text-3xl font-bold text-center mb-12 text-[var(--secondary)]">
         {cms.content.fetures.title}
       </h2>
       <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
