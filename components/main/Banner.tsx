@@ -8,7 +8,6 @@ export default function Banner() {
   const cms = useContext(CMSContext);
   if (!cms?.content?.banner) return null;
 
-  // Correct path: cms.content.banner
   const { title, supporting_text, buttons, background_image, logo } =
     cms.content.banner;
 
@@ -22,7 +21,16 @@ export default function Banner() {
       }}
     >
       {logo && (
-        <img src={logo} alt="icon" className="w-16 h-16 mb-6 animate-bounce" />
+        <div className="mb-6 animate-bounce">
+          <Image
+            src={logo}
+            alt="icon"
+            width={64}
+            height={64}
+            className="w-16 h-16 object-contain"
+            priority
+          />
+        </div>
       )}
 
       {/* Title */}
@@ -42,7 +50,7 @@ export default function Banner() {
           <a
             key={i}
             href={btn.link}
-            className="px-6 py-3 rounded-lg font-medium bg-[var(--primary)] hover:bg-[var(--secondary)] transition"
+            className="px-6 py-3 rounded-lg font-medium border-1 border-[var(--primary)] text-[var(--primary)] hover:bg-[var(--primary)] hover:text-white transition"
           >
             {btn.label}
           </a>
