@@ -28,7 +28,7 @@
     },
     "segments": [
       {
-        "image": "image.jpg",
+        "image": "images/about/about.png",
         "text": "MAKLUMAN : Berkuat kuasa mulai 1 SEPTEMBER 2024,permohonan baharu eMasjid MAIS akan dilaksanakan berdasarkan Peraturan-Peraturan",
         "button": { "label": "Details", "link": "url" }
       }

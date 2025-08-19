@@ -3,23 +3,19 @@
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { FaBars, FaTimes } from "react-icons/fa";
-import { useCMS } from "@/hooks/useCMS"; // import hook
+import cmsData from "@/data/cms.json"; // or from context later
 
 export default function Navbar() {
   const pathname = usePathname();
   const isHome = pathname === "/";
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const { content, base_settings } = useCMS();
+  // Pull nav items from JSON (fallback to empty array)
+  const navItems = cmsData.content.banner.menu_items || [];
 
-  // ✅ Pull nav items directly from CMS JSON
-  const navItems = content?.banner?.menu_items || [];
-
-  // ✅ Use CMS primary color for active/hover states
-  const primary = base_settings?.primary_color || "#164776";
   const linkStyle = isHome
-    ? `text-white hover:text-[${primary}]`
-    : `text-gray-800 hover:text-[${primary}]`;
+    ? "text-white hover:text-green-600"
+    : "text-gray-800 hover:text-blue-600";
 
   return (
     <nav
@@ -31,8 +27,8 @@ export default function Navbar() {
     >
       {/* Desktop Nav */}
       <ul className="hidden md:flex justify-center space-x-15">
-        {navItems.map((item: any) => (
-          <li key={item.label}>
+        {navItems.map((item, index) => (
+          <li key={index}>
             <a href={item.link} className={`font-medium ${linkStyle}`}>
               {item.label}
             </a>
@@ -52,16 +48,13 @@ export default function Navbar() {
 
       {/* Mobile Nav Menu */}
       {menuOpen && (
-        <ul
-          className="md:hidden mt-4 flex flex-col items-start gap-4 rounded-md p-4 shadow-md"
-          style={{ backgroundColor: primary }}
-        >
-          {navItems.map((item: any) => (
-            <li key={item.label}>
+        <ul className="md:hidden mt-4 flex flex-col items-start gap-4 bg-[#164776] rounded-md p-4 shadow-md">
+          {navItems.map((item, index) => (
+            <li key={index}>
               <a
                 href={item.link}
                 onClick={() => setMenuOpen(false)}
-                className="text-white hover:opacity-80 font-medium"
+                className="text-white hover:text-[var(--primary-color)] font-medium"
               >
                 {item.label}
               </a>
@@ -134,7 +127,7 @@ export default function Navbar() {
 //               <a
 //                 href={item.href}
 //                 onClick={() => setMenuOpen(false)}
-//                 className="text-white hover:text-[#0C9F77] font-medium"
+//                 className="text-white hover:text-[var(--primary-color)] font-medium"
 //               >
 //                 {item.name}
 //               </a>
