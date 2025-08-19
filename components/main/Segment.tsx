@@ -1,18 +1,16 @@
 "use client";
 
-import { useContext } from "react";
-import { CMSContext } from "@/app/providers/cmsProvider";
-import { assetPath } from "@/lib/assetPath";
 import Image from "next/image";
+import { assetPath } from "@/lib/assetPath";
+import { SegmentsProps } from "@/types/cms";
 
-export default function Segment() {
-  const cms = useContext(CMSContext);
-  if (!cms || !cms.content?.segments) return null;
+export default function Segment({ segments }: SegmentsProps) {
+  if (!segments || segments.length === 0) return null;
 
   return (
     <section className="py-16 px-6 bg-white">
       <div className="max-w-6xl mx-auto flex flex-col gap-16">
-        {cms.content.segments.map((segment, idx) => (
+        {segments.map((segment, idx) => (
           <div
             key={idx}
             className="grid grid-cols-1 md:grid-cols-12 items-stretch gap-8"
@@ -34,7 +32,7 @@ export default function Segment() {
               {/* Top: Text */}
               <p className="text-gray-700 text-xl mt-3">{segment.text}</p>
 
-              {/* Bottom: Button (same design, just pushed to bottom) */}
+              {/* Bottom: Button (if exists) */}
               {segment.button && (
                 <div className="mt-6 mb-5 flex justify-between items-center">
                   {/* Left: Button */}

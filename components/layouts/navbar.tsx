@@ -3,15 +3,12 @@
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { FaBars, FaTimes } from "react-icons/fa";
-import cmsData from "@/data/cms.json"; // or from context later
+import { MenuItem } from "@/types/cms";
 
-export default function Navbar() {
+export default function Navbar({ menuItems }: { menuItems: MenuItem[] }) {
   const pathname = usePathname();
   const isHome = pathname === "/";
   const [menuOpen, setMenuOpen] = useState(false);
-
-  // Pull nav items from JSON (fallback to empty array)
-  const navItems = cmsData.content.banner.menu_items || [];
 
   const linkStyle = isHome
     ? "text-white hover:text-[var(--primary)]"
@@ -27,7 +24,7 @@ export default function Navbar() {
     >
       {/* Desktop Nav */}
       <ul className="hidden md:flex justify-center space-x-15">
-        {navItems.map((item, index) => (
+        {menuItems?.map((item, index) => (
           <li key={index}>
             <a href={item.link} className={`font-medium ${linkStyle}`}>
               {item.label}
@@ -49,12 +46,12 @@ export default function Navbar() {
       {/* Mobile Nav Menu */}
       {menuOpen && (
         <ul className="md:hidden mt-4 flex flex-col items-start gap-4 bg-[#164776] rounded-md p-4 shadow-md">
-          {navItems.map((item, index) => (
+          {menuItems?.map((item, index) => (
             <li key={index}>
               <a
                 href={item.link}
                 onClick={() => setMenuOpen(false)}
-                className="text-white hover:text-[var(--primary-color)] font-medium"
+                className="text-white hover:text-[var(--primary)] font-medium"
               >
                 {item.label}
               </a>

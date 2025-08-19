@@ -2,7 +2,7 @@
   "base_settings": {
     "primary_color": "#008000",
     "secondary_color": "#FF6374",
-    "text_color": "#00FGEHD"
+    "text_color": "#00FF00"
   },
   "content": {
     "banner": {
@@ -78,6 +78,71 @@
         },
         {
           "question": "Bantuan Teknikal",
+          "text": "Briefly talk about your firm's services here.",
+          "answer": "this is the answer of this question"
+        },
+        {
+          "question": "Proses Permohonan",
+          "text": "Briefly talk about your firm's services here.",
+          "answer": "this is the answer of this question"
+        },
+        {
+          "question": "Proses Permohonan",
+          "text": "Briefly talk about your firm's services here.",
+          "answer": "this is the answer of this question"
+        },
+        {
+          "question": "Proses Permohonan",
+          "text": "Briefly talk about your firm's services here.",
+          "answer": "this is the answer of this question"
+        },
+        {
+          "question": "Proses Permohonan",
+          "text": "Briefly talk about your firm's services here.",
+          "answer": "this is the answer of this question"
+        },
+        {
+          "question": "Proses Permohonan",
+          "text": "Briefly talk about your firm's services here.",
+          "answer": "this is the answer of this question"
+        },
+        {
+          "question": "Proses Permohonan",
+          "text": "Briefly talk about your firm's services here.",
+          "answer": "this is the answer of this question"
+        },
+        {
+          "question": "Proses Permohonan",
+          "text": "Briefly talk about your firm's services here.",
+          "answer": "this is the answer of this question"
+        },
+        {
+          "question": "Proses Permohonan",
+          "text": "Briefly talk about your firm's services here.",
+          "answer": "this is the answer of this question"
+        },
+        {
+          "question": "Proses Permohonan",
+          "text": "Briefly talk about your firm's services here.",
+          "answer": "this is the answer of this question"
+        },
+        {
+          "question": "Proses Permohonan",
+          "text": "Briefly talk about your firm's services here.",
+          "answer": "this is the answer of this question"
+        },
+        {
+          "question": "Proses Permohonan",
+          "text": "Briefly talk about your firm's services here.",
+          "answer": "this is the answer of this question"
+        },
+        {
+          "question": "Proses Permohonan",
+          "text": "Briefly talk about your firm's services here.",
+          "answer": "this is the answer of this question"
+        },
+        {
+          "question": "Proses Permohonan",
           "text": "Briefly talk about your firm's services here.",
           "answer": "this is the answer of this question"
         }
