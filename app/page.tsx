@@ -3,6 +3,7 @@
 import Footer from "@/components/layouts/footer";
 import Navbar from "@/components/layouts/navbar";
 import Banner from "@/components/main/Banner";
+import Branding from "@/components/main/Branding";
 import Faq from "@/components/main/Faq";
 import Features from "@/components/main/Features"; // ✅ fixed spelling
 import Segment from "@/components/main/Segment";
@@ -29,6 +30,9 @@ export default function Home() {
 
       {/* FAQ section */}
       <Faq faq={content.faq} />
+
+      {/* Branding section */}
+      <Branding />
 
       {/* Footer section */}
       <Footer footer={content.footer} />

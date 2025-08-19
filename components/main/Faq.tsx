@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { FaPlay } from "react-icons/fa";
 import { FAQProps } from "@/types/cms";
+import { assetPath } from "@/lib/assetPath";
 
 export default function Faq({ faq }: FAQProps) {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
@@ -14,7 +15,7 @@ export default function Faq({ faq }: FAQProps) {
   return (
     <div
       className="relative bg-cover bg-center py-16 px-4"
-      style={{ backgroundImage: "url('/images/soalan/bg.png')" }}
+      style={{ backgroundImage: `url(${assetPath(faq.background_image)})` }}
     >
       {/* Section Title */}
       <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 text-[var(--secondary)]">

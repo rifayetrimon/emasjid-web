@@ -6,8 +6,8 @@
   },
   "content": {
     "banner": {
-      "logo": "www.google-icon/logo.svg",
-      "background_image": "www.google-image/image.png",
+      "logo": "/images/banner/icon.png",
+      "background_image": "/images/banner/bg.png",
       "menu_items": [
         { "label": "Utama", "link": "/" },
         { "label": "Info Masjid", "link": "/semakana" },
@@ -28,7 +28,7 @@
     },
     "segments": [
       {
-        "image": "images/about/about.png",
+        "image": "/images/about/about.png",
         "text": "MAKLUMAN : Berkuat kuasa mulai 1 SEPTEMBER 2024,permohonan baharu eMasjid MAIS akan dilaksanakan berdasarkan Peraturan-Peraturan berpandukan Majlis Agama Islam (Negeri Selangor) 2025.",
         "button": { "label": "Lihat Selanjutnya", "link": "url" }
       }
@@ -37,22 +37,22 @@
       "title": "Kelebihan e-Masjid",
       "items": [
         {
-          "icon": "icon.svg",
+          "icon": "/icons/cloud.svg",
           "title": "Selamat & Terjamin",
           "text": "Data pengguna dilindungi dengan selamat"
         },
         {
-          "icon": "icon.svg",
+          "icon": "/icons/profile.svg",
           "title": "Mesra Pengguna",
           "text": "Akses lancar melalui telefon & tablet"
         },
         {
-          "icon": "icon.svg",
+          "icon": "/icons/time.svg",
           "title": "Akses 24/7",
           "text": "Boleh digunakan bila-bila masa"
         },
         {
-          "icon": "icon.svg",
+          "icon": "/icons/pc.svg",
           "title": "Kemaskini Automatik",
           "text": "Pengawasan berterusan oleh MAIS"
         }
@@ -60,6 +60,7 @@
     },
     "faq": {
       "title": "Soalan Lazim",
+      "background_image": "/images/soalan/bg.png",
       "items": [
         {
           "question": "Maklumat Umum",
