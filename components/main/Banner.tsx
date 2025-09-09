@@ -52,7 +52,7 @@ export default function Banner({ banner }: BannerProps) {
           <a
             key={i}
             href={btn.link}
-            className="px-6 py-3 rounded-lg font-medium border border-[var(--primary)] hover:bg-[var(--primary)] hover:text-white transition"
+            className="px-6 py-3 rounded-lg font-bold border border-[var(--primary)] hover:bg-[var(--primary)] hover:text-white transition"
           >
             {btn.label}
           </a>

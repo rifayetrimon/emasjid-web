@@ -60,9 +60,7 @@ export default function Footer({ footer }: FooterProps) {
                   rel="noopener noreferrer"
                 >
                   <Image
-                    src={assetPath(
-                      `/icons/${social.platform.toLowerCase()}.svg`
-                    )}
+                    src={assetPath(social.platform)}
                     alt={social.platform}
                     width={24}
                     height={24}

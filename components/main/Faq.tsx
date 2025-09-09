@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FaPlay } from "react-icons/fa";
 import { FAQProps } from "@/types/cms";
 import { assetPath } from "@/lib/assetPath";
@@ -12,10 +12,25 @@ export default function Faq({ faq }: FAQProps) {
 
   const handleClose = () => setOpenIndex(null);
 
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  useEffect(() => {
+    if (openIndex !== null) {
+      document.body.style.overflow = "hidden"; // disable page scroll
+    } else {
+      document.body.style.overflow = "unset"; // reset scroll safely
+    }
+
+    return () => {
+      document.body.style.overflow = "unset"; // cleanup on unmount
+    };
+  }, [openIndex]);
+
   return (
     <div
       className="relative bg-cover bg-center py-16 px-4"
-      style={{ backgroundImage: `url(${assetPath(faq.background_image)})` }}
+      style={{
+        backgroundImage: `url(${assetPath(faq.background_image ?? "")})`,
+      }}
     >
       {/* Section Title */}
       <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 text-[var(--secondary)]">
@@ -59,7 +74,13 @@ export default function Faq({ faq }: FAQProps) {
           />
 
           {/* Drawer */}
-          <div className="fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-lg z-50 p-6 animate-slideUp h-1/3">
+          <div
+            className="fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-lg z-50 p-6 animate-slideUp"
+            style={{
+              height: "calc(33vh + 30px)", // 1/3 screen height + 30px
+              maxHeight: "70vh", // prevent it from taking the whole screen
+            }}
+          >
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-bold text-gray-900">
                 {faq.items[openIndex].question}
@@ -71,8 +92,12 @@ export default function Faq({ faq }: FAQProps) {
                 ×
               </button>
             </div>
-            <div className="overflow-y-auto h-full pr-2">
-              <p className="text-gray-700">{faq.items[openIndex].answer}</p>
+
+            {/* Scrollable Answer */}
+            <div className="overflow-y-auto max-h-[calc(100%-40px)] pr-2">
+              <p className="text-gray-700 whitespace-pre-line">
+                {faq.items[openIndex].answer}
+              </p>
             </div>
           </div>
         </>
