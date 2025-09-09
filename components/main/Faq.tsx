@@ -15,13 +15,13 @@ export default function Faq({ faq }: FAQProps) {
   // eslint-disable-next-line react-hooks/rules-of-hooks
   useEffect(() => {
     if (openIndex !== null) {
-      document.body.style.overflow = "hidden"; // disable page scroll
+      document.body.style.overflow = "hidden";
     } else {
-      document.body.style.overflow = "unset"; // reset scroll safely
+      document.body.style.overflow = "unset";
     }
 
     return () => {
-      document.body.style.overflow = "unset"; // cleanup on unmount
+      document.body.style.overflow = "unset";
     };
   }, [openIndex]);
 
@@ -77,8 +77,8 @@ export default function Faq({ faq }: FAQProps) {
           <div
             className="fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-lg z-50 p-6 animate-slideUp"
             style={{
-              height: "calc(33vh + 30px)", // 1/3 screen height + 30px
-              maxHeight: "70vh", // prevent it from taking the whole screen
+              height: "calc(50vh)",
+              maxHeight: "55vh",
             }}
           >
             <div className="flex justify-between items-center mb-4">
@@ -93,30 +93,16 @@ export default function Faq({ faq }: FAQProps) {
               </button>
             </div>
 
-            {/* Scrollable Answer */}
-            <div className="overflow-y-auto max-h-[calc(100%-40px)] pr-2">
-              <p className="text-gray-700 whitespace-pre-line">
-                {faq.items[openIndex].answer}
-              </p>
-            </div>
+            {/* Scrollable Answer (with HTML support) */}
+            <div
+              className="faq-answer overflow-y-auto max-h-[calc(100%-40px)] pr-2 text-gray-700"
+              dangerouslySetInnerHTML={{
+                __html: faq.items[openIndex].answer,
+              }}
+            />
           </div>
         </>
       )}
-
-      {/* Drawer Animation */}
-      <style jsx>{`
-        @keyframes slideUp {
-          from {
-            transform: translateY(100%);
-          }
-          to {
-            transform: translateY(0);
-          }
-        }
-        .animate-slideUp {
-          animation: slideUp 0.3s ease-out;
-        }
-      `}</style>
     </div>
   );
 }
