@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FaBars, FaTimes } from "react-icons/fa";
 import { MenuItem } from "@/types/cms";
 
@@ -9,6 +9,17 @@ export default function Navbar({ menuItems }: { menuItems: MenuItem[] }) {
   const pathname = usePathname();
   const isHome = pathname === "/";
   const [menuOpen, setMenuOpen] = useState(false);
+
+  // Log the API response data
+  useEffect(() => {
+    console.group("🧭 NAVBAR - API Response Data");
+    console.log("Menu Items:", menuItems);
+    console.log("Total Items:", menuItems?.length);
+    console.log("Current Pathname:", pathname);
+    console.log("Is Home Page:", isHome);
+    console.table(menuItems);
+    console.groupEnd();
+  }, [menuItems, pathname, isHome]);
 
   const linkStyle = isHome
     ? "text-white hover:text-[var(--primary)]"
@@ -38,6 +49,7 @@ export default function Navbar({ menuItems }: { menuItems: MenuItem[] }) {
         <button
           onClick={() => setMenuOpen(!menuOpen)}
           className={`text-2xl ${isHome ? "text-white" : "text-gray-800"}`}
+          aria-label="Toggle navigation menu"
         >
           {menuOpen ? <FaTimes /> : <FaBars />}
         </button>

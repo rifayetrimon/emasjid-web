@@ -8,7 +8,31 @@ import { assetPath } from "@/lib/assetPath";
 export default function Faq({ faq }: FAQProps) {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
-  if (!faq || !faq.items || faq.items.length === 0) return null;
+  // Log the API response data
+  useEffect(() => {
+    console.group("❓ FAQ - API Response Data");
+    console.log("FAQ Data:", faq);
+    console.log("FAQ Title:", faq?.title);
+    console.log("Background Image:", faq?.background_image);
+    console.log("Total FAQ Items:", faq?.items?.length);
+    console.log("FAQ Items:", faq?.items);
+    if (faq?.items) {
+      console.table(
+        faq.items.map((item, index) => ({
+          index,
+          question: item.question,
+          text: item.text,
+          answerLength: item.answer?.length || 0,
+        }))
+      );
+    }
+    console.groupEnd();
+  }, [faq]);
+
+  if (!faq || !faq.items || faq.items.length === 0) {
+    console.warn("⚠️ FAQ: No FAQ items provided");
+    return null;
+  }
 
   const handleClose = () => setOpenIndex(null);
 
@@ -58,7 +82,7 @@ export default function Faq({ faq }: FAQProps) {
                 </h3>
                 <p className="text-sm text-gray-600">{item.text}</p>
               </div>
-              <FaPlay className="text-sm text-gray-400 group-hover:text-[#0C9F77]" />
+              <FaPlay className="text-sm text-gray-400 group-hover:text-[#0C9F77] flex-shrink-0" />
             </button>
           </div>
         ))}
@@ -88,6 +112,7 @@ export default function Faq({ faq }: FAQProps) {
               <button
                 onClick={handleClose}
                 className="text-gray-500 hover:text-gray-800 text-xl font-bold"
+                aria-label="Close FAQ"
               >
                 ×
               </button>
