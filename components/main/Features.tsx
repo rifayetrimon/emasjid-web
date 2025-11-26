@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import { FeaturesProps } from "@/types/cms";
-import { assetPath } from "@/lib/assetPath";
 import { useEffect } from "react";
 
 export default function Features({ fetures }: FeaturesProps) {
