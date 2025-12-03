@@ -9,6 +9,11 @@ const nextConfig: NextConfig = {
         hostname: "devsec.awfatech.com",
         pathname: "/**",
       },
+      {
+        protocol: "https",
+        hostname: "devapi02.awfatech.com",
+        pathname: "/**",
+      },
     ],
   },
 };
