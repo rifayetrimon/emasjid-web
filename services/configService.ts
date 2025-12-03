@@ -21,7 +21,6 @@ interface NavMenuItem {
 async function configService(): Promise<CMSData> {
   const SID = 0;
 
-  // Since baseURL is already in myAxios, just use the endpoint paths
   const apiUrls = {
     config: `getConfig?sid=${SID}`,
     navHeader: `getNavHeader?sid=${SID}`,
@@ -51,10 +50,11 @@ async function configService(): Promise<CMSData> {
     const footerData = footerRes.data?.data || {};
     const faqData = faqRes.data?.data || [];
 
-    // Transform data
+    // --- CRITICAL FIX START ---
+    // We do NOT slice here anymore. We take the full list.
     const allMenuItems = navData.dataset?.menu || [];
-    const menuItems = allMenuItems.slice(0, 5);
-    const buttonItems = allMenuItems.slice(5);
+    const menuItems = allMenuItems; // Pass ALL items to the variable
+    // --- CRITICAL FIX END ---
 
     const bannerBgImage =
       bannerData.head?.[0]?.content?.[0]?.file || "/images/banner/bg.png";
@@ -92,6 +92,7 @@ async function configService(): Promise<CMSData> {
         banner: {
           logo: configData.logoCMS || "/images/banner/icon.png",
           background_image: bannerBgImage,
+          // Map all items here so Navbar gets them all
           menu_items: menuItems.map((item: NavMenuItem) => ({
             label: item.menuTitle,
             link: item.menuLink,
@@ -102,10 +103,7 @@ async function configService(): Promise<CMSData> {
           },
           supporting_text:
             "Maklumat ini disediakan sebagai panduan kepada mana-mana orang yang ingin membuat permohonan menggunakan Sistem Pengurusan Smart Masjid MAIS",
-          buttons: buttonItems.map((item: NavMenuItem) => ({
-            label: item.menuTitle,
-            link: item.menuLink,
-          })),
+          buttons: [], // Empty because the extra links are now in the dropdown
         },
         segments: [
           {
