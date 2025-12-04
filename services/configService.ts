@@ -18,6 +18,33 @@ interface NavMenuItem {
   [key: string]: unknown;
 }
 
+// ⭐ This function handles both external URLs and local paths
+// For external URLs: return as-is
+// For local paths: ensure they start with "/"
+function getImageUrl(
+  path: string | undefined | null,
+  fallback: string
+): string {
+  // 1. If path is missing or empty, use fallback
+  if (!path || path.trim() === "") {
+    return fallback;
+  }
+
+  // 2. Fix malformed URLs like "https:/domain.com" → "https://domain.com"
+  let cleanedPath = path.trim();
+  if (cleanedPath.match(/^https?:\/[^/]/)) {
+    cleanedPath = cleanedPath.replace(/^(https?:)\/([^/])/, "$1//$2");
+  }
+
+  // 3. If it's a full URL (external image), return as-is
+  if (cleanedPath.includes("://")) {
+    return cleanedPath;
+  }
+
+  // 4. For local paths, ensure they start with "/"
+  return cleanedPath.startsWith("/") ? cleanedPath : `/${cleanedPath}`;
+}
+
 async function configService(): Promise<CMSData> {
   const SID = 0;
 
@@ -50,14 +77,16 @@ async function configService(): Promise<CMSData> {
     const footerData = footerRes.data?.data || {};
     const faqData = faqRes.data?.data || [];
 
-    // --- CRITICAL FIX START ---
-    // We do NOT slice here anymore. We take the full list.
     const allMenuItems = navData.dataset?.menu || [];
-    const menuItems = allMenuItems; // Pass ALL items to the variable
-    // --- CRITICAL FIX END ---
+    const menuItems = allMenuItems;
 
-    const bannerBgImage =
-      bannerData.head?.[0]?.content?.[0]?.file || "/images/banner/bg.png";
+    // --- Process Images with proper path extraction ---
+
+    const bannerBgImage = getImageUrl(
+      bannerData.head?.[0]?.content?.[0]?.file,
+      "/images/banner/bg.png"
+    );
+
     const bannerFocusLink =
       bannerData.head?.[0]?.content?.[0]?.urllink || "www.masjid.com";
 
@@ -82,6 +111,32 @@ async function configService(): Promise<CMSData> {
       text: "Data pengguna dilindungi dengan selamat",
     });
 
+    const logoUrl = getImageUrl(configData.logoCMS, "/images/banner/icon.png");
+    const faqBgUrl = getImageUrl(footerData.bgImage, "/images/soalan/bg.png");
+
+    // ⚠️ TODO: These fields don't exist in banner API
+    // Need to fetch from different API endpoints
+    // For now, using fallback images
+    const segmentImage = getImageUrl(
+      bannerData.bottom?.[0]?.content?.[0]?.file,
+      "/images/about/about.png"
+    );
+
+    const brandingImage = getImageUrl(
+      bannerData.branding?.[0]?.content?.[0]?.file,
+      "/images/image1.jpg"
+    );
+
+    const partnershipImage = getImageUrl(
+      bannerData.partnership?.[0]?.content?.[0]?.file,
+      "/images/partnership.jpg"
+    );
+
+    console.log("🖼️ Processed Images:");
+    console.log("  - Segment:", segmentImage);
+    console.log("  - Branding:", brandingImage);
+    console.log("  - Partnership:", partnershipImage);
+
     const finalJson: CMSData = {
       base_settings: {
         primary_color: configData.primaryColor || "#78C841",
@@ -90,9 +145,8 @@ async function configService(): Promise<CMSData> {
       },
       content: {
         banner: {
-          logo: configData.logoCMS || "/images/banner/icon.png",
+          logo: logoUrl,
           background_image: bannerBgImage,
-          // Map all items here so Navbar gets them all
           menu_items: menuItems.map((item: NavMenuItem) => ({
             label: item.menuTitle,
             link: item.menuLink,
@@ -103,11 +157,11 @@ async function configService(): Promise<CMSData> {
           },
           supporting_text:
             "Maklumat ini disediakan sebagai panduan kepada mana-mana orang yang ingin membuat permohonan menggunakan Sistem Pengurusan Smart Masjid MAIS",
-          buttons: [], // Empty because the extra links are now in the dropdown
+          buttons: [],
         },
         segments: [
           {
-            image: "/images/about/about.png",
+            image: segmentImage,
             text: "MAKLUMAN : Berkuat kuasa mulai 1 SEPTEMBER 2024, permohonan baharu eMasjid MAIS akan dilaksanakan berdasarkan Peraturan-Peraturan berpandukan Majlis Agama Islam (Negeri Selangor) 2025.",
             button: { label: "Lihat Selanjutnya", link: "#" },
           },
@@ -118,7 +172,7 @@ async function configService(): Promise<CMSData> {
         },
         faq: {
           title: configData.faqMainTitle || "Soalan Lazim",
-          background_image: footerData.bgImage || "/images/soalan/bg.png",
+          background_image: faqBgUrl,
           items: faqData.map(
             (item: {
               title: string;
@@ -131,10 +185,14 @@ async function configService(): Promise<CMSData> {
             })
           ),
         },
-        branding: [{ image: "/images/image1.jpg" }],
+        branding: [
+          {
+            image: brandingImage,
+          },
+        ],
         footer: {
           image: {
-            image: configData.logoCMS || "/images/banner/icon.png",
+            image: logoUrl,
             link: "#",
           },
           footer_title:
@@ -161,13 +219,15 @@ async function configService(): Promise<CMSData> {
         },
         pernarship_image: {
           isset: "True",
-          image: "imges.jpg",
+          image: partnershipImage,
         },
       },
       features: mappedFeatures,
     };
 
-    console.log("✅ CMS configuration transformed successfully");
+    console.log("✅ CMS Config Transformed");
+    console.log("🖼️ Debug URL Check:", finalJson.content.segments[0].image);
+
     return finalJson;
   } catch (error) {
     console.error("❌ Error in configService:", error);

@@ -9,14 +9,23 @@ import Segment from "@/components/main/Segment";
 import configService from "@/services/configService";
 import { CMSData } from "@/types/cms";
 
+// ⭐⭐⭐ CRITICAL: Add these lines to force dynamic rendering ⭐⭐⭐
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+export const fetchCache = "force-no-store";
+
 export default async function Home() {
   let cmsData: CMSData;
 
   try {
+    console.log("🔄 Page: Fetching data from external API...");
+
     // Fetch data from API
     cmsData = await configService();
+
+    console.log("✅ Page: Data fetched successfully");
   } catch (error) {
-    console.error("Failed to load configuration:", error);
+    console.error("❌ Failed to load configuration:", error);
 
     // Fallback UI in case of error
     return (

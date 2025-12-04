@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import { BannerProps } from "@/types/cms";
-import { assetPath } from "@/lib/assetPath";
 import { useEffect } from "react";
 
 export default function Banner({ banner }: BannerProps) {
@@ -11,14 +10,11 @@ export default function Banner({ banner }: BannerProps) {
     console.group("🎯 BANNER - API Response Data");
     console.log("Banner Data:", banner);
     console.log("Logo:", banner?.logo);
-    console.log(
-      "Logo after assetPath:",
-      banner?.logo ? assetPath(banner.logo) : "N/A"
-    );
+    console.log("Logo after assetPath:", banner?.logo ? banner.logo : "N/A");
     console.log("Background Image:", banner?.background_image);
     console.log(
       "Background after assetPath:",
-      banner?.background_image ? assetPath(banner.background_image) : "N/A"
+      banner?.background_image ? banner.background_image : "N/A"
     );
     console.log("Title:", banner?.title);
     console.log("Title - General:", banner?.title?.general);
@@ -52,10 +48,10 @@ export default function Banner({ banner }: BannerProps) {
   };
 
   // Get the proper image path
-  const logoSrc = logo ? (isAbsoluteUrl(logo) ? logo : assetPath(logo)) : null;
+  const logoSrc = logo ? (isAbsoluteUrl(logo) ? logo : logo) : null;
   const bgImageSrc = isAbsoluteUrl(background_image)
     ? background_image
-    : assetPath(background_image);
+    : background_image;
 
   return (
     <section

@@ -1,4 +1,4 @@
-import { assetPath } from "@/lib/assetPath";
+"use client";
 import Image from "next/image";
 import { FooterProps } from "@/types/cms";
 
@@ -12,7 +12,7 @@ export default function Footer({ footer }: FooterProps) {
   const footerLogoSrc = footer.image.image
     ? isAbsoluteUrl(footer.image.image)
       ? footer.image.image
-      : assetPath(footer.image.image)
+      : footer.image.image
     : null;
 
   // Log the API response data in the component
@@ -84,7 +84,7 @@ export default function Footer({ footer }: FooterProps) {
               {footer.social_links.map((social, i) => {
                 const socialIconSrc = isAbsoluteUrl(social.platform)
                   ? social.platform
-                  : assetPath(social.platform);
+                  : social.platform;
 
                 return (
                   <a

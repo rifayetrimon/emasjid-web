@@ -1,29 +1,37 @@
-// import { NextResponse } from "next/server";
-// import cmsData from "@/data/cms.json";
-
-// export async function GET() {
-//   return NextResponse.json(cmsData);
-// }
-
+// app/api/cms/route.ts
 import { NextResponse } from "next/server";
-import path from "path";
-import fs from "fs";
+import configService from "@/services/configService";
 
-// 1. Force this route to be dynamic (never cache the output)
+// ✅ Force this route to NEVER cache
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export async function GET() {
   try {
-    // 2. Define the path (works in both dev and prod)
-    const filePath = path.join(process.cwd(), "data", "cms.json");
+    console.log("🔄 API Route: Fetching fresh CMS data from external API...");
 
-    // 3. Read the file fresh from the disk
-    const fileContents = fs.readFileSync(filePath, "utf8");
-    const data = JSON.parse(fileContents);
+    // This calls your external API every time
+    const data = await configService();
 
-    return NextResponse.json(data);
+    console.log("✅ API Route: Successfully fetched CMS data");
+
+    return NextResponse.json(data, {
+      headers: {
+        // Prevent any caching
+        "Cache-Control":
+          "no-store, no-cache, must-revalidate, proxy-revalidate",
+        Pragma: "no-cache",
+        Expires: "0",
+      },
+    });
   } catch (error) {
-    console.error("Database Error:", error);
-    return NextResponse.json({ error: "Data file not found" }, { status: 500 });
+    console.error("❌ API Route Error:", error);
+    return NextResponse.json(
+      {
+        error: "Failed to fetch CMS data",
+        message: error instanceof Error ? error.message : "Unknown error",
+      },
+      { status: 500 }
+    );
   }
 }

@@ -11,6 +11,9 @@ const myAxios = axios.create({
     Authorization: `Bearer ${AUTH_TOKEN}`,
     "Content-Type": "application/json",
     Accept: "application/json",
+    // ⭐ Prevent caching in axios
+    "Cache-Control": "no-cache, no-store, must-revalidate",
+    Pragma: "no-cache",
   },
 });
 
@@ -20,6 +23,13 @@ myAxios.interceptors.request.use(
     console.log(
       `🚀 API Request: ${config.method?.toUpperCase()} ${config.url}`
     );
+
+    // ⭐ Add timestamp to prevent caching
+    config.params = {
+      ...config.params,
+      _t: Date.now(), // Cache buster
+    };
+
     return config;
   },
   (error) => {

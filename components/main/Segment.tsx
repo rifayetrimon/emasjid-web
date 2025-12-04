@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import { assetPath } from "@/lib/assetPath";
 import { SegmentsProps } from "@/types/cms";
 import { useEffect } from "react";
 
@@ -53,7 +52,7 @@ export default function Segment({ segments }: SegmentsProps) {
             <div className="col-span-12 md:col-span-4 flex justify-center md:justify-start">
               <div className="relative w-full max-w-[350px] h-[250px]">
                 <Image
-                  src={assetPath(segment.image)}
+                  src={segment.image}
                   alt={segment.button?.label || `Segment ${idx + 1}`}
                   fill
                   className="rounded-lg shadow-md object-cover"

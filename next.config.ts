@@ -1,21 +1,23 @@
-import type { NextConfig } from "next";
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  output: "standalone", // For Docker deployment
 
-const nextConfig: NextConfig = {
-  output: "standalone",
   images: {
     remotePatterns: [
       {
         protocol: "https",
         hostname: "devsec.awfatech.com",
+        port: "",
         pathname: "/**",
       },
       {
         protocol: "https",
-        hostname: "devapi02.awfatech.com",
+        hostname: "devaws04.awfatech.com",
+        port: "",
         pathname: "/**",
       },
     ],
   },
 };
 
-export default nextConfig;
+module.exports = nextConfig;

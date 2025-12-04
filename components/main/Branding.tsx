@@ -1,6 +1,5 @@
 // components/main/Branding.tsx
 import Image from "next/image";
-import { assetPath } from "@/lib/assetPath";
 import { BrandingItem } from "@/types/cms";
 
 interface BrandingProps {
@@ -25,7 +24,7 @@ export default function Branding({ branding }: BrandingProps) {
       {branding.map((item, index) => (
         <div key={index} className="relative w-full h-[500px]">
           <Image
-            src={assetPath(item.image)}
+            src={item.image}
             alt={`Branding ${index + 1}`}
             fill
             style={{ objectFit: "cover", objectPosition: "top" }}

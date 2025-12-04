@@ -1,3 +1,4 @@
+// hooks/useCMS.ts
 import { useContext } from "react";
 import { CMSContext } from "@/app/providers/cmsProvider"; // adjust import path
 
