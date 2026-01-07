@@ -6,7 +6,7 @@ const AUTH_TOKEN = getConfig().token_key || "";
 const baseApiUrl = getConfig().baseApiUrl || "";
 
 const myAxios = axios.create({
-  baseURL: `${baseApiUrl}/v2/utilities/`,
+  baseURL: baseApiUrl,
   timeout: 15000, // 15 seconds
   headers: {
     Authorization: `Bearer ${AUTH_TOKEN}`,
