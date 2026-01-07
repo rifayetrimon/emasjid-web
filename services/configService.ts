@@ -50,7 +50,7 @@ async function configService(): Promise<CMSData> {
   const config = getConfig();
 
   const SID = config.sid || "";
-  
+
   const apiUrls = {
     config: `getConfig?sid=${SID}`,
     navHeader: `getNavHeader?sid=${SID}`,
