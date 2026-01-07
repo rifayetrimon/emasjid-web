@@ -1,11 +1,12 @@
 // lib/myAxios.ts
 import axios, { AxiosError } from "axios";
+import getConfig from "./getConfig";
 
-const AUTH_TOKEN =
-  "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjdXN0X25hbWUiOiJTQU1TVU5HIiwiYXBwX2NvZGUiOiJ0ZXN0Y21zIiwiYXBwX25hbWUiOiJFQk9TUyIsInNpZCI6IjAiLCJhcHBlbmdpbmUiOiJodHRwczovL21vYmlnYXRlLmF3ZmF0ZWNoLmNvbS9jdHJsX21vYmlsZXYyIiwidXJsIjoiaHR0cHM6Ly9kZXZzZWMuYXdmYXRlY2guY29tL3Rlc3RjbXMiLCJkYl9uYW1lIjoiZGV2c2VjX3Rlc3RjbXMiLCJkYl9uYW1lMiI6IiIsImhvc3QiOiI0My4yNTIuMzYuMTkxIiwiY3NpZCI6IkUwMDA4NTUiLCJpYXQiOjE3NjIyNDIzNzgsIm5iZiI6MTc2MjI0MjM0OCwiYXVkIjoidXNlciIsImlzcyI6ImF3ZmF0ZWNoIGdsb2JhbCIsInN1YiI6ImFwcGNvZGUifQ.ud6bKkHNyRxVJICOtPHv-heqguIZkCYpi9POOE8aJwkIbKp72Q9RrtMPdOiHw3USh7q_ZFYX3xwzqvx0Ivhog1RK-BOXIOKQyVUKm3VE7X9bUZTucIHfGweMJHtOyyq0s6PENsmmAcGcSDoQ_DzPryzWUPEp2wCduwANO6tTEm2W8KyiFLhD4iBifo56EwJJwT1Fd3RhFMp5PMq-fe3RKrg27nHOgVT92ewIrLzH9FJHbH8-km2MoKM3QavYvSjMkMQRTLWh-AwOfXO1k4iCLIk7BApB4HDvszLlbvDNWlvWVNNhTkq2zdrthWFAuaIglR5gDakJVWrYWlud6H-bPg";
+const AUTH_TOKEN = getConfig().token_key || "";
+const baseApiUrl = getConfig().baseApiUrl || "";
 
 const myAxios = axios.create({
-  baseURL: "https://devapi02.awfatech.com/api/v2/utilities/",
+  baseURL: `${baseApiUrl}/v2/utilities/`,
   timeout: 15000, // 15 seconds
   headers: {
     Authorization: `Bearer ${AUTH_TOKEN}`,
@@ -19,7 +20,7 @@ const myAxios = axios.create({
 
 // Request interceptor
 myAxios.interceptors.request.use(
-  (config) => {
+  config => {
     console.log(
       `🚀 API Request: ${config.method?.toUpperCase()} ${config.url}`
     );
@@ -32,7 +33,7 @@ myAxios.interceptors.request.use(
 
     return config;
   },
-  (error) => {
+  error => {
     console.error("❌ Request Error:", error);
     return Promise.reject(error);
   }
@@ -40,7 +41,7 @@ myAxios.interceptors.request.use(
 
 // Response interceptor
 myAxios.interceptors.response.use(
-  (response) => {
+  response => {
     console.log(`✅ API Response: ${response.config.url}`, response.status);
     return response;
   },

@@ -1,4 +1,5 @@
 // services/configService.ts
+import getConfig from "@/lib/getConfig";
 import myAxios from "@/lib/myAxios";
 import { CMSData } from "@/types/cms";
 
@@ -46,8 +47,10 @@ function getImageUrl(
 }
 
 async function configService(): Promise<CMSData> {
-  const SID = 0;
+  const config = getConfig();
 
+  const SID = config.sid || "";
+  
   const apiUrls = {
     config: `getConfig?sid=${SID}`,
     navHeader: `getNavHeader?sid=${SID}`,
