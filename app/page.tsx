@@ -1,3 +1,4 @@
+import FallbackError from "@/components/layouts/FallbackError";
 import Footer from "@/components/layouts/footer";
 import Navbar from "@/components/layouts/navbar";
 import Banner from "@/components/main/Banner";
@@ -7,12 +8,11 @@ import Features from "@/components/main/Features";
 import Segment from "@/components/main/Segment";
 import configService from "@/services/configService";
 import { CMSData } from "@/types/cms";
-import { notFound } from "next/navigation";
 
 // ⭐⭐⭐ CRITICAL: Add these lines to force dynamic rendering ⭐⭐⭐
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
-export const fetchCache = "force-no-store";
+// export const dynamic = "force-dynamic";
+// export const revalidate = 0;
+// export const fetchCache = "force-no-store";
 
 export default async function Home() {
   let cmsData: CMSData;
@@ -26,7 +26,7 @@ export default async function Home() {
     console.log("✅ Page: Data fetched successfully");
   } catch (error) {
     console.error("❌ Page Error: Failed to fetch CMS data", error);
-    notFound();
+    return <FallbackError />;
   }
 
   const { base_settings, content } = cmsData || {};
