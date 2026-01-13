@@ -52,11 +52,11 @@ async function configService(): Promise<CMSData> {
   const SID = config.sid || "";
 
   const apiUrls = {
-    config: `getConfig?sid=${SID}`,
-    navHeader: `getNavHeader?sid=${SID}`,
-    banner: `getBanner?sid=${SID}`,
-    footer: `getFooter?sid=${SID}`,
-    faq: `getFAQ?sid=${SID}`,
+    config: `config?sid=${SID}`,
+    navHeader: `nav-header?sid=${SID}`,
+    banner: `banner?sid=${SID}`,
+    footer: `footer?sid=${SID}`,
+    faq: `faq?sid=${SID}`,
   };
 
   try {
