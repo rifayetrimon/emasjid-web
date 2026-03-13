@@ -1,33 +1,14 @@
-"use client";
-
 import Image from "next/image";
-import { BannerProps } from "@/types/cms";
-import { useEffect } from "react";
+import { getBannerData } from "@/services/bannerService";
+import InlineError from "@/components/ui/InlineError";
 
-export default function Banner({ banner }: BannerProps) {
-  // Log the API response data
-  useEffect(() => {
-    console.group("🎯 BANNER - API Response Data");
-    console.log("Banner Data:", banner);
-    console.log("Logo:", banner?.logo);
-    console.log("Logo after assetPath:", banner?.logo ? banner.logo : "N/A");
-    console.log("Background Image:", banner?.background_image);
-    console.log(
-      "Background after assetPath:",
-      banner?.background_image ? banner.background_image : "N/A"
-    );
-    console.log("Title:", banner?.title);
-    console.log("Title - General:", banner?.title?.general);
-    console.log("Title - Focus Text:", banner?.title?.focus?.text);
-    console.log("Title - Focus Link:", banner?.title?.focus?.link);
-    console.log("Supporting Text:", banner?.supporting_text);
-    console.groupEnd();
-  }, [banner]);
+export default async function Banner() {
+  const banner = await getBannerData();
 
-  // Basic check if the banner prop is provided
+  // Basic check if the banner data is provided
   if (!banner) {
-    console.error("❌ BANNER: No banner data provided");
-    return null;
+    console.warn("⚠️ BANNER: No banner data provided");
+    return <InlineError componentName="Utama (Banner)" />;
   }
 
   const { title, supporting_text, background_image, logo } = banner;

@@ -6,8 +6,7 @@ import Branding from "@/components/main/Branding";
 import Faq from "@/components/main/Faq";
 import Features from "@/components/main/Features";
 import Segment from "@/components/main/Segment";
-import configService from "@/services/configService";
-import { CMSData } from "@/types/cms";
+import { getCachedConfig } from "@/services/apiCache";
 
 // ⭐⭐⭐ CRITICAL: Add these lines to force dynamic rendering ⭐⭐⭐
 // export const dynamic = "force-dynamic";
@@ -15,51 +14,51 @@ import { CMSData } from "@/types/cms";
 // export const fetchCache = "force-no-store";
 
 export default async function Home() {
-  let cmsData: CMSData;
+  let configData;
 
   try {
-    console.log("🔄 Page: Fetching data from external API...");
+    console.log("🔄 Page: Fetching config data for CSS vars...");
 
-    // Fetch data from API
-    cmsData = await configService();
+    // Fetch config data only
+    configData = await getCachedConfig();
 
-    console.log("✅ Page: Data fetched successfully");
+    console.log("✅ Page: Config fetched successfully");
   } catch (error) {
-    console.error("❌ Page Error: Failed to fetch CMS data", error);
-    return <FallbackError />;
+    console.error("❌ Page Error: Failed to fetch base config data", error);
+    // DO NOT return FallbackError here, as it crashes the entire page
+    // Instead, provide generic fallback so individual components can try to load
+    configData = {};
   }
-
-  const { base_settings, content } = cmsData || {};
 
   // Apply CSS variables dynamically
   const cssVars = {
-    "--primary": base_settings.primary_color,
-    "--secondary": base_settings.secondary_color,
-    "--text": base_settings.text_color,
+    "--primary": configData.primaryColor || "#78C841",
+    "--secondary": configData.secondaryColor || "#154D71",
+    "--text": configData.textColor || "#00FF00",
   } as React.CSSProperties;
 
   return (
     <div style={cssVars}>
       {/* Navbar */}
-      <Navbar menuItems={content.banner.menu_items} />
+      <Navbar />
 
       {/* Banner */}
-      <Banner banner={content.banner} />
+      <Banner />
 
       {/* Segment */}
-      <Segment segments={content.segments} />
+      <Segment />
 
       {/* Features */}
-      <Features fetures={content.fetures} />
+      <Features />
 
       {/* FAQ */}
-      <Faq faq={content.faq} />
+      <Faq />
 
       {/* Branding */}
-      <Branding branding={content.branding} />
+      <Branding />
 
       {/* Footer */}
-      <Footer footer={content.footer} />
+      <Footer />
     </div>
   );
 }

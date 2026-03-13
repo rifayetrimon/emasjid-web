@@ -1,43 +1,13 @@
-"use client";
-
 import Image from "next/image";
-import { SegmentsProps } from "@/types/cms";
-import { useEffect } from "react";
+import { getSegmentsData } from "@/services/segmentService";
+import InlineError from "@/components/ui/InlineError";
 
-export default function Segment({ segments }: SegmentsProps) {
-  // Log the API response data
-  useEffect(() => {
-    console.group("📰 SEGMENT - API Response Data");
-    console.log("Segments Data:", segments);
-    console.log("Total Segments:", segments?.length);
-
-    if (segments && segments.length > 0) {
-      segments.forEach((segment, index) => {
-        console.log(`\nSegment ${index}:`, {
-          image: segment.image,
-          text: segment.text,
-          button: segment.button,
-        });
-      });
-
-      console.table(
-        segments.map((segment, index) => ({
-          index,
-          image: segment.image,
-          textPreview: segment.text?.substring(0, 60) + "..." || "No text",
-          hasButton: !!segment.button,
-          buttonLabel: segment.button?.label || "-",
-          buttonLink: segment.button?.link || "-",
-        }))
-      );
-    }
-
-    console.groupEnd();
-  }, [segments]);
+export default async function Segment() {
+  const segments = await getSegmentsData();
 
   if (!segments || segments.length === 0) {
     console.warn("⚠️ SEGMENT: No segment items provided");
-    return null;
+    return <InlineError componentName="Makluman/Segmen" />;
   }
 
   return (

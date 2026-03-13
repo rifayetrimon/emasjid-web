@@ -1,8 +1,18 @@
-"use client";
 import Image from "next/image";
-import { FooterProps } from "@/types/cms";
+import { getFooterData } from "@/services/footerService";
+import InlineError from "@/components/ui/InlineError";
 
-export default function Footer({ footer }: FooterProps) {
+export default async function Footer() {
+  const footer = await getFooterData();
+
+  if (!footer) {
+    return (
+      <footer className="w-full bg-[#1A1A1A] py-12 px-6">
+        <InlineError componentName="Pengaki (Footer)" />
+      </footer>
+    );
+  }
+
   // Helper function to check if URL is absolute
   const isAbsoluteUrl = (url: string) => {
     return url.startsWith("http://") || url.startsWith("https://");
@@ -14,21 +24,6 @@ export default function Footer({ footer }: FooterProps) {
       ? footer.image.image
       : footer.image.image
     : null;
-
-  // Log the API response data in the component
-  console.group("🦶 FOOTER - API Response Data");
-  console.log("Footer Data:", footer);
-  console.log("Footer Title:", footer.footer_title);
-  console.log("Footer Text:", footer.text);
-  console.log("Address:", footer.address);
-  console.log("Phone:", footer.phone);
-  console.log("Email:", footer.email);
-  console.log("Social Links:", footer.social_links);
-  console.log("Copyright:", footer.copyright);
-  console.log("Image:", footer.image);
-  console.log("Original Logo Path:", footer.image.image);
-  console.log("Processed Logo Path:", footerLogoSrc);
-  console.groupEnd();
 
   return (
     <footer className="bg-[#164776] text-white py-10 px-6">
