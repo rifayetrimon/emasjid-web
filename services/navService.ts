@@ -11,6 +11,9 @@ interface NavMenuItem {
 export async function getNavData(): Promise<MenuItem[]> {
   try {
     const navData = await getCachedNavHeader();
+
+    if (!navData) return [];
+
     const allMenuItems = navData.dataset?.menu || [];
 
     return allMenuItems.map((item: NavMenuItem) => ({

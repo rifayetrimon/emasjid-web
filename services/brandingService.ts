@@ -7,14 +7,17 @@ export async function getBrandingData(): Promise<BrandingItem[]> {
   try {
     const bannerData = await getCachedBanner();
 
-    const brandingImage = getImageUrl(
-      bannerData.branding?.[0]?.content?.[0]?.file,
-      "/images/image1.jpg"
-    );
+    const firstBanner = Array.isArray(bannerData) ? bannerData[0] : bannerData;
+
+    const brandingImage = firstBanner?.imageUrl;
+
+    if (!brandingImage) {
+      return [];
+    }
 
     return [
       {
-        image: brandingImage,
+        image: getImageUrl(brandingImage, ""),
       },
     ];
   } catch (error) {

@@ -8,26 +8,29 @@ export async function getBannerData(): Promise<BannerProps["banner"] | null> {
     const bannerData = await getCachedBanner();
     const configData = await getCachedConfig();
 
+    const firstBanner = Array.isArray(bannerData) ? bannerData[0] : bannerData;
+
     const bannerBgImage = getImageUrl(
-      bannerData.head?.[0]?.content?.[0]?.file,
+      firstBanner?.imageUrl,
       "/images/banner/bg.png"
     );
 
-    const bannerFocusLink =
-      bannerData.head?.[0]?.content?.[0]?.urllink || "www.masjid.com";
+    const bannerFocusLink = firstBanner?.urllink1 || "";
 
     const logoUrl = getImageUrl(configData.logoCMS, "/images/banner/icon.png");
 
     return {
       logo: logoUrl,
       background_image: bannerBgImage,
-      menu_items: [], // Deprecated in favor of the standalone nav component fetching it, but keeping for type compatibility if needed
+      menu_items: [],
       title: {
-        general: "Selamat Datang ke Portal",
-        focus: { text: "eMasjid", link: bannerFocusLink },
+        general: configData.bannerTitle || "",
+        focus: {
+          text: configData.bannerFocusText || "",
+          link: bannerFocusLink,
+        },
       },
-      supporting_text:
-        "Maklumat ini disediakan sebagai panduan kepada mana-mana orang yang ingin membuat permohonan menggunakan Sistem Pengurusan Smart Masjid MAIS",
+      supporting_text: configData.bannerSupportingText || "",
       buttons: [],
     };
   } catch (error) {

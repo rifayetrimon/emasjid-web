@@ -2,7 +2,6 @@
 import axios, { AxiosError } from "axios";
 import getConfig from "./getConfig";
 
-const AUTH_TOKEN = getConfig().token_key || "";
 const baseApiUrl = getConfig().baseApiUrl || "";
 const xEncryptedKey = getConfig().x_encrypted_key || "";
 
@@ -10,7 +9,6 @@ const myAxios = axios.create({
   baseURL: baseApiUrl,
   timeout: 15000, // 15 seconds
   headers: {
-    Authorization: `Bearer ${AUTH_TOKEN}`,
     "Content-Type": "application/json",
     Accept: "application/json",
     // ⭐ Prevent caching in axios

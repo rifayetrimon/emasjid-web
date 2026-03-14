@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { CMSProvider } from "./providers/cmsProvider";
+import { getCachedConfig } from "@/services/apiCache";
+import { getImageUrl } from "@/services/utils";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -13,10 +15,28 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "eMasjid",
-  description: "A platform for managing mosque activities",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  try {
+    const configData = await getCachedConfig();
+    const logoUrl = getImageUrl(configData.logoCMS, "/images/banner/icon.png");
+
+    return {
+      title: "eMasjid",
+      description: "A platform for managing mosque activities",
+      icons: {
+        icon: logoUrl,
+      },
+    };
+  } catch {
+    return {
+      title: "eMasjid",
+      description: "A platform for managing mosque activities",
+      icons: {
+        icon: "/images/banner/icon.png",
+      },
+    };
+  }
+}
 
 export default function RootLayout({
   children,

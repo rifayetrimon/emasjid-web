@@ -7,16 +7,23 @@ export async function getSegmentsData(): Promise<SegmentsProps["segments"]> {
   try {
     const bannerData = await getCachedBanner();
 
+    const firstBanner = Array.isArray(bannerData) ? bannerData[0] : bannerData;
+
     const segmentImage = getImageUrl(
-      bannerData.bottom?.[0]?.content?.[0]?.file,
+      firstBanner?.imageUrl,
       "/images/about/about.png"
     );
+
+    const segmentText = firstBanner?.urllink2 || "";
+    const segmentButtonLink = firstBanner?.urllink3 || "#";
 
     return [
       {
         image: segmentImage,
-        text: "MAKLUMAN : Berkuat kuasa mulai 1 SEPTEMBER 2024, permohonan baharu eMasjid MAIS akan dilaksanakan berdasarkan Peraturan-Peraturan berpandukan Majlis Agama Islam (Negeri Selangor) 2025.",
-        button: { label: "Lihat Selanjutnya", link: "#" },
+        text: segmentText,
+        button: segmentButtonLink
+          ? { label: "Lihat Selanjutnya", link: segmentButtonLink }
+          : undefined,
       },
     ];
   } catch (error) {

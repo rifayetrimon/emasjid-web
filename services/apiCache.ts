@@ -28,25 +28,25 @@ export const getCachedConfig = cache(async () => {
 export const getCachedNavHeader = cache(async () => {
   const sid = getSID();
   const res = await myAxios.get(`nav-header?sid=${sid}`);
-  return res.data?.data || {};
+  return res.data?.data || null;
 });
 
 /**
- * Fetches the banner section data
+ * Fetches the banner section data (returns array)
  */
 export const getCachedBanner = cache(async () => {
   const sid = getSID();
   const res = await myAxios.get(`banner?sid=${sid}`);
-  return res.data?.data || {};
+  return res.data?.data || [];
 });
 
 /**
- * Fetches the footer section data
+ * Fetches the footer section data (returns array)
  */
 export const getCachedFooter = cache(async () => {
   const sid = getSID();
   const res = await myAxios.get(`footer?sid=${sid}`);
-  return res.data?.data || {};
+  return res.data?.data || [];
 });
 
 /**
