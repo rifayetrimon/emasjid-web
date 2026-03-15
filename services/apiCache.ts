@@ -57,3 +57,12 @@ export const getCachedFaq = cache(async () => {
   const res = await myAxios.get(`faq?sid=${sid}`);
   return res.data?.data || [];
 });
+
+/**
+ * Fetches the addon plugin data (social links, popups, etc.)
+ */
+export const getCachedAddonPlugin = cache(async () => {
+  const sid = getSID();
+  const res = await myAxios.get(`addon-plugin?sid=${sid}`);
+  return res.data?.data || [];
+});
