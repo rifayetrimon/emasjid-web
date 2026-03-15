@@ -7,6 +7,9 @@ import Features from "@/components/main/Features";
 import Segment from "@/components/main/Segment";
 import { getCachedConfig } from "@/services/apiCache";
 
+// Force dynamic rendering so CMS changes reflect immediately without rebuild
+export const dynamic = "force-dynamic";
+
 export default async function Home() {
   let configData;
 
