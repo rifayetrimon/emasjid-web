@@ -1,9 +1,14 @@
 import Image from "next/image";
 import { getSegmentsData } from "@/services/segmentService";
 import InlineError from "@/components/ui/InlineError";
+import { getNewsData } from "@/services/newsService";
 
 export default async function Segment() {
   const segments = await getSegmentsData();
+
+  const news = await getNewsData();
+
+  console.log({ segments, news });
 
   if (!segments || segments.length === 0) {
     console.warn("⚠️ SEGMENT: No segment items provided");

@@ -40,6 +40,12 @@ export const getCachedBanner = cache(async () => {
   return res.data?.data || [];
 });
 
+export const getCachedNews = cache(async () => {
+  const sid = getSID();
+  const res = await myAxios.get(`news?sid=${sid}`);
+  return res.data?.data || [];
+});
+
 /**
  * Fetches the footer section data (returns array)
  */

@@ -14,11 +14,9 @@ export async function getNavData(): Promise<MenuItem[]> {
 
     if (!navData) return [];
 
-    const allMenuItems = navData.dataset?.menu || [];
-
-    return allMenuItems.map((item: NavMenuItem) => ({
-      label: item.menuTitle,
-      link: item.menuLink,
+    return navData.map((item: NavMenuItem) => ({
+      label: item.title,
+      link: item.url,
     }));
   } catch (error) {
     console.error("❌ Error fetching navigation data:", error);
