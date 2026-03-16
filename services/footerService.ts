@@ -89,6 +89,7 @@ export async function getFooterData(): Promise<FooterProps["footer"] | null> {
       email: configData.email || "",
       social_links: socialLinks,
       copyright: configData.copyright || "",
+      bgColor: configData.bgColorFooter || "",
     };
   } catch (error) {
     console.error("❌ Error fetching footer data:", error);

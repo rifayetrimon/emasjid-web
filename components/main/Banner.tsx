@@ -11,7 +11,7 @@ export default async function Banner() {
     return <InlineError componentName="Utama (Banner)" />;
   }
 
-  const { title, supporting_text, background_image, logo } = banner;
+  const { title, supporting_text, background_image, logo, textColor } = banner;
 
   // Safely access nested title structure
   const focusText = title?.focus?.text;
@@ -36,11 +36,12 @@ export default async function Banner() {
 
   return (
     <section
-      className="relative w-full h-[90vh] flex flex-col justify-center items-center text-center text-white"
+      className="relative w-full h-[90vh] flex flex-col justify-center items-center text-center"
       style={{
         backgroundImage: `url(${bgImageSrc})`,
         backgroundSize: "cover",
         backgroundPosition: "center",
+        color: textColor || "#ffffff",
       }}
     >
       {/* Logo */}

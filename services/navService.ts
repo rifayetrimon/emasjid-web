@@ -1,5 +1,5 @@
 // services/navService.ts
-import { getCachedNavHeader } from "./apiCache";
+import { getCachedNavHeader, getCachedConfig } from "./apiCache";
 import { MenuItem } from "@/types/cms";
 
 interface NavMenuItem {
@@ -8,18 +8,31 @@ interface NavMenuItem {
   [key: string]: unknown;
 }
 
-export async function getNavData(): Promise<MenuItem[]> {
+export interface NavData {
+  menuItems: MenuItem[];
+  textColor: string;
+}
+
+export async function getNavData(): Promise<NavData> {
   try {
-    const navData = await getCachedNavHeader();
+    const [navData, configData] = await Promise.all([
+      getCachedNavHeader(),
+      getCachedConfig(),
+    ]);
 
-    if (!navData) return [];
+    const menuItems = navData
+      ? navData.map((item: NavMenuItem) => ({
+          label: item.title,
+          link: item.url,
+        }))
+      : [];
 
-    return navData.map((item: NavMenuItem) => ({
-      label: item.title,
-      link: item.url,
-    }));
+    return {
+      menuItems,
+      textColor: configData.textColorNavHeaderLine || "",
+    };
   } catch (error) {
     console.error("❌ Error fetching navigation data:", error);
-    return [];
+    return { menuItems: [], textColor: "" };
   }
 }

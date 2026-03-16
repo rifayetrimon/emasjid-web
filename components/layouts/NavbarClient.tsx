@@ -6,7 +6,7 @@ import { FaBars, FaTimes } from "react-icons/fa";
 import { ChevronDown } from "lucide-react";
 import { MenuItem } from "@/types/cms";
 
-export default function NavbarClient({ menuItems }: { menuItems: MenuItem[] }) {
+export default function NavbarClient({ menuItems, textColor }: { menuItems: MenuItem[]; textColor: string }) {
   const pathname = usePathname();
   const isHome = pathname === "/";
   const [menuOpen, setMenuOpen] = useState(false);
@@ -30,9 +30,11 @@ export default function NavbarClient({ menuItems }: { menuItems: MenuItem[] }) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const linkStyle = isHome
-    ? "text-white hover:text-[var(--primary)]"
-    : "text-gray-800 hover:text-[var(--primary)]";
+  const defaultColor = isHome ? "text-white" : "text-gray-800";
+  const linkStyle = textColor
+    ? "hover:text-[var(--primary)]"
+    : `${defaultColor} hover:text-[var(--primary)]`;
+  const linkColorStyle = textColor ? { color: textColor } : undefined;
 
   return (
     <nav
@@ -46,7 +48,7 @@ export default function NavbarClient({ menuItems }: { menuItems: MenuItem[] }) {
       <ul className="hidden md:flex justify-center gap-16 items-center">
         {visibleItems.map((item, index) => (
           <li key={index}>
-            <a href={item.link} className={`font-medium ${linkStyle}`}>
+            <a href={item.link} className={`font-medium ${linkStyle}`} style={linkColorStyle}>
               {item.label}
             </a>
           </li>
@@ -57,6 +59,7 @@ export default function NavbarClient({ menuItems }: { menuItems: MenuItem[] }) {
             <button
               onClick={() => setDropdownOpen(!dropdownOpen)}
               className={`font-medium flex items-center gap-1 ${linkStyle}`}
+              style={linkColorStyle}
               aria-expanded={dropdownOpen}
               aria-haspopup="true"
             >
@@ -90,7 +93,8 @@ export default function NavbarClient({ menuItems }: { menuItems: MenuItem[] }) {
       <div className="md:hidden flex justify-between items-center">
         <button
           onClick={() => setMenuOpen(!menuOpen)}
-          className={`text-2xl ${isHome ? "text-white" : "text-gray-800"}`}
+          className={`text-2xl ${textColor ? "" : (isHome ? "text-white" : "text-gray-800")}`}
+          style={linkColorStyle}
           aria-label="Toggle navigation menu"
         >
           {menuOpen ? <FaTimes /> : <FaBars />}
@@ -105,7 +109,8 @@ export default function NavbarClient({ menuItems }: { menuItems: MenuItem[] }) {
               <a
                 href={item.link}
                 onClick={() => setMenuOpen(false)}
-                className="text-white hover:text-[var(--primary)] font-medium"
+                className={`hover:text-[var(--primary)] font-medium ${textColor ? "" : "text-white"}`}
+                style={linkColorStyle}
               >
                 {item.label}
               </a>

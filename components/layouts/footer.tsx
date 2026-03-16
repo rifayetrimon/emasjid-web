@@ -26,7 +26,10 @@ export default async function Footer() {
     : null;
 
   return (
-    <footer className="bg-[#164776] text-white py-10 px-6">
+    <footer
+      className="text-white py-10 px-6"
+      style={{ backgroundColor: footer.bgColor || "#164776" }}
+    >
       <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
         {/* Left: Image (7 columns) */}
         <div className="col-span-12 md:col-span-7 flex justify-center md:justify-start">

@@ -43,6 +43,7 @@ export interface Banner {
   title: BannerTitle;
   supporting_text: string;
   buttons: BannerButton[];
+  textColor: string;
 }
 
 /* ------------------------------
@@ -187,6 +188,7 @@ export interface FooterData {
   email: string;
   social_links: { platform: string; link: string }[];
   copyright: string;
+  bgColor: string;
 }
 
 export interface FooterProps {

@@ -1,13 +1,7 @@
 {
-  "base_settings": {
-    "primary_color": "#78C841",
-    "secondary_color": "#154D71",
-    "text_color": "#00FF00"
-  },
+  "base_settings": {},
   "content": {
     "banner": {
-      "logo": "/images/banner/icon.png",
-      "background_image": "/images/banner/bg.png",
       "menu_items": [
         { "label": "Utama", "link": "/" },
         { "label": "Info Masjid", "link": "/semakana" },
