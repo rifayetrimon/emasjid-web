@@ -36,7 +36,7 @@ export const getCachedNavHeader = cache(async () => {
  */
 export const getCachedBanner = cache(async () => {
   const sid = getSID();
-  const res = await myAxios.get(`banner?sid=${sid}`);
+  const res = await myAxios.get(`banner?sid=${sid}&type=Banner`);
   return res.data?.data || [];
 });
 
