@@ -40,6 +40,7 @@ export interface BannerButton {
 export interface Banner {
   logo: string;
   background_image: string;
+  background_images: string[];
   menu_items: MenuItem[];
   title: BannerTitle;
   supporting_text: string;

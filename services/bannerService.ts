@@ -10,8 +10,13 @@ export async function getBannerData(): Promise<BannerProps["banner"] | null> {
 
     const firstBanner = bannerData?.dataset?.[0];
 
+    // Collect all valid banner images
+    const allImages: string[] = (firstBanner?.files || [])
+      .map((f: { file: string; url: string }) => f.file)
+      .filter((file: string) => file && file.trim() !== "");
+
     const bannerBgImage = getImageUrl(
-      firstBanner?.files?.[0]?.file,
+      allImages[0],
       "/images/banner/bg.png"
     );
 
@@ -24,6 +29,7 @@ export async function getBannerData(): Promise<BannerProps["banner"] | null> {
     return {
       logo: logoUrl,
       background_image: bannerBgImage,
+      background_images: allImages.length > 0 ? allImages : [bannerBgImage],
       menu_items: [],
       title: {
         general: bannerConfig.banneTitle || "",

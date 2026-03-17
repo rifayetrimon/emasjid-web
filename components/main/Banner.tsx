@@ -1,5 +1,6 @@
 import { getBannerData } from "@/services/bannerService";
 import InlineError from "@/components/ui/InlineError";
+import BannerSlideshow from "./BannerSlideshow";
 
 export default async function Banner() {
   let banner;
@@ -10,40 +11,33 @@ export default async function Banner() {
     return <InlineError componentName="Utama (Banner)" />;
   }
 
-  // Basic check if the banner data is provided
   if (!banner) {
     console.warn("⚠️ BANNER: No banner data provided");
     return <InlineError componentName="Utama (Banner)" />;
   }
 
-  const { title, supporting_text, background_image, textColor, overlayColor, overlayOpacity } = banner;
+  const { title, supporting_text, background_images, textColor, overlayColor, overlayOpacity } = banner;
 
-  // Safely access nested title structure
   const focusText = title?.focus?.text;
   const focusLink = title?.focus?.link;
 
-  // Render nothing if critical data is missing
-  if (!background_image) {
-    console.warn("⚠️ BANNER: No background image provided");
+  if (!background_images || background_images.length === 0) {
+    console.warn("⚠️ BANNER: No background images provided");
     return null;
   }
-
-  const bgImageSrc = background_image;
 
   return (
     <section
       className="relative w-full h-[90vh] flex flex-col justify-center items-center text-center overflow-hidden"
-      style={{
-        backgroundImage: `url(${bgImageSrc})`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        color: textColor || "#ffffff",
-      }}
+      style={{ color: textColor || "#ffffff" }}
     >
+      {/* Slideshow background images */}
+      <BannerSlideshow images={background_images} interval={7000} />
+
       {/* Overlay */}
       {overlayColor && (
         <div
-          className="absolute inset-0 z-0"
+          className="absolute inset-0 z-[1]"
           style={{
             backgroundColor: overlayColor,
             opacity: overlayOpacity / 100,
@@ -51,9 +45,8 @@ export default async function Banner() {
         />
       )}
 
-      {/* Content - above overlay */}
+      {/* Content */}
       <div className="relative z-10 flex flex-col items-center">
-        {/* Title */}
         <h1 className="text-4xl md:text-6xl font-bold mb-4 px-4">
           {title?.general}{" "}
           {focusText && focusLink && (
@@ -66,7 +59,6 @@ export default async function Banner() {
           )}
         </h1>
 
-        {/* Supporting text */}
         {supporting_text && (
           <p className="max-w-5xl text-lg md:text-xl mb-6 px-4 leading-relaxed">
             {supporting_text}
