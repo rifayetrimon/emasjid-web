@@ -3,7 +3,13 @@ import { getFooterData } from "@/services/footerService";
 import InlineError from "@/components/ui/InlineError";
 
 export default async function Footer() {
-  const footer = await getFooterData();
+  let footer;
+  try {
+    footer = await getFooterData();
+  } catch (error) {
+    console.error("❌ Footer component error:", error);
+    footer = null;
+  }
 
   if (!footer) {
     return (

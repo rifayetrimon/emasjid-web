@@ -18,10 +18,13 @@ const geistMono = Geist_Mono({
 export async function generateMetadata(): Promise<Metadata> {
   try {
     const configData = await getCachedConfig();
-    const logoUrl = getImageUrl(configData.logoCMS, "/images/banner/icon.png");
+    const logoUrl = getImageUrl(
+      configData.logoCMS || configData.generalSettings?.logoCMS,
+      "/images/banner/icon.png",
+    );
 
     return {
-      title: "eMasjid",
+      title: configData.generalSettings?.title || "eMasjid",
       description: "A platform for managing mosque activities",
       icons: {
         icon: logoUrl,

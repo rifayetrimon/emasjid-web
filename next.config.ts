@@ -16,6 +16,12 @@ const nextConfig = {
         port: "",
         pathname: "/**",
       },
+      {
+        protocol: "https",
+        hostname: "devapi02.awfatech.com",
+        port: "",
+        pathname: "/**",
+      },
     ],
   },
 };

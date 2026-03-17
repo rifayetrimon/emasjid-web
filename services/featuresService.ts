@@ -10,8 +10,9 @@ export async function getFeaturesData(): Promise<
 
     // Features are not provided by the current API endpoints.
     // Return the section title from config so the CMS controls it.
+    const bannerConfig = configData.bannerConfig || {};
     return {
-      title: configData.midBannerMainTitle || "",
+      title: bannerConfig.banneTitle || "",
       items: [],
     };
   } catch (error) {

@@ -44,16 +44,18 @@ export async function getFooterData(): Promise<FooterProps["footer"] | null> {
       getCachedAddonPlugin(),
     ]);
 
-    const logoUrl = getImageUrl(configData.logoCMS, "/images/banner/icon.png");
+    const general = configData.generalSettings || {};
+    const footerConfig = configData.footerConfig || {};
+    const logoUrl = getImageUrl(configData.logoCMS || general.logoCMS, "/images/banner/icon.png");
 
     const firstFooter = Array.isArray(footerData) ? footerData[0] : footerData;
 
     const address = [
-      configData.address1,
-      configData.address2,
-      configData.city,
-      configData.state,
-      configData.postcode,
+      footerConfig.address1,
+      footerConfig.address2,
+      footerConfig.city,
+      footerConfig.state,
+      footerConfig.postcode,
     ]
       .filter(Boolean)
       .join(", ");
@@ -85,11 +87,11 @@ export async function getFooterData(): Promise<FooterProps["footer"] | null> {
       footer_title: firstFooter?.col1?.title || "",
       text: firstFooter?.col1?.content || "",
       address: address,
-      phone: configData.phonenum || "",
-      email: configData.email || "",
+      phone: footerConfig.phonenum || "",
+      email: footerConfig.email || "",
       social_links: socialLinks,
       copyright: configData.copyright || "",
-      bgColor: configData.bgColorFooter || "",
+      bgColor: footerConfig.bgColorFooter || "",
     };
   } catch (error) {
     console.error("❌ Error fetching footer data:", error);

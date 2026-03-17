@@ -5,70 +5,86 @@ import myAxios from "@/lib/myAxios";
 
 // React `cache()` will deduplicate requests with the same arguments
 // during a single server-rendered request cycle.
+// IMPORTANT: Each function has try/catch to prevent cached rejected promises
+// from cascading and crashing the entire page render.
 
-/**
- * Common function to get SID for endpoints.
- */
 function getSID(): string {
   return getConfig().sid || "";
 }
 
-/**
- * Fetches the configuration data
- */
 export const getCachedConfig = cache(async () => {
-  const sid = getSID();
-  const res = await myAxios.get(`config?sid=${sid}`);
-  return res.data?.data || {};
+  try {
+    const sid = getSID();
+    const res = await myAxios.get(`config?sid=${sid}`);
+    return res.data?.data || {};
+  } catch (error) {
+    console.error("❌ getCachedConfig failed:", error);
+    return {};
+  }
 });
 
-/**
- * Fetches the navigation headers data
- */
 export const getCachedNavHeader = cache(async () => {
-  const sid = getSID();
-  const res = await myAxios.get(`nav-header?sid=${sid}`);
-  return res.data?.data || null;
+  try {
+    const sid = getSID();
+    const res = await myAxios.get(`nav-header?sid=${sid}`);
+    return res.data?.data || null;
+  } catch (error) {
+    console.error("❌ getCachedNavHeader failed:", error);
+    return null;
+  }
 });
 
-/**
- * Fetches the banner section data (returns array)
- */
 export const getCachedBanner = cache(async () => {
-  const sid = getSID();
-  const res = await myAxios.get(`banner?sid=${sid}&type=Banner`);
-  return res.data?.data || [];
+  try {
+    const sid = getSID();
+    const res = await myAxios.get(`banner?sid=${sid}&type=Banner`);
+    return res.data?.data || [];
+  } catch (error) {
+    console.error("❌ getCachedBanner failed:", error);
+    return [];
+  }
 });
 
 export const getCachedNews = cache(async () => {
-  const sid = getSID();
-  const res = await myAxios.get(`news?sid=${sid}`);
-  return res.data?.data || [];
+  try {
+    const sid = getSID();
+    const res = await myAxios.get(`news?sid=${sid}`);
+    return res.data?.data || [];
+  } catch (error) {
+    console.error("❌ getCachedNews failed:", error);
+    return [];
+  }
 });
 
-/**
- * Fetches the footer section data (returns array)
- */
 export const getCachedFooter = cache(async () => {
-  const sid = getSID();
-  const res = await myAxios.get(`footer?sid=${sid}`);
-  return res.data?.data || [];
+  try {
+    const sid = getSID();
+    const res = await myAxios.get(`footer?sid=${sid}`);
+    return res.data?.data || [];
+  } catch (error) {
+    console.error("❌ getCachedFooter failed:", error);
+    return [];
+  }
 });
 
-/**
- * Fetches the FAQ section data
- */
 export const getCachedFaq = cache(async () => {
-  const sid = getSID();
-  const res = await myAxios.get(`faq?sid=${sid}`);
-  return res.data?.data || [];
+  try {
+    const sid = getSID();
+    const res = await myAxios.get(`faq?sid=${sid}`);
+    return res.data?.data || [];
+  } catch (error) {
+    console.error("❌ getCachedFaq failed:", error);
+    return [];
+  }
 });
 
-/**
- * Fetches the addon plugin data (social links, popups, etc.)
- */
 export const getCachedAddonPlugin = cache(async () => {
-  const sid = getSID();
-  const res = await myAxios.get(`addon-plugin?sid=${sid}`);
-  return res.data?.data || [];
+  try {
+    const sid = getSID();
+    const res = await myAxios.get(`addon-plugin?sid=${sid}`);
+    return res.data?.data || [];
+  } catch (error) {
+    console.error("❌ getCachedAddonPlugin failed:", error);
+    return [];
+  }
 });

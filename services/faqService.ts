@@ -9,8 +9,9 @@ export async function getFaqData(): Promise<FAQProps["faq"] | null> {
 
     const faqItems = Array.isArray(faqData) ? faqData : [];
 
+    const faqConfig = configData.faqConfig || {};
     return {
-      title: configData.faqMainTitle || "",
+      title: faqConfig.faqTitle || "",
       background_image: "",
       items: faqItems.map(
         (item: { title: string; description: string; message: string }) => ({

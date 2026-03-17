@@ -3,7 +3,13 @@ import { getBrandingData } from "@/services/brandingService";
 import InlineError from "@/components/ui/InlineError";
 
 export default async function Branding() {
-  const branding = await getBrandingData();
+  let branding;
+  try {
+    branding = await getBrandingData();
+  } catch (error) {
+    console.error("❌ Branding component error:", error);
+    return <InlineError componentName="Penjenamaan" />;
+  }
 
   if (!branding || branding.length === 0) {
     console.warn("⚠️ BRANDING: No branding items provided");

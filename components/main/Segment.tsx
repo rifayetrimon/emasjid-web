@@ -4,11 +4,14 @@ import InlineError from "@/components/ui/InlineError";
 import { getNewsData } from "@/services/newsService";
 
 export default async function Segment() {
-  const segments = await getSegmentsData();
-
-  const news = await getNewsData();
-
-  console.log({ segments, news });
+  let segments;
+  try {
+    segments = await getSegmentsData();
+    await getNewsData(); // prefetch
+  } catch (error) {
+    console.error("❌ Segment component error:", error);
+    return <InlineError componentName="Makluman/Segmen" />;
+  }
 
   if (!segments || segments.length === 0) {
     console.warn("⚠️ SEGMENT: No segment items provided");

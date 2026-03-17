@@ -16,6 +16,7 @@ export interface BaseSettings {
 export interface MenuItem {
   label: string;
   link: string;
+  submenu?: MenuItem[];
 }
 
 /* ------------------------------
@@ -44,6 +45,8 @@ export interface Banner {
   supporting_text: string;
   buttons: BannerButton[];
   textColor: string;
+  overlayColor: string;
+  overlayOpacity: number;
 }
 
 /* ------------------------------
@@ -153,6 +156,23 @@ export interface CMSData {
 ------------------------------ */
 export interface BannerProps {
   banner: Banner;
+}
+
+export interface NavConfig {
+  navbarBg: string;
+  navbarItemfontSize: string;
+  navbarItemColor: string;
+  navbarItemHoverColor: string;
+  navbarItemUnderLine: boolean;
+  navbarItemUnderLineColor: string;
+  navbarOpacity: number;
+  navbarDropdownBg: string;
+}
+
+export interface NavSocialLink {
+  platform: string;
+  icon: string;
+  link: string;
 }
 
 export interface NavbarProps {

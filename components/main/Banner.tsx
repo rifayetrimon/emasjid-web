@@ -1,9 +1,14 @@
-import Image from "next/image";
 import { getBannerData } from "@/services/bannerService";
 import InlineError from "@/components/ui/InlineError";
 
 export default async function Banner() {
-  const banner = await getBannerData();
+  let banner;
+  try {
+    banner = await getBannerData();
+  } catch (error) {
+    console.error("❌ Banner component error:", error);
+    return <InlineError componentName="Utama (Banner)" />;
+  }
 
   // Basic check if the banner data is provided
   if (!banner) {
@@ -11,7 +16,7 @@ export default async function Banner() {
     return <InlineError componentName="Utama (Banner)" />;
   }
 
-  const { title, supporting_text, background_image, logo, textColor } = banner;
+  const { title, supporting_text, background_image, textColor, overlayColor, overlayOpacity } = banner;
 
   // Safely access nested title structure
   const focusText = title?.focus?.text;
@@ -23,20 +28,11 @@ export default async function Banner() {
     return null;
   }
 
-  // Helper function to check if URL is absolute
-  const isAbsoluteUrl = (url: string) => {
-    return url.startsWith("http://") || url.startsWith("https://");
-  };
-
-  // Get the proper image path
-  const logoSrc = logo ? (isAbsoluteUrl(logo) ? logo : logo) : null;
-  const bgImageSrc = isAbsoluteUrl(background_image)
-    ? background_image
-    : background_image;
+  const bgImageSrc = background_image;
 
   return (
     <section
-      className="relative w-full h-[90vh] flex flex-col justify-center items-center text-center"
+      className="relative w-full h-[90vh] flex flex-col justify-center items-center text-center overflow-hidden"
       style={{
         backgroundImage: `url(${bgImageSrc})`,
         backgroundSize: "cover",
@@ -44,40 +40,39 @@ export default async function Banner() {
         color: textColor || "#ffffff",
       }}
     >
-      {/* Logo */}
-      {logoSrc && (
-        <div className="mb-6">
-          <Image
-            src={logoSrc}
-            alt="Logo Masjid"
-            width={160}
-            height={160}
-            className="w-40 h-40 object-contain"
-            priority
-            unoptimized={isAbsoluteUrl(logoSrc)}
-          />
-        </div>
+      {/* Overlay */}
+      {overlayColor && (
+        <div
+          className="absolute inset-0 z-0"
+          style={{
+            backgroundColor: overlayColor,
+            opacity: overlayOpacity / 100,
+          }}
+        />
       )}
 
-      {/* Title */}
-      <h1 className="text-4xl md:text-6xl font-bold mb-4 px-4">
-        {title?.general}{" "}
-        {focusText && focusLink && (
-          <a href={focusLink} className="hover:opacity-90 transition-opacity">
-            <span className="text-[var(--secondary)]">
-              {focusText.charAt(0)}
-            </span>
-            <span className="text-[var(--primary)]">{focusText.slice(1)}</span>
-          </a>
+      {/* Content - above overlay */}
+      <div className="relative z-10 flex flex-col items-center">
+        {/* Title */}
+        <h1 className="text-4xl md:text-6xl font-bold mb-4 px-4">
+          {title?.general}{" "}
+          {focusText && focusLink && (
+            <a href={focusLink} className="hover:opacity-90 transition-opacity">
+              <span className="text-[var(--secondary)]">
+                {focusText.charAt(0)}
+              </span>
+              <span className="text-[var(--primary)]">{focusText.slice(1)}</span>
+            </a>
+          )}
+        </h1>
+
+        {/* Supporting text */}
+        {supporting_text && (
+          <p className="max-w-5xl text-lg md:text-xl mb-6 px-4 leading-relaxed">
+            {supporting_text}
+          </p>
         )}
-      </h1>
-
-      {/* Supporting text */}
-      {supporting_text && (
-        <p className="max-w-5xl text-lg md:text-xl mb-6 px-4 leading-relaxed">
-          {supporting_text}
-        </p>
-      )}
+      </div>
     </section>
   );
 }

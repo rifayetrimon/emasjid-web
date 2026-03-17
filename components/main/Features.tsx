@@ -3,7 +3,13 @@ import { getFeaturesData } from "@/services/featuresService";
 import InlineError from "@/components/ui/InlineError";
 
 export default async function Features() {
-  const fetures = await getFeaturesData();
+  let fetures;
+  try {
+    fetures = await getFeaturesData();
+  } catch (error) {
+    console.error("❌ Features component error:", error);
+    return <InlineError componentName="Kelebihan" />;
+  }
 
   if (!fetures || !fetures.items || fetures.items.length === 0) {
     console.warn("⚠️ FEATURES: No feature items provided");

@@ -17,22 +17,26 @@ export async function getBannerData(): Promise<BannerProps["banner"] | null> {
 
     const bannerFocusLink = firstBanner?.files?.[0]?.url || "";
 
-    const logoUrl = getImageUrl(configData.logoCMS, "/images/banner/icon.png");
+    const general = configData.generalSettings || {};
+    const bannerConfig = configData.bannerConfig || {};
+    const logoUrl = getImageUrl(configData.logoCMS || general.logoCMS, "/images/banner/icon.png");
 
     return {
       logo: logoUrl,
       background_image: bannerBgImage,
       menu_items: [],
       title: {
-        general: configData.midBannerMainTitle || "",
+        general: bannerConfig.banneTitle || "",
         focus: {
-          text: configData.bannerFocusText || "",
+          text: bannerConfig.bannerFocusText || "",
           link: bannerFocusLink,
         },
       },
-      supporting_text: configData.subheader || "",
+      supporting_text: bannerConfig.bannerSubText || "",
       buttons: [],
-      textColor: configData.textColor || "",
+      textColor: general.textColor || "",
+      overlayColor: bannerConfig.bannerOverlayColor || "",
+      overlayOpacity: typeof bannerConfig.bannerOverlay === "number" ? bannerConfig.bannerOverlay : 0,
     };
   } catch (error) {
     console.error("❌ Error fetching banner data:", error);

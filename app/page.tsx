@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Footer from "@/components/layouts/footer";
 import Navbar from "@/components/layouts/navbar";
 import Banner from "@/components/main/Banner";
@@ -10,50 +11,57 @@ import { getCachedConfig } from "@/services/apiCache";
 // Force dynamic rendering so CMS changes reflect immediately without rebuild
 export const dynamic = "force-dynamic";
 
+function SectionLoader() {
+  return <div className="w-full py-8 flex justify-center"><div className="w-8 h-8 border-4 border-gray-200 border-t-gray-600 rounded-full animate-spin" /></div>;
+}
+
 export default async function Home() {
   let configData;
 
   try {
-    console.log("🔄 Page: Fetching config data for CSS vars...");
-
-    // Fetch config data only
     configData = await getCachedConfig();
-
-    console.log("✅ Page: Config fetched successfully");
   } catch (error) {
     console.error("❌ Page Error: Failed to fetch base config data", error);
     configData = {};
   }
 
-  // Apply CSS variables dynamically
+  // Apply CSS variables dynamically from nested generalSettings
+  const general = configData.generalSettings || {};
   const cssVars = {
-    "--primary": configData.primaryColor || "#78C841",
-    "--secondary": configData.secondaryColor || "#154D71",
-    "--text": configData.textColor || "#00FF00",
+    "--primary": general.primaryColor || "#78C841",
+    "--secondary": general.secondaryColor || "#154D71",
+    "--text": general.textColor || "#00FF00",
   } as React.CSSProperties;
 
   return (
     <div style={cssVars}>
-      {/* Navbar */}
-      <Navbar />
+      <Suspense fallback={<SectionLoader />}>
+        <Navbar />
+      </Suspense>
 
-      {/* Banner */}
-      <Banner />
+      <Suspense fallback={<SectionLoader />}>
+        <Banner />
+      </Suspense>
 
-      {/* Segment */}
-      <Segment />
+      <Suspense fallback={<SectionLoader />}>
+        <Segment />
+      </Suspense>
 
-      {/* Features */}
-      <Features />
+      <Suspense fallback={<SectionLoader />}>
+        <Features />
+      </Suspense>
 
-      {/* FAQ */}
-      <Faq />
+      <Suspense fallback={<SectionLoader />}>
+        <Faq />
+      </Suspense>
 
-      {/* Branding */}
-      <Branding />
+      <Suspense fallback={<SectionLoader />}>
+        <Branding />
+      </Suspense>
 
-      {/* Footer */}
-      <Footer />
+      <Suspense fallback={<SectionLoader />}>
+        <Footer />
+      </Suspense>
     </div>
   );
 }
