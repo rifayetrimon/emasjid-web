@@ -54,7 +54,7 @@ export async function getNavData(): Promise<NavData> {
 
     const menuItems = navData ? navData.map(mapMenuItem) : [];
 
-    const logo = getImageUrl(configData.logoCMS || general.logoCMS, "/images/banner/icon.png");
+    const logo = getImageUrl(configData.logoCMS || general.logoCMS);
 
     const navConfig: NavConfig = {
       navbarBg: navCfg.navbarBg || "",
@@ -98,7 +98,7 @@ export async function getNavData(): Promise<NavData> {
     console.error("❌ Error fetching navigation data:", error);
     return {
       menuItems: [],
-      logo: "/images/banner/icon.png",
+      logo: "",
       navConfig: {
         navbarBg: "",
         navbarItemfontSize: "",

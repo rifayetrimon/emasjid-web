@@ -1,110 +1,94 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { FaPlay } from "react-icons/fa";
+import { useState } from "react";
 import { FAQProps } from "@/types/cms";
 
 export default function FaqClient({ faq }: FAQProps) {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
-
-  const handleClose = () => setOpenIndex(null);
-
-  useEffect(() => {
-    if (openIndex !== null) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "unset";
-    }
-
-    return () => {
-      document.body.style.overflow = "unset";
-    };
-  }, [openIndex]);
 
   if (!faq || !faq.items || faq.items.length === 0) {
     console.warn("⚠️ FAQ: No FAQ items provided");
     return null;
   }
 
-  return (
-    <div
-      className="relative bg-cover bg-center py-16 px-4"
-      style={{
-        backgroundImage: `url(${faq.background_image ?? ""})`,
-      }}
-    >
-      {/* Section Title */}
-      <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 text-[var(--secondary)]">
-        {faq.title}
-      </h2>
+  const toggle = (i: number) => {
+    setOpenIndex(openIndex === i ? null : i);
+  };
 
-      {/* FAQ Grid */}
-      <div
-        className={`max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6 ${
-          faq.items.length > 10 ? "overflow-y-auto" : ""
-        }`}
-        style={{
-          maxHeight: faq.items.length > 10 ? "600px" : "none",
-        }}
-      >
-        {faq.items.map((item, i) => (
-          <div key={i} className="w-full">
-            <button
-              onClick={() => setOpenIndex(i)}
-              className="group w-full text-left flex items-center justify-between bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition duration-300 focus:outline-none focus:ring-2 focus:ring-[#0C9F77]"
-            >
-              <div className="pr-4">
-                <h3 className="text-base md:text-lg font-semibold text-black mb-1">
-                  {item.question}
-                </h3>
-                <p className="text-sm text-gray-600">{item.text}</p>
-              </div>
-              <FaPlay className="text-sm text-gray-400 group-hover:text-[#0C9F77] flex-shrink-0" />
-            </button>
-          </div>
-        ))}
-      </div>
+  // Split items into left and right columns
+  const half = Math.ceil(faq.items.length / 2);
+  const leftItems = faq.items.slice(0, half);
+  const rightItems = faq.items.slice(half);
 
-      {/* Drawer */}
-      {openIndex !== null && (
-        <>
-          {/* Overlay */}
-          <div
-            onClick={handleClose}
-            className="fixed inset-0 bg-black/50 z-40"
-          />
+  const renderItem = (item: typeof faq.items[0], index: number) => {
+    const isOpen = openIndex === index;
 
-          {/* Drawer */}
-          <div
-            className="fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-lg z-50 p-6 animate-slideUp"
-            style={{
-              height: "calc(50vh)",
-              maxHeight: "55vh",
-            }}
+    return (
+      <div key={index}>
+        <button
+          onClick={() => toggle(index)}
+          className="w-full flex items-center justify-between bg-gray-50 hover:bg-gray-100 rounded-lg px-5 py-4 transition-colors duration-200 text-left"
+        >
+          <span className="text-sm md:text-base font-medium text-gray-800 pr-4">
+            {item.question}
+          </span>
+          <span
+            className={`flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-full text-gray-500 transition-transform duration-300 ${
+              isOpen ? "rotate-45" : ""
+            }`}
           >
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-bold text-gray-900">
-                {faq.items[openIndex].question}
-              </h3>
-              <button
-                onClick={handleClose}
-                className="text-gray-500 hover:text-gray-800 text-xl font-bold"
-                aria-label="Close FAQ"
-              >
-                ×
-              </button>
-            </div>
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 4v16m8-8H4"
+              />
+            </svg>
+          </span>
+        </button>
 
-            {/* Scrollable Answer (with HTML support) */}
-            <div
-              className="faq-answer overflow-y-auto max-h-[calc(100%-40px)] pr-2 text-gray-700"
-              dangerouslySetInnerHTML={{
-                __html: faq.items[openIndex].answer,
-              }}
-            />
-          </div>
-        </>
+        {/* Answer - collapsible */}
+        <div
+          className={`overflow-hidden transition-all duration-300 ease-in-out ${
+            isOpen ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"
+          }`}
+        >
+          <div
+            className="px-5 py-4 text-sm text-gray-600 leading-relaxed"
+            dangerouslySetInnerHTML={{ __html: item.answer }}
+          />
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <section className="py-16 px-6 bg-white" id="faq">
+      {/* Title */}
+      {faq.title && (
+        <h2 className="text-2xl md:text-3xl font-bold text-center mb-10 text-gray-900">
+          {faq.title}
+        </h2>
       )}
-    </div>
+
+      {/* 2-column grid */}
+      <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3">
+        {/* Left column */}
+        <div className="space-y-3">
+          {leftItems.map((item, i) => renderItem(item, i))}
+        </div>
+
+        {/* Right column */}
+        <div className="space-y-3">
+          {rightItems.map((item, i) => renderItem(item, i + half))}
+        </div>
+      </div>
+    </section>
   );
 }

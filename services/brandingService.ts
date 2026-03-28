@@ -17,7 +17,7 @@ export async function getBrandingData(): Promise<BrandingItem[]> {
 
     return [
       {
-        image: getImageUrl(brandingImage, ""),
+        image: getImageUrl(brandingImage),
       },
     ];
   } catch (error) {

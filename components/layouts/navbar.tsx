@@ -18,7 +18,7 @@ export default async function Navbar() {
     return (
       <NavbarClient
         menuItems={[]}
-        logo="/images/banner/icon.png"
+        logo=""
         navConfig={{
           navbarBg: "",
           navbarItemfontSize: "",

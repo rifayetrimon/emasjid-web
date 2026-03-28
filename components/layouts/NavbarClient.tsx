@@ -74,13 +74,17 @@ export default function NavbarClient({
       <div className="max-w-7xl mx-auto flex items-center justify-between relative z-10">
         {/* Logo */}
         <Link href="/" className="flex-shrink-0">
-          <Image
-            src={logo}
-            alt="Logo"
-            width={48}
-            height={48}
-            className="h-12 w-auto object-contain"
-          />
+          {logo ? (
+            <Image
+              src={logo}
+              alt="Logo"
+              width={48}
+              height={48}
+              className="h-12 w-auto object-contain"
+            />
+          ) : (
+            <span className="text-xl font-bold" style={{ color: itemColor }}>Logo</span>
+          )}
         </Link>
 
         {/* Desktop Nav */}

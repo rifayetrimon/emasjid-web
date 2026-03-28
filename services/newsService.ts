@@ -1,33 +1,43 @@
-// services/segmentService.ts
-import { getCachedBanner, getCachedNews } from "./apiCache";
-import { SegmentsProps } from "@/types/cms";
-import { getImageUrl } from "./utils";
+// services/newsService.ts
+import { getCachedNews } from "./apiCache";
 
-export async function getNewsData(): Promise<SegmentsProps["segments"]> {
+export interface HighlightNewsItem {
+  contentId: number;
+  title: string;
+  message: string;
+  image: string | null;
+  date: string;
+  altImg1: string;
+}
+
+export async function getNewsData() {
   try {
-    const bannerData = await getCachedNews();
+    const newsData = await getCachedNews();
 
-    const firstBanner = Array.isArray(bannerData) ? bannerData[0] : bannerData;
+    const dataset = newsData?.dataset || (Array.isArray(newsData) ? newsData : []);
 
-    const segmentImage = getImageUrl(
-      firstBanner?.imageUrl,
-      "/images/about/about.png",
+    // Filter only highlighted posts
+    const highlighted = dataset.filter(
+      (item: Record<string, unknown>) => {
+        const val = String(item?.highlightPost || "").toLowerCase();
+        return val === "true" || val === "yes";
+      }
     );
 
-    const segmentText = firstBanner?.urllink2 || "";
-    const segmentButtonLink = firstBanner?.urllink3 || "#";
+    const items: HighlightNewsItem[] = highlighted.map(
+      (item: Record<string, unknown>) => ({
+        contentId: item.contentId as number,
+        title: (item.title as string) || "",
+        message: (item.message as string) || "",
+        image: (item.file1 as string) || null,
+        date: (item.date as string) || "",
+        altImg1: (item.altImg1 as string) || "",
+      })
+    );
 
-    return [
-      {
-        image: segmentImage,
-        text: segmentText,
-        button: segmentButtonLink
-          ? { label: "Lihat Selanjutnya", link: segmentButtonLink }
-          : undefined,
-      },
-    ];
+    return items;
   } catch (error) {
-    console.error("❌ Error fetching segment data:", error);
+    console.error("❌ Error fetching news data:", error);
     return [];
   }
 }

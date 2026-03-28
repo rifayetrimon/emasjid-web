@@ -46,7 +46,7 @@ export async function getFooterData(): Promise<FooterProps["footer"] | null> {
 
     const general = configData.generalSettings || {};
     const footerConfig = configData.footerConfig || {};
-    const logoUrl = getImageUrl(configData.logoCMS || general.logoCMS, "/images/banner/icon.png");
+    const logoUrl = getImageUrl(configData.logoCMS || general.logoCMS);
 
     const firstFooter = Array.isArray(footerData) ? footerData[0] : footerData;
 

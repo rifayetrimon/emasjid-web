@@ -15,21 +15,17 @@ export async function getBannerData(): Promise<BannerProps["banner"] | null> {
       .map((f: { file: string; url: string }) => f.file)
       .filter((file: string) => file && file.trim() !== "");
 
-    const bannerBgImage = getImageUrl(
-      allImages[0],
-      "/images/banner/bg.png"
-    );
-
+    const bannerBgImage = getImageUrl(allImages[0]);
     const bannerFocusLink = firstBanner?.files?.[0]?.url || "";
 
     const general = configData.generalSettings || {};
     const bannerConfig = configData.bannerConfig || {};
-    const logoUrl = getImageUrl(configData.logoCMS || general.logoCMS, "/images/banner/icon.png");
+    const logoUrl = getImageUrl(configData.logoCMS || general.logoCMS);
 
     return {
       logo: logoUrl,
       background_image: bannerBgImage,
-      background_images: allImages.length > 0 ? allImages : [bannerBgImage],
+      background_images: allImages,
       menu_items: [],
       title: {
         general: bannerConfig.banneTitle || "",

@@ -32,7 +32,7 @@ export default async function Banner() {
       style={{ color: textColor || "#ffffff" }}
     >
       {/* Slideshow background images */}
-      <BannerSlideshow images={background_images} interval={7000} />
+      <BannerSlideshow media={background_images} interval={7000} />
 
       {/* Overlay */}
       {overlayColor && (

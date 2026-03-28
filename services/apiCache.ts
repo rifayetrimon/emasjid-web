@@ -78,6 +78,28 @@ export const getCachedFaq = cache(async () => {
   }
 });
 
+export const getCachedSideBanner = cache(async () => {
+  try {
+    const sid = getSID();
+    const res = await myAxios.get(`banner?sid=${sid}&type=Sider`);
+    return res.data?.data || [];
+  } catch (error) {
+    console.error("❌ getCachedSideBanner failed:", error);
+    return [];
+  }
+});
+
+export const getCachedNewsDetail = cache(async (contentId: string) => {
+  try {
+    const sid = getSID();
+    const res = await myAxios.get(`news/${contentId}?sid=${sid}`);
+    return res.data?.data || null;
+  } catch (error) {
+    console.error("❌ getCachedNewsDetail failed:", error);
+    return null;
+  }
+});
+
 export const getCachedAddonPlugin = cache(async () => {
   try {
     const sid = getSID();

@@ -20,23 +20,17 @@ export async function generateMetadata(): Promise<Metadata> {
     const configData = await getCachedConfig();
     const logoUrl = getImageUrl(
       configData.logoCMS || configData.generalSettings?.logoCMS,
-      "/images/banner/icon.png",
     );
 
     return {
       title: configData.generalSettings?.title || "eMasjid",
       description: "A platform for managing mosque activities",
-      icons: {
-        icon: logoUrl,
-      },
+      ...(logoUrl ? { icons: { icon: logoUrl } } : {}),
     };
   } catch {
     return {
       title: "eMasjid",
       description: "A platform for managing mosque activities",
-      icons: {
-        icon: "/images/banner/icon.png",
-      },
     };
   }
 }

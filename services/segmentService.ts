@@ -9,10 +9,7 @@ export async function getSegmentsData(): Promise<SegmentsProps["segments"]> {
 
     const firstBanner = Array.isArray(bannerData) ? bannerData[0] : bannerData;
 
-    const segmentImage = getImageUrl(
-      firstBanner?.imageUrl,
-      "/images/about/about.png"
-    );
+    const segmentImage = getImageUrl(firstBanner?.imageUrl);
 
     const segmentText = firstBanner?.urllink2 || "";
     const segmentButtonLink = firstBanner?.urllink3 || "#";
