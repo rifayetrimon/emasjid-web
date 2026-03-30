@@ -57,9 +57,9 @@ export default async function Home() {
         <NewsList />
       </Suspense>
 
-      <Suspense fallback={<SectionLoader />}>
+      {/* <Suspense fallback={<SectionLoader />}>
         <Features />
-      </Suspense>
+      </Suspense> */}
 
       <Suspense fallback={<SectionLoader />}>
         <Faq />
@@ -69,9 +69,9 @@ export default async function Home() {
         <ContactUs />
       </Suspense>
 
-      <Suspense fallback={<SectionLoader />}>
+      {/* <Suspense fallback={<SectionLoader />}>
         <Branding />
-      </Suspense>
+      </Suspense> */}
 
       <Suspense fallback={<SectionLoader />}>
         <Footer />
