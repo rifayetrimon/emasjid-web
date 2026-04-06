@@ -86,7 +86,7 @@ export default async function Segment() {
       getNewsData(),
       getCachedConfig(),
     ]);
-    newsItems = items;
+    newsItems = items.slice(0, 5);
     trendingBg = configData?.newsTrendingConfig?.backgroundColorTrending || "";
   } catch (error) {
     console.error("❌ Segment component error:", error);
