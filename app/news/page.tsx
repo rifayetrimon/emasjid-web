@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import Image from "next/image";
+import Image from "@/components/ui/FallbackImage";
 import Link from "next/link";
 import Navbar from "@/components/layouts/navbar";
 import Footer from "@/components/layouts/footer";
@@ -82,7 +82,6 @@ export default async function NewsListingPage() {
                     href={`/news/${item.contentId}`}
                     className="relative w-[160px] md:w-[240px] min-h-[140px] flex-shrink-0"
                   >
-                    {item.file1 ? (
                       <Image
                         src={item.file1}
                         alt={item.altImg1 || item.title}
@@ -90,13 +89,6 @@ export default async function NewsListingPage() {
                         className="object-cover group-hover:scale-105 transition-transform duration-300"
                         sizes="240px"
                       />
-                    ) : (
-                      <div className="absolute inset-0 bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
-                        <span className="text-4xl font-bold text-gray-400">
-                          {item.title?.charAt(0)}
-                        </span>
-                      </div>
-                    )}
                   </Link>
 
                   {/* Content */}

@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { FaBars, FaTimes } from "react-icons/fa";
 import { ChevronDown, Share2 } from "lucide-react";
-import Image from "next/image";
+import Image from "@/components/ui/FallbackImage";
 import Link from "next/link";
 import { MenuItem, NavConfig, NavSocialLink } from "@/types/cms";
 

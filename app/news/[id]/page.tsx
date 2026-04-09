@@ -69,11 +69,12 @@ export default async function NewsDetailPage({
 
       <main className="min-h-screen bg-white">
         {/* Images on top - full width */}
-        {news.images.length > 0 && (
-          <div className="max-w-5xl mx-auto px-6 pt-8">
-            <NewsImageGallery images={news.images} defaultMode={galleryMode} />
-          </div>
-        )}
+        <div className="max-w-5xl mx-auto px-6 pt-8">
+          <NewsImageGallery 
+            images={news.images.length > 0 ? news.images : [{ src: "/icon/default-img.png", alt: news.title }]} 
+            defaultMode={galleryMode} 
+          />
+        </div>
 
         <article className="max-w-4xl mx-auto px-6 py-8">
           {/* Back link */}

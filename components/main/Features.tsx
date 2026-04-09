@@ -1,4 +1,4 @@
-import Image from "next/image";
+import Image from "@/components/ui/FallbackImage";
 import { getFeaturesData } from "@/services/featuresService";
 import InlineError from "@/components/ui/InlineError";
 

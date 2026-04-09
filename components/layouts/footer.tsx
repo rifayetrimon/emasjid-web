@@ -1,4 +1,4 @@
-import Image from "next/image";
+import Image from "@/components/ui/FallbackImage";
 import { getFooterData } from "@/services/footerService";
 import InlineError from "@/components/ui/InlineError";
 

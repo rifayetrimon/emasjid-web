@@ -1,4 +1,4 @@
-import Image from "next/image";
+import Image from "@/components/ui/FallbackImage";
 import Link from "next/link";
 import {
   getCachedNews,
@@ -88,21 +88,13 @@ export default async function NewsList() {
                   href={`/news/${item.contentId}`}
                   className="relative w-[180px] md:w-[260px] min-h-[180px] flex-shrink-0"
                 >
-                  {item.file1 ? (
-                    <Image
-                      src={item.file1}
-                      alt={item.altImg1 || item.title}
-                      fill
-                      className="object-cover group-hover:scale-105 transition-transform duration-300"
-                      sizes="260px"
-                    />
-                  ) : (
-                    <div className="absolute inset-0 bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
-                      <span className="text-3xl font-bold text-gray-400">
-                        {item.title?.charAt(0)}
-                      </span>
-                    </div>
-                  )}
+                  <Image
+                    src={item.file1}
+                    alt={item.altImg1 || item.title}
+                    fill
+                    className="object-cover group-hover:scale-105 transition-transform duration-300"
+                    sizes="260px"
+                  />
                 </Link>
 
                 {/* ── Content: more lines shown ── */}

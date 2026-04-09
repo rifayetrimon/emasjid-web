@@ -1,4 +1,4 @@
-import Image from "next/image";
+import Image from "@/components/ui/FallbackImage";
 import { getNewsData, HighlightNewsItem } from "@/services/newsService";
 import { getCachedConfig } from "@/services/apiCache";
 import InlineError from "@/components/ui/InlineError";
