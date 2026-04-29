@@ -8,6 +8,7 @@ import Features from "@/components/main/Features";
 import Segment from "@/components/main/Segment";
 import NewsList from "@/components/main/NewsList";
 import ContactUs from "@/components/main/ContactUs";
+import DemoSwitcher from "@/components/demos/DemoSwitcher";
 import { getCachedConfig } from "@/services/apiCache";
 
 // Force dynamic rendering so CMS changes reflect immediately without rebuild
@@ -76,6 +77,8 @@ export default async function Home() {
       <Suspense fallback={<SectionLoader />}>
         <Footer />
       </Suspense>
+
+      <DemoSwitcher />
     </div>
   );
 }
