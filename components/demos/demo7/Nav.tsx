@@ -33,7 +33,7 @@ export default function Demo7Nav({ menuItems, logo, socialLinks }: Props) {
       }`}
     >
       <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-        <Link href="/demo7" className="flex items-center gap-2">
+        <Link href="/" className="flex items-center gap-2">
           {logo ? (
             <Image
               src={logo}
@@ -89,15 +89,21 @@ export default function Demo7Nav({ menuItems, logo, socialLinks }: Props) {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label={s.platform}
-                className="w-9 h-9 rounded-full bg-gray-100/60 hover:bg-rose-100 flex items-center justify-center transition-all"
+                className="group w-9 h-9 rounded-full bg-gray-100/60 hover:bg-rose-100 flex items-center justify-center transition-all"
               >
-                <Image src={s.icon} alt={s.platform} width={15} height={15} />
+                <Image
+                  src={s.icon}
+                  alt={s.platform}
+                  width={15}
+                  height={15}
+                  className="brightness-0 opacity-60 group-hover:opacity-100 transition-opacity"
+                />
               </a>
             ))}
           </div>
           <Link
             href="/news"
-            className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full bg-gradient-to-br from-rose-400 to-pink-500 text-white text-sm font-semibold shadow-lg shadow-rose-200/50 hover:shadow-xl hover:shadow-rose-300/60 transition-all"
+            className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full bg-gradient-to-br from-[var(--primary)] to-[var(--secondary)] text-white text-sm font-semibold shadow-lg shadow-rose-200/50 hover:shadow-xl hover:shadow-rose-300/60 transition-all"
           >
             <Sparkles className="w-3.5 h-3.5" />
             Mula
@@ -139,7 +145,7 @@ export default function Demo7Nav({ menuItems, logo, socialLinks }: Props) {
                             <a
                               key={si}
                               href={sub.link}
-                              className="block text-sm text-gray-600 hover:text-rose-500"
+                              className="block text-sm text-gray-600 hover:text-[var(--primary)]"
                             >
                               {sub.label}
                             </a>

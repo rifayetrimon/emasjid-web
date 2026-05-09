@@ -42,7 +42,7 @@ export default function Demo5Nav({ menuItems, logo, socialLinks }: Props) {
 
   return (
     <header className="bg-[#fdfaf3] border-b border-[#d4b88a]/30 relative z-50">
-      <div className="bg-[#0c3d3c] text-[#e8d5a8] text-xs">
+      <div className="bg-[var(--secondary)] text-[#e8d5a8] text-xs">
         <div className="max-w-7xl mx-auto px-6 py-2 flex items-center justify-center gap-4">
           <Ornament className="w-12 h-3 text-[#e8d5a8]/60" />
           <span className="tracking-[0.25em] uppercase">
@@ -53,7 +53,7 @@ export default function Demo5Nav({ menuItems, logo, socialLinks }: Props) {
       </div>
 
       <div className="max-w-7xl mx-auto px-6 py-5 flex items-center justify-between">
-        <Link href="/demo5" className="flex items-center gap-3">
+        <Link href="/" className="flex items-center gap-3">
           {logo ? (
             <Image
               src={logo}
@@ -64,7 +64,7 @@ export default function Demo5Nav({ menuItems, logo, socialLinks }: Props) {
             />
           ) : (
             <span
-              className="text-2xl font-bold text-[#0c3d3c]"
+              className="text-2xl font-bold text-[var(--secondary)]"
               style={{ fontFamily: "'Times New Roman', serif" }}
             >
               eMasjid
@@ -77,7 +77,7 @@ export default function Demo5Nav({ menuItems, logo, socialLinks }: Props) {
             <div key={i} className="relative group">
               <a
                 href={item.link || "#"}
-                className="px-4 py-2 text-sm font-medium text-[#0c3d3c] hover:text-[#a47133] transition-colors flex items-center gap-1"
+                className="px-4 py-2 text-sm font-medium text-[var(--secondary)] hover:text-[var(--primary)] transition-colors flex items-center gap-1"
                 style={{ fontFamily: "'Times New Roman', serif" }}
               >
                 {item.label}
@@ -92,7 +92,7 @@ export default function Demo5Nav({ menuItems, logo, socialLinks }: Props) {
                       <a
                         key={si}
                         href={sub.link}
-                        className="block px-4 py-2 text-sm text-[#0c3d3c] hover:bg-[#f5e9d0] hover:text-[#a47133] transition"
+                        className="block px-4 py-2 text-sm text-[var(--secondary)] hover:bg-[#f5e9d0] hover:text-[var(--primary)] transition"
                       >
                         {sub.label}
                       </a>
@@ -112,16 +112,22 @@ export default function Demo5Nav({ menuItems, logo, socialLinks }: Props) {
               target="_blank"
               rel="noopener noreferrer"
               aria-label={s.platform}
-              className="w-9 h-9 rounded-full border border-[#d4b88a] bg-[#f5e9d0] hover:bg-[#e8d5a8] flex items-center justify-center transition"
+              className="group w-9 h-9 rounded-full border border-[#d4b88a] bg-[#f5e9d0] hover:bg-[#e8d5a8] hover:border-[var(--primary)] flex items-center justify-center transition"
             >
-              <Image src={s.icon} alt={s.platform} width={14} height={14} />
+              <Image
+                src={s.icon}
+                alt={s.platform}
+                width={14}
+                height={14}
+                className="brightness-0 opacity-70 group-hover:opacity-100 transition-opacity"
+              />
             </a>
           ))}
         </div>
 
         <button
           onClick={() => setOpen(!open)}
-          className="lg:hidden p-2 text-[#0c3d3c]"
+          className="lg:hidden p-2 text-[var(--secondary)]"
           aria-label="Toggle menu"
         >
           {open ? <X /> : <Menu />}
@@ -129,7 +135,7 @@ export default function Demo5Nav({ menuItems, logo, socialLinks }: Props) {
       </div>
 
       <div className="flex justify-center pb-3">
-        <Ornament className="w-16 h-3 text-[#a47133]/50" />
+        <Ornament className="w-16 h-3 text-[var(--primary)]/50" />
       </div>
 
       {open && (
@@ -146,7 +152,7 @@ export default function Demo5Nav({ menuItems, logo, socialLinks }: Props) {
                     <>
                       <button
                         onClick={() => setOpenSub(openSub === i ? null : i)}
-                        className="w-full flex items-center justify-between py-3 text-sm font-medium text-[#0c3d3c]"
+                        className="w-full flex items-center justify-between py-3 text-sm font-medium text-[var(--secondary)]"
                       >
                         {item.label}
                         <ChevronDown
@@ -161,7 +167,7 @@ export default function Demo5Nav({ menuItems, logo, socialLinks }: Props) {
                             <a
                               key={si}
                               href={sub.link}
-                              className="block text-sm text-[#0c3d3c]/80 hover:text-[#a47133]"
+                              className="block text-sm text-[var(--secondary)]/80 hover:text-[var(--primary)]"
                             >
                               {sub.label}
                             </a>
@@ -172,7 +178,7 @@ export default function Demo5Nav({ menuItems, logo, socialLinks }: Props) {
                   ) : (
                     <a
                       href={item.link || "#"}
-                      className="block py-3 text-sm font-medium text-[#0c3d3c]"
+                      className="block py-3 text-sm font-medium text-[var(--secondary)]"
                     >
                       {item.label}
                     </a>

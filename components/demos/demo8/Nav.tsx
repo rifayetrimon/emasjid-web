@@ -28,12 +28,12 @@ export default function Demo8Nav({ menuItems, logo, socialLinks }: Props) {
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         scrolled
-          ? "bg-black/90 backdrop-blur-xl border-b border-amber-500/10"
+          ? "bg-black/90 backdrop-blur-xl border-b border-[var(--primary)]/10"
           : "bg-gradient-to-b from-black/70 to-transparent"
       }`}
     >
       <div className="max-w-[1400px] mx-auto px-6 py-4 flex items-center gap-6">
-        <Link href="/demo8" className="flex items-center gap-2 flex-shrink-0">
+        <Link href="/" className="flex items-center gap-2 flex-shrink-0">
           {logo ? (
             <Image
               src={logo}
@@ -44,7 +44,7 @@ export default function Demo8Nav({ menuItems, logo, socialLinks }: Props) {
             />
           ) : (
             <span className="font-bold text-lg text-white tracking-tight">
-              eMasjid<span className="text-amber-400">.</span>
+              eMasjid<span className="text-[var(--primary)]">.</span>
             </span>
           )}
         </Link>
@@ -54,7 +54,7 @@ export default function Demo8Nav({ menuItems, logo, socialLinks }: Props) {
             <div key={i} className="relative group">
               <a
                 href={item.link || "#"}
-                className="px-3 py-2 text-sm font-medium text-white/80 hover:text-amber-400 transition flex items-center gap-1"
+                className="px-3 py-2 text-sm font-medium text-white/80 hover:text-[var(--primary)] transition flex items-center gap-1"
               >
                 {item.label}
                 {item.submenu && item.submenu.length > 0 && (
@@ -68,7 +68,7 @@ export default function Demo8Nav({ menuItems, logo, socialLinks }: Props) {
                       <a
                         key={si}
                         href={sub.link}
-                        className="block px-4 py-2.5 text-sm text-white/80 hover:bg-white/5 hover:text-amber-400 transition border-l-2 border-transparent hover:border-amber-400"
+                        className="block px-4 py-2.5 text-sm text-white/80 hover:bg-white/5 hover:text-[var(--primary)] transition border-l-2 border-transparent hover:border-[var(--primary)]"
                       >
                         {sub.label}
                       </a>
@@ -110,7 +110,7 @@ export default function Demo8Nav({ menuItems, logo, socialLinks }: Props) {
           </div>
           <Link
             href="/news"
-            className="ml-2 px-5 py-2 rounded-full bg-amber-400 hover:bg-amber-300 text-black text-sm font-bold transition"
+            className="ml-2 px-5 py-2 rounded-full bg-[var(--primary)] hover:bg-[var(--primary)]/85 text-black text-sm font-bold transition"
           >
             Tonton
           </Link>
@@ -151,7 +151,7 @@ export default function Demo8Nav({ menuItems, logo, socialLinks }: Props) {
                             <a
                               key={si}
                               href={sub.link}
-                              className="block text-sm text-white/70 hover:text-amber-400"
+                              className="block text-sm text-white/70 hover:text-[var(--primary)]"
                             >
                               {sub.label}
                             </a>

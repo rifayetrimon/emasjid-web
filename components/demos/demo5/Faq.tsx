@@ -29,20 +29,20 @@ export default function Demo5Faq({ title, items }: Props) {
       <div className="relative max-w-4xl mx-auto">
         <div className="text-center mb-14">
           <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="h-[1px] w-16 bg-[#a47133]" />
-            <svg width="20" height="20" viewBox="0 0 20 20" className="text-[#a47133]">
+            <div className="h-[1px] w-16 bg-[var(--primary)]" />
+            <svg width="20" height="20" viewBox="0 0 20 20" className="text-[var(--primary)]">
               <path
                 d="M10 1 L13 7 L19 8 L14.5 12.5 L16 19 L10 16 L4 19 L5.5 12.5 L1 8 L7 7 Z"
                 fill="currentColor"
               />
             </svg>
-            <div className="h-[1px] w-16 bg-[#a47133]" />
+            <div className="h-[1px] w-16 bg-[var(--primary)]" />
           </div>
-          <p className="text-xs uppercase tracking-[0.3em] text-[#a47133] mb-3 font-bold">
+          <p className="text-xs uppercase tracking-[0.3em] text-[var(--primary)] mb-3 font-bold">
             Pertanyaan Umum
           </p>
           <h2
-            className="text-4xl md:text-5xl font-bold text-[#0c3d3c]"
+            className="text-4xl md:text-5xl font-bold text-[var(--secondary)]"
             style={{ fontFamily: "'Times New Roman', serif" }}
           >
             {title || "Soalan Lazim"}
@@ -57,7 +57,7 @@ export default function Demo5Faq({ title, items }: Props) {
                 key={i}
                 className={`relative border-2 transition-all ${
                   isOpen
-                    ? "border-[#a47133] bg-white shadow-lg"
+                    ? "border-[var(--primary)] bg-white shadow-lg"
                     : "border-[#d4b88a]/50 bg-white/50 hover:border-[#d4b88a]"
                 }`}
                 style={{
@@ -71,20 +71,20 @@ export default function Demo5Faq({ title, items }: Props) {
                 >
                   <div className="flex items-center gap-4 flex-1">
                     <span
-                      className="text-2xl text-[#a47133] font-bold flex-shrink-0"
+                      className="text-2xl text-[var(--primary)] font-bold flex-shrink-0"
                       style={{ fontFamily: "'Times New Roman', serif" }}
                     >
                       {String(i + 1).padStart(2, "0")}.
                     </span>
                     <h3
-                      className="text-base md:text-lg font-bold text-[#0c3d3c]"
+                      className="text-base md:text-lg font-bold text-[var(--secondary)]"
                       style={{ fontFamily: "'Times New Roman', serif" }}
                     >
                       {item.question}
                     </h3>
                   </div>
                   <span
-                    className={`flex-shrink-0 w-8 h-8 flex items-center justify-center text-[#a47133] transition-transform ${
+                    className={`flex-shrink-0 w-8 h-8 flex items-center justify-center text-[var(--primary)] transition-transform ${
                       isOpen ? "rotate-180" : ""
                     }`}
                   >
@@ -107,7 +107,7 @@ export default function Demo5Faq({ title, items }: Props) {
                   <div className="px-6 pb-6">
                     <div className="h-[1px] w-full bg-[#d4b88a]/50 mb-4" />
                     <div
-                      className="text-sm text-[#0c3d3c]/80 leading-relaxed faq-answer pl-12"
+                      className="text-sm text-[var(--secondary)]/80 leading-relaxed faq-answer pl-12"
                       dangerouslySetInnerHTML={{ __html: item.answer }}
                     />
                   </div>

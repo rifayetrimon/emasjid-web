@@ -110,3 +110,14 @@ export const getCachedAddonPlugin = cache(async () => {
     return [];
   }
 });
+
+export const getCachedVisitors = cache(async () => {
+  try {
+    const sid = getSID();
+    const res = await myAxios.get(`visitors?sid=${sid}`);
+    return res.data?.data || {};
+  } catch (error) {
+    console.error("❌ getCachedVisitors failed:", error);
+    return {};
+  }
+});

@@ -19,11 +19,11 @@ export default function Demo8Faq({ title, items }: Props) {
 
   return (
     <section className="py-24 px-6 bg-black relative overflow-hidden">
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[300px] bg-amber-500/10 blur-3xl pointer-events-none" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[300px] bg-[var(--primary)]/10 blur-3xl pointer-events-none" />
 
       <div className="relative max-w-4xl mx-auto">
         <div className="text-center mb-14">
-          <span className="inline-block px-4 py-1.5 rounded-full bg-amber-400/10 border border-amber-400/30 text-xs uppercase tracking-[0.25em] font-semibold text-amber-400 mb-5">
+          <span className="inline-block px-4 py-1.5 rounded-full bg-[var(--primary)]/10 border border-[var(--primary)]/30 text-xs uppercase tracking-[0.25em] font-semibold text-[var(--primary)] mb-5">
             FAQ
           </span>
           <h2 className="text-4xl md:text-5xl font-bold text-white tracking-tight mb-3">
@@ -42,7 +42,7 @@ export default function Demo8Faq({ title, items }: Props) {
                 key={i}
                 className={`rounded-2xl border transition-all overflow-hidden ${
                   isOpen
-                    ? "bg-zinc-900 border-amber-400/40"
+                    ? "bg-zinc-900 border-[var(--primary)]/40"
                     : "bg-zinc-950 border-white/5 hover:border-white/15"
                 }`}
               >
@@ -50,7 +50,7 @@ export default function Demo8Faq({ title, items }: Props) {
                   onClick={() => setOpenIndex(isOpen ? null : i)}
                   className="w-full flex items-center gap-4 px-6 py-5 text-left"
                 >
-                  <span className="text-amber-400 font-bold text-sm tabular-nums w-8">
+                  <span className="text-[var(--primary)] font-bold text-sm tabular-nums w-8">
                     {String(i + 1).padStart(2, "0")}
                   </span>
                   <h3 className="flex-1 text-base md:text-lg font-semibold text-white">
@@ -59,7 +59,7 @@ export default function Demo8Faq({ title, items }: Props) {
                   <span
                     className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-all ${
                       isOpen
-                        ? "bg-amber-400 text-black rotate-180"
+                        ? "bg-[var(--primary)] text-black rotate-180"
                         : "bg-white/10 text-white/50"
                     }`}
                   >

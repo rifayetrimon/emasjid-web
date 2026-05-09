@@ -49,13 +49,13 @@ export default function Demo7Contact({ email, phone, address, state }: Props) {
 
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-14">
-          <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-pink-100 text-xs uppercase tracking-wider font-semibold text-pink-500 mb-5 shadow-sm">
-            <Heart className="w-3 h-3 fill-pink-400 text-pink-400" />
+          <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-[var(--primary)]/20 text-xs uppercase tracking-wider font-semibold text-[var(--primary)] mb-5 shadow-sm">
+            <Heart className="w-3 h-3 fill-[var(--primary)] text-[var(--primary)]" />
             Hubungi Kami
           </span>
           <h2 className="text-4xl md:text-5xl font-bold text-gray-900 tracking-tight leading-tight">
             Mari Berbual{" "}
-            <span className="bg-gradient-to-r from-rose-500 via-pink-500 to-orange-400 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] bg-clip-text text-transparent">
               bersama.
             </span>
           </h2>
@@ -69,7 +69,7 @@ export default function Demo7Contact({ email, phone, address, state }: Props) {
                 label: "Telefon",
                 value: phone,
                 href: phone ? `tel:${phone}` : undefined,
-                grad: "from-rose-400 to-pink-500",
+                grad: "from-[var(--primary)] to-[var(--secondary)]",
               },
               {
                 icon: Mail,
@@ -137,7 +137,7 @@ export default function Demo7Contact({ email, phone, address, state }: Props) {
                     required
                     value={data.negeri}
                     onChange={(e) => setData({ ...data, negeri: e.target.value })}
-                    className="w-full px-4 py-3 rounded-2xl bg-rose-50/60 border border-rose-100 text-sm focus:bg-white focus:border-rose-300 focus:ring-2 focus:ring-rose-100 outline-none transition-all"
+                    className="w-full px-4 py-3 rounded-2xl bg-[var(--primary)]/5 border border-[var(--primary)]/20 text-sm focus:bg-white focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary)]/20 outline-none transition-all"
                   >
                     <option value="">Pilih Negeri</option>
                     {NEGERI_LIST.map((n) => (
@@ -158,13 +158,13 @@ export default function Demo7Contact({ email, phone, address, state }: Props) {
                   rows={4}
                   value={data.penerangan}
                   onChange={(e) => setData({ ...data, penerangan: e.target.value })}
-                  className="w-full px-4 py-3 rounded-2xl bg-rose-50/60 border border-rose-100 text-sm focus:bg-white focus:border-rose-300 focus:ring-2 focus:ring-rose-100 outline-none transition-all resize-none"
+                  className="w-full px-4 py-3 rounded-2xl bg-[var(--primary)]/5 border border-[var(--primary)]/20 text-sm focus:bg-white focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary)]/20 outline-none transition-all resize-none"
                 />
               </div>
               <button
                 type="submit"
                 disabled={status === "sending"}
-                className="w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl bg-gradient-to-br from-rose-400 to-pink-500 text-white text-sm font-bold shadow-lg shadow-rose-200/60 hover:shadow-xl hover:shadow-rose-300/70 transition-all disabled:opacity-50"
+                className="w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl bg-gradient-to-br from-[var(--primary)] to-[var(--secondary)] text-white text-sm font-bold shadow-lg shadow-rose-200/60 hover:shadow-xl hover:shadow-rose-300/70 transition-all disabled:opacity-50"
               >
                 {status === "sending"
                   ? "Menghantar..."
@@ -202,7 +202,7 @@ function Input({
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full px-4 py-3 rounded-2xl bg-rose-50/60 border border-rose-100 text-sm focus:bg-white focus:border-rose-300 focus:ring-2 focus:ring-rose-100 outline-none transition-all"
+        className="w-full px-4 py-3 rounded-2xl bg-[var(--primary)]/5 border border-[var(--primary)]/20 text-sm focus:bg-white focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary)]/20 outline-none transition-all"
       />
     </div>
   );

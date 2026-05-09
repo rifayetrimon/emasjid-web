@@ -2,6 +2,7 @@
 import { getCachedNavHeader, getCachedConfig, getCachedAddonPlugin } from "./apiCache";
 import { MenuItem, NavConfig, NavSocialLink } from "@/types/cms";
 import { getImageUrl } from "./utils";
+import { isPluginFlagOn } from "@/lib/getShopPlugin";
 
 interface NavMenuItem {
   title: string;
@@ -54,12 +55,30 @@ export async function getNavData(): Promise<NavData> {
         .replace(/(^-|-$)/g, "");
     };
 
+    // Labels that always point to the home/landing page regardless of CMS URL
+    const HOME_LABELS = new Set([
+      "home",
+      "utama",
+      "laman utama",
+      "main",
+      "halaman utama",
+      "muka depan",
+    ]);
+
+    const isHomeLabel = (title: string) =>
+      HOME_LABELS.has(title.toLowerCase().trim());
+
     const mapMenuItem = (item: NavMenuItem, parentSlug: string = ""): MenuItem => {
       let link = item.url;
 
       if (!link || link.trim() === "") {
         const slug = generateSlug(item.title);
         link = parentSlug ? `${parentSlug}/${slug}` : `/${slug}`;
+      }
+
+      // Top-level "Home" / "Utama" menu items always go to /
+      if (!parentSlug && isHomeLabel(item.title)) {
+        link = "/";
       }
 
       const submenu =
@@ -76,11 +95,21 @@ export async function getNavData(): Promise<NavData> {
       };
     };
 
-    const menuItems = navData
+    const menuItems: MenuItem[] = navData
       ? navData
           .sort((a: NavMenuItem, b: NavMenuItem) => (a.config?.index || 0) - (b.config?.index || 0))
           .map((item: NavMenuItem) => mapMenuItem(item, ""))
       : [];
+
+    // Append "E-shop" if the Shop plugin is enabled in CMS
+    const shopFlag = configData?.generalSettings?.shopPlugin;
+    const shopOn = isPluginFlagOn(shopFlag);
+    console.log(
+      `🛒 [navService] shopPlugin=${JSON.stringify(shopFlag)} (type: ${typeof shopFlag}) → enabled=${shopOn}`
+    );
+    if (shopOn) {
+      menuItems.push({ label: "E-shop", link: "/shop" });
+    }
 
     const logo = getImageUrl(configData.logoCMS || general.logoCMS);
 

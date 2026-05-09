@@ -18,19 +18,46 @@ const geistMono = Geist_Mono({
 export async function generateMetadata(): Promise<Metadata> {
   try {
     const configData = await getCachedConfig();
-    const logoUrl = getImageUrl(
-      configData.logoCMS || configData.generalSettings?.logoCMS,
-    );
+    const general = configData.generalSettings || {};
+    const logoUrl = getImageUrl(configData.logoCMS || general.logoCMS);
+    const title = general.title || "eMasjid";
+    const description =
+      general.description ||
+      "Platform pengurusan masjid moden — akses berita, pengumuman, jadual aktiviti, dan perkhidmatan dengan mudah.";
 
     return {
-      title: configData.generalSettings?.title || "eMasjid",
-      description: "A platform for managing mosque activities",
+      title: { default: title, template: `%s — ${title}` },
+      description,
+      keywords: [
+        title,
+        "eMasjid",
+        "masjid",
+        "pengurusan masjid",
+        "jadual solat",
+        "berita masjid",
+      ],
+      robots: { index: true, follow: true },
       ...(logoUrl ? { icons: { icon: logoUrl } } : {}),
+      openGraph: {
+        type: "website",
+        title,
+        description,
+        siteName: title,
+        ...(logoUrl ? { images: [{ url: logoUrl, alt: title }] } : {}),
+        locale: "ms_MY",
+      },
+      twitter: {
+        card: "summary_large_image",
+        title,
+        description,
+        ...(logoUrl ? { images: [logoUrl] } : {}),
+      },
     };
   } catch {
     return {
       title: "eMasjid",
-      description: "A platform for managing mosque activities",
+      description: "Platform pengurusan masjid moden.",
+      robots: { index: true, follow: true },
     };
   }
 }

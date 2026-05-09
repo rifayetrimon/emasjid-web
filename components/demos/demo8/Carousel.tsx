@@ -110,16 +110,16 @@ export default function Demo8Carousel({ title, items, large = false }: Props) {
                 <div className="absolute inset-0 bg-gradient-to-br from-zinc-700 to-zinc-900" />
               )}
               <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent opacity-90" />
-              <div className="absolute inset-0 ring-0 group-hover/card:ring-2 group-hover/card:ring-amber-400/60 rounded-xl transition-all" />
+              <div className="absolute inset-0 ring-0 group-hover/card:ring-2 group-hover/card:ring-[var(--primary)]/60 rounded-xl transition-all" />
 
               {large && (
-                <div className="absolute top-3 left-3 px-2.5 py-1 rounded bg-amber-400 text-black text-[10px] font-bold uppercase tracking-wider">
+                <div className="absolute top-3 left-3 px-2.5 py-1 rounded bg-[var(--primary)] text-black text-[10px] font-bold uppercase tracking-wider">
                   Pilihan
                 </div>
               )}
 
               <div className="absolute bottom-0 left-0 right-0 p-4 md:p-5">
-                <p className="text-[10px] md:text-xs uppercase tracking-wider text-amber-400 font-semibold mb-1.5">
+                <p className="text-[10px] md:text-xs uppercase tracking-wider text-[var(--primary)] font-semibold mb-1.5">
                   {item.date}
                 </p>
                 <h3

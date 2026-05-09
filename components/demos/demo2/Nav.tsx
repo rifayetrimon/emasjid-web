@@ -70,7 +70,7 @@ export default function Demo2Nav({
       </div>
 
       <div className="max-w-7xl mx-auto px-6 py-5 flex items-center justify-between">
-        <Link href="/demo2" className="flex items-center gap-3">
+        <Link href="/" className="flex items-center gap-3">
           {logo ? (
             <Image
               src={logo}

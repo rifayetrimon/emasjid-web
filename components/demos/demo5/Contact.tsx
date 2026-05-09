@@ -42,7 +42,7 @@ export default function Demo5Contact({ email, phone, address, state }: Props) {
   };
 
   return (
-    <section className="py-20 px-6 bg-[#0c3d3c] relative overflow-hidden">
+    <section className="py-20 px-6 bg-[var(--secondary)] relative overflow-hidden">
       <div
         className="absolute inset-0 opacity-[0.06] pointer-events-none"
         style={{
@@ -83,13 +83,13 @@ export default function Demo5Contact({ email, phone, address, state }: Props) {
             ].map((c, i) => (
               <div
                 key={i}
-                className="border-2 border-[#e8d5a8]/30 bg-[#0c3d3c]/40 backdrop-blur-sm p-5 flex items-start gap-4"
+                className="border-2 border-[#e8d5a8]/30 bg-[var(--secondary)]/40 backdrop-blur-sm p-5 flex items-start gap-4"
                 style={{
                   clipPath:
                     "polygon(10px 0, calc(100% - 10px) 0, 100% 10px, 100% calc(100% - 10px), calc(100% - 10px) 100%, 10px 100%, 0 calc(100% - 10px), 0 10px)",
                 }}
               >
-                <div className="w-11 h-11 rounded-full bg-[#a47133] flex items-center justify-center text-[#fdfaf3] flex-shrink-0">
+                <div className="w-11 h-11 rounded-full bg-[var(--primary)] flex items-center justify-center text-[#fdfaf3] flex-shrink-0">
                   <c.icon className="w-5 h-5" />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -109,14 +109,14 @@ export default function Demo5Contact({ email, phone, address, state }: Props) {
 
           <form
             onSubmit={submit}
-            className="lg:col-span-3 bg-[#fdfaf3] border-4 border-[#a47133] p-8 md:p-10 relative"
+            className="lg:col-span-3 bg-[#fdfaf3] border-4 border-[var(--primary)] p-8 md:p-10 relative"
             style={{
               clipPath:
                 "polygon(20px 0, calc(100% - 20px) 0, 100% 20px, 100% calc(100% - 20px), calc(100% - 20px) 100%, 20px 100%, 0 calc(100% - 20px), 0 20px)",
             }}
           >
             <h3
-              className="text-2xl font-bold text-[#0c3d3c] mb-6 text-center"
+              className="text-2xl font-bold text-[var(--secondary)] mb-6 text-center"
               style={{ fontFamily: "'Times New Roman', serif" }}
             >
               Borang Hubungi
@@ -129,14 +129,14 @@ export default function Demo5Contact({ email, phone, address, state }: Props) {
               <div className="grid sm:grid-cols-2 gap-4">
                 <Input label="Emel" type="email" value={data.emel} onChange={(v) => setData({ ...data, emel: v })} />
                 <div>
-                  <label className="block text-xs uppercase tracking-wider text-[#0c3d3c] mb-1.5 font-bold">
+                  <label className="block text-xs uppercase tracking-wider text-[var(--secondary)] mb-1.5 font-bold">
                     Negeri
                   </label>
                   <select
                     required
                     value={data.negeri}
                     onChange={(e) => setData({ ...data, negeri: e.target.value })}
-                    className="w-full px-3 py-2.5 text-sm bg-[#fdfaf3] border-2 border-[#d4b88a] focus:border-[#a47133] outline-none transition-colors text-[#0c3d3c]"
+                    className="w-full px-3 py-2.5 text-sm bg-[#fdfaf3] border-2 border-[#d4b88a] focus:border-[var(--primary)] outline-none transition-colors text-[var(--secondary)]"
                   >
                     <option value="">Pilih Negeri</option>
                     {NEGERI_LIST.map((n) => (
@@ -149,7 +149,7 @@ export default function Demo5Contact({ email, phone, address, state }: Props) {
               </div>
               <Input label="Tajuk" value={data.tajuk} onChange={(v) => setData({ ...data, tajuk: v })} />
               <div>
-                <label className="block text-xs uppercase tracking-wider text-[#0c3d3c] mb-1.5 font-bold">
+                <label className="block text-xs uppercase tracking-wider text-[var(--secondary)] mb-1.5 font-bold">
                   Penerangan
                 </label>
                 <textarea
@@ -157,14 +157,14 @@ export default function Demo5Contact({ email, phone, address, state }: Props) {
                   rows={4}
                   value={data.penerangan}
                   onChange={(e) => setData({ ...data, penerangan: e.target.value })}
-                  className="w-full px-3 py-2.5 text-sm bg-[#fdfaf3] border-2 border-[#d4b88a] focus:border-[#a47133] outline-none transition-colors text-[#0c3d3c] resize-none"
+                  className="w-full px-3 py-2.5 text-sm bg-[#fdfaf3] border-2 border-[#d4b88a] focus:border-[var(--primary)] outline-none transition-colors text-[var(--secondary)] resize-none"
                 />
               </div>
               <div className="flex justify-center pt-2">
                 <button
                   type="submit"
                   disabled={status === "sending"}
-                  className="inline-flex items-center gap-3 px-10 py-3 bg-[#a47133] hover:bg-[#0c3d3c] text-[#fdfaf3] text-sm font-bold uppercase tracking-[0.2em] transition-colors disabled:opacity-50"
+                  className="inline-flex items-center gap-3 px-10 py-3 bg-[var(--primary)] hover:bg-[var(--secondary)] text-[#fdfaf3] text-sm font-bold uppercase tracking-[0.2em] transition-colors disabled:opacity-50"
                   style={{ fontFamily: "'Times New Roman', serif" }}
                 >
                   {status === "sending"
@@ -196,7 +196,7 @@ function Input({
 }) {
   return (
     <div>
-      <label className="block text-xs uppercase tracking-wider text-[#0c3d3c] mb-1.5 font-bold">
+      <label className="block text-xs uppercase tracking-wider text-[var(--secondary)] mb-1.5 font-bold">
         {label}
       </label>
       <input
@@ -204,7 +204,7 @@ function Input({
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full px-3 py-2.5 text-sm bg-[#fdfaf3] border-2 border-[#d4b88a] focus:border-[#a47133] outline-none transition-colors text-[#0c3d3c]"
+        className="w-full px-3 py-2.5 text-sm bg-[#fdfaf3] border-2 border-[#d4b88a] focus:border-[var(--primary)] outline-none transition-colors text-[var(--secondary)]"
       />
     </div>
   );

@@ -32,8 +32,8 @@ export default function Demo7Faq({ title, items }: Props) {
 
       <div className="max-w-3xl mx-auto">
         <div className="text-center mb-14">
-          <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-rose-100 text-xs uppercase tracking-wider font-semibold text-rose-500 mb-5 shadow-sm">
-            <span className="w-1.5 h-1.5 rounded-full bg-rose-400" />
+          <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-[var(--primary)]/20 text-xs uppercase tracking-wider font-semibold text-[var(--primary)] mb-5 shadow-sm">
+            <span className="w-1.5 h-1.5 rounded-full bg-[var(--primary)]" />
             Bantuan
           </span>
           <h2 className="text-4xl md:text-5xl font-bold text-gray-900 tracking-tight leading-tight">

@@ -47,12 +47,12 @@ export default function Demo8Contact({ email, phone, address, state }: Props) {
 
       <div className="relative max-w-6xl mx-auto">
         <div className="text-center mb-14">
-          <span className="inline-block px-4 py-1.5 rounded-full bg-amber-400/10 border border-amber-400/30 text-xs uppercase tracking-[0.25em] font-semibold text-amber-400 mb-5">
+          <span className="inline-block px-4 py-1.5 rounded-full bg-[var(--primary)]/10 border border-[var(--primary)]/30 text-xs uppercase tracking-[0.25em] font-semibold text-[var(--primary)] mb-5">
             Hubungi
           </span>
           <h2 className="text-4xl md:text-6xl font-bold text-white tracking-tight">
             Mari{" "}
-            <span className="bg-gradient-to-r from-amber-300 to-amber-500 bg-clip-text text-transparent italic">
+            <span className="bg-gradient-to-r from-[var(--primary)]/85 to-[var(--primary)] bg-clip-text text-transparent italic">
               berhubung.
             </span>
           </h2>
@@ -70,13 +70,13 @@ export default function Demo8Contact({ email, phone, address, state }: Props) {
                 <a
                   key={i}
                   href={c.href || "#"}
-                  className="flex items-start gap-4 p-5 rounded-xl bg-zinc-900 border border-white/5 hover:border-amber-400/40 transition-all group"
+                  className="flex items-start gap-4 p-5 rounded-xl bg-zinc-900 border border-white/5 hover:border-[var(--primary)]/40 transition-all group"
                 >
-                  <div className="w-11 h-11 rounded-full bg-amber-400/10 border border-amber-400/30 flex items-center justify-center text-amber-400 flex-shrink-0 group-hover:bg-amber-400 group-hover:text-black transition-all">
+                  <div className="w-11 h-11 rounded-full bg-[var(--primary)]/10 border border-[var(--primary)]/30 flex items-center justify-center text-[var(--primary)] flex-shrink-0 group-hover:bg-[var(--primary)] group-hover:text-black transition-all">
                     <c.icon className="w-5 h-5" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-[10px] uppercase tracking-[0.25em] text-amber-400 font-bold mb-1.5">
+                    <p className="text-[10px] uppercase tracking-[0.25em] text-[var(--primary)] font-bold mb-1.5">
                       {c.label}
                     </p>
                     <p className="text-sm text-white break-words">{c.value}</p>
@@ -104,7 +104,7 @@ export default function Demo8Contact({ email, phone, address, state }: Props) {
                     required
                     value={data.negeri}
                     onChange={(e) => setData({ ...data, negeri: e.target.value })}
-                    className="w-full px-4 py-3 rounded-lg bg-black border border-white/10 text-white text-sm focus:border-amber-400 outline-none transition-all"
+                    className="w-full px-4 py-3 rounded-lg bg-black border border-white/10 text-white text-sm focus:border-[var(--primary)] outline-none transition-all"
                   >
                     <option value="">Pilih Negeri</option>
                     {NEGERI_LIST.map((n) => (
@@ -125,13 +125,13 @@ export default function Demo8Contact({ email, phone, address, state }: Props) {
                   rows={4}
                   value={data.penerangan}
                   onChange={(e) => setData({ ...data, penerangan: e.target.value })}
-                  className="w-full px-4 py-3 rounded-lg bg-black border border-white/10 text-white text-sm focus:border-amber-400 outline-none transition-all resize-none"
+                  className="w-full px-4 py-3 rounded-lg bg-black border border-white/10 text-white text-sm focus:border-[var(--primary)] outline-none transition-all resize-none"
                 />
               </div>
               <button
                 type="submit"
                 disabled={status === "sending"}
-                className="w-full inline-flex items-center justify-center gap-2 px-6 py-4 rounded-lg bg-amber-400 hover:bg-amber-300 text-black text-sm font-bold transition-all disabled:opacity-50"
+                className="w-full inline-flex items-center justify-center gap-2 px-6 py-4 rounded-lg bg-[var(--primary)] hover:bg-[var(--primary)]/85 text-black text-sm font-bold transition-all disabled:opacity-50"
               >
                 {status === "sending"
                   ? "Menghantar..."
@@ -169,7 +169,7 @@ function Input({
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full px-4 py-3 rounded-lg bg-black border border-white/10 text-white text-sm focus:border-amber-400 outline-none transition-all"
+        className="w-full px-4 py-3 rounded-lg bg-black border border-white/10 text-white text-sm focus:border-[var(--primary)] outline-none transition-all"
       />
     </div>
   );
