@@ -76,7 +76,7 @@ export default async function NewsDetailPage({
     popular = [];
   }
 
-  const isBlog2 = templateId === "7";
+  const isBlog = templateId === "6";
   const category = categoryFor(Number(id) || 0);
 
   // Build a relative share URL (no need for env var; browser resolves to full origin)
@@ -88,13 +88,13 @@ export default async function NewsDetailPage({
         <main className="min-h-screen">
           <div
             className={
-              isBlog2
+              isBlog
                 ? "max-w-7xl mx-auto px-6 py-8 grid grid-cols-1 lg:grid-cols-3 gap-10"
                 : "max-w-5xl mx-auto px-6 py-8"
             }
           >
             {/* MAIN COLUMN */}
-            <article className={isBlog2 ? "lg:col-span-2 text-[var(--text)]" : "text-[var(--text)]"}>
+            <article className={isBlog ? "lg:col-span-2 text-[var(--text)]" : "text-[var(--text)]"}>
               {/* Breadcrumb */}
               <nav className="flex items-center gap-2 text-xs text-[var(--text)]/60 mb-4">
                 <Link href="/" className="hover:text-[var(--primary)] transition">
@@ -104,7 +104,7 @@ export default async function NewsDetailPage({
                 <Link href="/news" className="hover:text-[var(--primary)] transition">
                   Berita
                 </Link>
-                {isBlog2 && (
+                {isBlog && (
                   <>
                     <span>›</span>
                     <span className="text-[var(--text)]/80 line-clamp-1">
@@ -115,7 +115,7 @@ export default async function NewsDetailPage({
               </nav>
 
               {/* Category badge (Blog 2 only) */}
-              {isBlog2 && (
+              {isBlog && (
                 <span
                   className={`inline-block px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white mb-4 ${category.color}`}
                 >
@@ -162,7 +162,7 @@ export default async function NewsDetailPage({
               </div>
 
               {/* Share buttons */}
-              {isBlog2 && (
+              {isBlog && (
                 <div className="mb-6">
                   <ShareButtons title={news.title} url={shareUrl} />
                 </div>
@@ -214,7 +214,7 @@ export default async function NewsDetailPage({
             </article>
 
             {/* RIGHT SIDEBAR — Blog 2 only */}
-            {isBlog2 && (
+            {isBlog && (
               <aside className="space-y-8">
                 {popular.length > 0 && (
                   <div>

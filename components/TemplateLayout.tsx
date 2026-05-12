@@ -18,10 +18,8 @@ import Demo5Footer from "@/components/demos/demo5/Footer";
 import Blog2Nav from "@/components/demos/blog2/Nav";
 import Blog2Footer from "@/components/demos/blog2/Footer";
 import type { HighlightNewsItem } from "@/services/newsService";
-import ClassicNavbar from "@/components/layouts/navbar";
-import ClassicFooter from "@/components/layouts/footer";
 
-export type TemplateId = "1" | "2" | "3" | "4" | "5" | "6" | "7";
+export type TemplateId = "1" | "2" | "3" | "4" | "5" | "6";
 
 interface Props {
   templateId: TemplateId;
@@ -65,12 +63,6 @@ const TEMPLATE_DEFAULTS: Record<
     bg: "bg-[#fdfaf3]",
   },
   "6": {
-    primary: "#78C841",
-    secondary: "#154D71",
-    text: "#1a1a1a",
-    bg: "bg-white",
-  },
-  "7": {
     primary: "#fbbe21",
     secondary: "#1f2937",
     text: "#111827",
@@ -88,13 +80,13 @@ export default async function TemplateLayout({
     getFooterData(),
     getCachedConfig(),
     getVisitorStats(),
-    // News data — only used by Template 7's nav (trending bar) and footer columns.
+    // News data — only used by Template 6 (Blog) nav (trending bar) and footer columns.
     // React cache() dedupes with page-level fetches, so no double-fetch.
-    templateId === "7" ? getNewsData() : Promise.resolve([] as HighlightNewsItem[]),
-    templateId === "7" ? getCachedNews() : Promise.resolve(null),
+    templateId === "6" ? getNewsData() : Promise.resolve([] as HighlightNewsItem[]),
+    templateId === "6" ? getCachedNews() : Promise.resolve(null),
   ]);
 
-  // Build Popular/Trending lists for Template 7 footer
+  // Build Popular/Trending lists for the Blog template footer
   const allNews = newsRaw?.dataset || (Array.isArray(newsRaw) ? newsRaw : []);
   const popularPosts = (highlighted.length > 0 ? highlighted : allNews)
     .slice(0, 2)
@@ -190,12 +182,7 @@ export default async function TemplateLayout({
       );
       footerElement = footer && <Demo5Footer footer={footer} visitors={visitors} />;
       break;
-    case "6":
-      navElement = <ClassicNavbar />;
-      // Classic Footer fetches its own visitor data
-      footerElement = <ClassicFooter />;
-      break;
-    case "7": {
+    case "6": {
       navElement = (
         <Blog2Nav
           menuItems={menuItems}

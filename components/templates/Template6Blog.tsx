@@ -107,7 +107,7 @@ function CategoryBadge({ contentId }: { contentId: number }) {
 
 /* ============================================================ */
 
-export default async function Template7Blog2() {
+export default async function Template6Blog() {
   const [
     banner,
     highlighted,
@@ -207,7 +207,7 @@ export default async function Template7Blog2() {
   const staticBody = banner?.supporting_text || "";
 
   return (
-    <TemplateLayout templateId="7">
+    <TemplateLayout templateId="6">
       {/* ━━━━━━ TRENDING NOW STRIP ━━━━━━ */}
       {heroFeatured && (
         <div className="bg-gray-50 border-b border-gray-200">

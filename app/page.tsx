@@ -4,8 +4,7 @@ import Template2Donation from "@/components/templates/Template2Donation";
 import Template3Marketplace from "@/components/templates/Template3Marketplace";
 import Template4Corporate from "@/components/templates/Template4Corporate";
 import Template5Portfolio from "@/components/templates/Template5Portfolio";
-import Template6Classic from "@/components/templates/Template6Classic";
-import Template7Blog2 from "@/components/templates/Template7Blog2";
+import Template6Blog from "@/components/templates/Template6Blog";
 
 export const dynamic = "force-dynamic";
 
@@ -22,9 +21,7 @@ export default async function HomePage() {
     case "5":
       return <Template5Portfolio />;
     case "6":
-      return <Template6Classic />;
-    case "7":
-      return <Template7Blog2 />;
+      return <Template6Blog />;
     case "1":
     default:
       return <Template1Website />;
