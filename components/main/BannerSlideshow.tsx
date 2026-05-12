@@ -5,6 +5,8 @@ import { useState, useEffect, useCallback, useRef } from "react";
 interface BannerSlideshowProps {
   media: string[];
   interval?: number;
+  /** "cover" (default) crops to fill; "contain" shows the full image. */
+  fit?: "cover" | "contain";
 }
 
 const VIDEO_EXTENSIONS = [".mp4", ".webm", ".ogg", ".mov"];
@@ -17,7 +19,10 @@ function isVideo(url: string): boolean {
 export default function BannerSlideshow({
   media,
   interval = 7000,
+  fit = "cover",
 }: BannerSlideshowProps) {
+  const videoFitClass = fit === "contain" ? "object-contain" : "object-cover";
+  const imageBgClass = fit === "contain" ? "bg-contain bg-no-repeat" : "bg-cover";
   const [currentIndex, setCurrentIndex] = useState(0);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
@@ -74,7 +79,7 @@ export default function BannerSlideshow({
             <video
               key={index}
               ref={(el) => { videoRefs.current[index] = el; }}
-              className="absolute inset-0 w-full h-full object-cover transition-opacity duration-[2000ms] ease-in-out"
+              className={`absolute inset-0 w-full h-full ${videoFitClass} transition-opacity duration-[2000ms] ease-in-out`}
               style={{ opacity: active ? 1 : 0 }}
               src={url}
               muted
@@ -95,7 +100,7 @@ export default function BannerSlideshow({
         return (
           <div
             key={index}
-            className="absolute inset-0 bg-cover bg-center transition-opacity duration-[2000ms] ease-in-out"
+            className={`absolute inset-0 ${imageBgClass} bg-center transition-opacity duration-[2000ms] ease-in-out`}
             style={{
               backgroundImage: `url(${url})`,
               opacity: active ? 1 : 0,

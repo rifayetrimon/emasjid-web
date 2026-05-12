@@ -3,15 +3,18 @@ import Link from "next/link";
 import TemplateLayout from "@/components/TemplateLayout";
 import BannerSlideshow from "@/components/main/BannerSlideshow";
 import Blog2Faq from "@/components/demos/blog2/Faq";
-import Blog2Newsletter from "@/components/demos/blog2/Newsletter";
 import Blog2Contact from "@/components/demos/blog2/Contact";
+import DontMissSection from "@/components/demos/blog2/DontMissSection";
+import { categoryFor } from "@/lib/blog2Categories";
 import { getBannerData } from "@/services/bannerService";
 import { getNewsData } from "@/services/newsService";
 import { getFaqData } from "@/services/faqService";
+import { getFooterData } from "@/services/footerService";
 import {
   getCachedConfig,
   getCachedNews,
   getCachedSideBanner,
+  getCachedPromotagBanner,
 } from "@/services/apiCache";
 import { ArrowRight, Users, UserPlus, Bell } from "lucide-react";
 
@@ -46,19 +49,9 @@ function formatDate(d: string): string {
   }
 }
 
-const CATEGORIES = [
-  { label: "Fashion", color: "bg-pink-500" },
-  { label: "Gadgets", color: "bg-blue-500" },
-  { label: "Reviews", color: "bg-emerald-500" },
-  { label: "Lifestyle", color: "bg-orange-500" },
-  { label: "Travel", color: "bg-purple-500" },
-  { label: "Music", color: "bg-rose-500" },
-  { label: "Architecture", color: "bg-amber-500" },
-  { label: "Design", color: "bg-cyan-500" },
-];
-function cat(i: number) {
-  return CATEGORIES[i % CATEGORIES.length];
-}
+// Categories + resolver live in lib/blog2Categories.ts so they can be shared
+// between server and client components.
+const cat = categoryFor;
 
 const AUTHOR = "Pentadbir";
 
@@ -101,8 +94,8 @@ function Meta({ date, author = AUTHOR }: { date: string; author?: string }) {
   );
 }
 
-function CategoryBadge({ index }: { index: number }) {
-  const c = cat(index);
+function CategoryBadge({ contentId }: { contentId: number }) {
+  const c = cat(contentId);
   return (
     <span
       className={`inline-block px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white ${c.color}`}
@@ -120,15 +113,19 @@ export default async function Template7Blog2() {
     highlighted,
     newsRaw,
     sideBannerRaw,
+    promotagRaw,
     faq,
     config,
+    footer,
   ] = await Promise.all([
     getBannerData(),
     getNewsData(),
     getCachedNews(),
     getCachedSideBanner(),
+    getCachedPromotagBanner(),
     getFaqData(),
     getCachedConfig(),
+    getFooterData(),
   ]);
 
   const footerCfg = config.footerConfig || {};
@@ -154,32 +151,60 @@ export default async function Template7Blog2() {
     })
     .filter(Boolean) as { src: string; url: string }[];
 
+  // Promotion banner (Promotag) — separate API: banner?type=Promotag
+  const promotag = (() => {
+    const dataset =
+      promotagRaw?.dataset || (Array.isArray(promotagRaw) ? promotagRaw : []);
+    const first = dataset?.[0];
+    if (!first) return null;
+    const file = first.files?.find(
+      (f: { file?: string }) => f.file && f.file.trim()
+    );
+    if (!file?.file) return null;
+    return {
+      src: file.file as string,
+      url: first.url || "",
+    };
+  })();
+
   // Hero
   const heroFeatured = highlighted[0] || allNews[0];
-  const heroSecondary = (highlighted.length > 1 ? highlighted.slice(1, 3) : allNews.slice(1, 3));
-  const heroTertiary = allNews.slice(2, 4);
+  // Right-column cards beside the banner: news with contentId 1 and 2 (admin-pinned),
+  // falling back to the next two newest if those IDs don't exist.
+  const findById = (id: number) => allNews.find((n) => n.contentId === id);
+  const pinnedHeroItems = [findById(1), findById(2)].filter(
+    (n): n is NewsItem => Boolean(n)
+  );
+  const heroSideItems =
+    pinnedHeroItems.length > 0 ? pinnedHeroItems : allNews.slice(1, 3);
 
-  // Don't Miss
-  const dontMissFeatured = highlighted[0] || allNews[0];
-  const dontMissList = allNews.slice(0, 4);
+  // Don't Miss — exclude the items shown beside the banner so the user
+  // doesn't see the same articles repeated at the top of the "Semua" tab.
+  const heroExcludeIds = [
+    heroFeatured?.contentId,
+    ...heroSideItems.map((i) => i.contentId),
+  ].filter((id): id is number => typeof id === "number");
+  const dontMissTabs = ["Semua", "Akademik", "Pengumuman", "Aktiviti"];
 
   // Lifestyle News
   const lifestyleGrid = allNews.slice(0, 2);
   const lifestyleList = allNews.slice(0, 4);
 
-  // House Design
-  const houseDesign = allNews.slice(0, 3);
-
-  // Performance Training
-  const performance = allNews.slice(0, 4);
-
   // Latest Articles
   const latestArticles = allNews.slice(0, 8);
 
+  // Image Gallery (news photos as visual grid)
+  const galleryItems = allNews
+    .filter((n) => n.file1)
+    .slice(0, 8);
+
   // Sidebar widgets data
-  const makeItModern = allNews.slice(0, 4);
   const mostPopular = allNews.slice(0, 3);
-  const recentComments = allNews.slice(0, 3);
+
+  // Static content (admin-controlled intro text from banner config)
+  const staticTitle = banner?.title?.general || "";
+  const staticFocus = banner?.title?.focus?.text || "";
+  const staticBody = banner?.supporting_text || "";
 
   return (
     <TemplateLayout templateId="7">
@@ -189,7 +214,7 @@ export default async function Template7Blog2() {
           <div className="max-w-7xl mx-auto px-6 py-2.5 flex items-center gap-4">
             <span className="flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-1 bg-red-600 text-white text-[10px] font-bold uppercase tracking-wider">
               <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-              Trending Now
+              Trending
             </span>
             <Link
               href={`/news/${heroFeatured.contentId}`}
@@ -204,61 +229,64 @@ export default async function Template7Blog2() {
       {/* ━━━━━━ HERO GRID ━━━━━━ */}
       {heroFeatured && (
         <section className="max-w-7xl mx-auto px-6 py-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {/* Featured Big */}
-            <Link
-              href={`/news/${heroFeatured.contentId}`}
-              className="group relative block aspect-[4/3] lg:aspect-auto overflow-hidden bg-gray-100"
-            >
-              {banner?.background_images?.length ? (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            {/* Featured Big — spans 2 columns on desktop */}
+            {banner?.background_images?.length ? (
+              <div className="lg:col-span-2 relative block aspect-[16/9] overflow-hidden bg-gray-900">
                 <BannerSlideshow
                   media={banner.background_images}
                   interval={6500}
+                  fit="contain"
                 />
-              ) : (
-                getImg(heroFeatured) && (
+                {banner?.overlayColor && (
+                  <div
+                    className="absolute inset-0 pointer-events-none"
+                    style={{
+                      backgroundColor: banner.overlayColor,
+                      opacity: (banner.overlayOpacity || 0) / 100,
+                    }}
+                  />
+                )}
+              </div>
+            ) : (
+              <Link
+                href={`/news/${heroFeatured.contentId}`}
+                className="lg:col-span-2 group relative block aspect-[16/9] overflow-hidden bg-gray-900"
+              >
+                {getImg(heroFeatured) && (
                   <Image
                     src={getImg(heroFeatured)}
                     alt={heroFeatured.altImg1 || heroFeatured.title}
                     fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-700"
-                    sizes="(max-width:1024px) 100vw, 50vw"
+                    className="object-cover group-hover:scale-[1.02] transition-transform duration-700"
+                    sizes="(max-width:1024px) 100vw, 66vw"
                     priority
                   />
-                )
-              )}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
-              {banner?.overlayColor && (
-                <div
-                  className="absolute inset-0 pointer-events-none"
-                  style={{
-                    backgroundColor: banner.overlayColor,
-                    opacity: (banner.overlayOpacity || 0) / 100,
-                  }}
-                />
-              )}
-              <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-                <CategoryBadge index={0} />
-                <h1 className="mt-3 text-2xl md:text-3xl font-bold leading-tight line-clamp-3 group-hover:text-[var(--primary)] transition">
-                  {heroFeatured.title}
-                </h1>
-                <div className="flex items-center gap-2 text-xs text-white/80 mt-2">
-                  <span>{AUTHOR}</span>
-                  <span>·</span>
-                  <span>{formatDate(heroFeatured.date)}</span>
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
+                <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+                  <CategoryBadge contentId={heroFeatured.contentId} />
+                  <h1 className="mt-3 text-2xl md:text-3xl font-bold leading-tight line-clamp-3 group-hover:text-[var(--primary)] transition">
+                    {heroFeatured.title}
+                  </h1>
+                  <div className="flex items-center gap-2 text-xs text-white/80 mt-2">
+                    <span>{AUTHOR}</span>
+                    <span>·</span>
+                    <span>{formatDate(heroFeatured.date)}</span>
+                  </div>
                 </div>
-              </div>
-            </Link>
+              </Link>
+            )}
 
-            {/* Right grid */}
-            <div className="grid grid-cols-2 gap-4">
-              {[...heroSecondary, ...heroTertiary].slice(0, 4).map((item, i) => {
+            {/* Right column — pinned news (IDs 1 & 2) stacked beside the banner */}
+            <div className="grid grid-cols-1 gap-4">
+              {heroSideItems.slice(0, 2).map((item) => {
                 const img = getImg(item);
                 return (
                   <Link
                     key={item.contentId}
                     href={`/news/${item.contentId}`}
-                    className="group relative block aspect-[4/3] overflow-hidden bg-gray-100"
+                    className="group relative block aspect-[16/9] overflow-hidden bg-gray-100"
                   >
                     {img && (
                       <Image
@@ -266,12 +294,12 @@ export default async function Template7Blog2() {
                         alt={item.altImg1 || item.title}
                         fill
                         className="object-cover group-hover:scale-105 transition-transform duration-500"
-                        sizes="(max-width:1024px) 50vw, 25vw"
+                        sizes="(max-width:1024px) 100vw, 33vw"
                       />
                     )}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
                     <div className="absolute bottom-0 left-0 right-0 p-3 text-white">
-                      <CategoryBadge index={i + 1} />
+                      <CategoryBadge contentId={item.contentId} />
                       <h3 className="mt-2 text-sm font-bold leading-snug line-clamp-2 group-hover:text-[var(--primary)] transition">
                         {item.title}
                       </h3>
@@ -284,223 +312,60 @@ export default async function Template7Blog2() {
         </section>
       )}
 
-      {/* ━━━━━━ DON'T MISS + STAY CONNECTED ━━━━━━ */}
+      {/* ━━━━━━ DON'T MISS + BERITA SEKOLAH (shared sidebar) ━━━━━━ */}
       <section className="max-w-7xl mx-auto px-6 pb-12 grid grid-cols-1 lg:grid-cols-4 gap-8">
-        <div className="lg:col-span-3">
-          <BlockTitle label="Don't Miss" />
-          {/* Decorative tabs */}
-          <div className="flex flex-wrap gap-2 mb-6 -mt-2">
-            {["All", "Lifestyle", "Travel", "Health & Fitness"].map((t, i) => (
-              <button
-                key={t}
-                className={`text-[11px] uppercase tracking-wider font-bold px-3 py-1 transition ${
-                  i === 0
-                    ? "bg-[var(--primary)] text-gray-900"
-                    : "text-gray-500 hover:text-gray-900"
-                }`}
-              >
-                {t}
-              </button>
-            ))}
+        {/* MAIN COLUMN — Don't Miss + Berita Sekolah stacked */}
+        <div className="lg:col-span-3 space-y-12">
+          <div>
+            <BlockTitle label="Jangan Lepaskan" />
+            <DontMissSection
+              items={allNews}
+              excludeIds={heroExcludeIds}
+              tabs={dontMissTabs}
+            />
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Featured card */}
-            {dontMissFeatured && (
-              <Link
-                href={`/news/${dontMissFeatured.contentId}`}
-                className="group block"
-              >
-                <div className="relative aspect-[16/10] overflow-hidden bg-gray-100 mb-3">
-                  {getImg(dontMissFeatured) && (
-                    <Image
-                      src={getImg(dontMissFeatured)}
-                      alt={dontMissFeatured.altImg1 || dontMissFeatured.title}
-                      fill
-                      className="object-cover group-hover:scale-105 transition-transform duration-500"
-                      sizes="(max-width:768px) 100vw, 50vw"
-                    />
-                  )}
-                  <span className="absolute top-3 left-3">
-                    <CategoryBadge index={0} />
-                  </span>
-                </div>
-                <h3 className="text-lg font-bold text-gray-900 leading-snug line-clamp-2 group-hover:text-[var(--primary)] transition">
-                  {dontMissFeatured.title}
-                </h3>
-                <Meta date={dontMissFeatured.date} />
-              </Link>
-            )}
-            {/* Right list */}
-            <div className="space-y-4">
-              {dontMissList.map((item) => (
+
+          <div>
+            <BlockTitle label="Berita Sekolah" accent="green" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              {lifestyleGrid.map((item) => (
                 <Link
                   key={item.contentId}
                   href={`/news/${item.contentId}`}
-                  className="group flex gap-3"
+                  className="group block"
                 >
-                  <div className="relative w-24 h-20 flex-shrink-0 overflow-hidden bg-gray-100">
+                  <div className="relative aspect-[16/10] overflow-hidden bg-gray-100 mb-3">
                     {item.file1 && (
                       <Image
                         src={item.file1}
                         alt={item.altImg1 || item.title}
                         fill
-                        className="object-cover"
-                        sizes="96px"
+                        className="object-cover group-hover:scale-105 transition-transform duration-500"
+                        sizes="(max-width:1024px) 50vw, 33vw"
                       />
                     )}
+                    <span className="absolute top-3 left-3">
+                      <CategoryBadge contentId={item.contentId} />
+                    </span>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <h4 className="text-sm font-bold text-gray-900 leading-snug line-clamp-2 group-hover:text-[var(--primary)] transition">
-                      {item.title}
-                    </h4>
-                    <p className="text-[10px] text-gray-500 mt-1">
-                      {formatDate(item.date)}
-                    </p>
-                  </div>
+                  <h3 className="text-base font-bold text-gray-900 leading-snug line-clamp-2 group-hover:text-[var(--primary)] transition">
+                    {item.title}
+                  </h3>
+                  <Meta date={item.date} />
+                  <div
+                    className="text-xs text-gray-600 leading-relaxed line-clamp-2 mt-2"
+                    dangerouslySetInnerHTML={{ __html: item.message }}
+                  />
                 </Link>
               ))}
             </div>
-          </div>
-        </div>
-
-        {/* STAY CONNECTED */}
-        <aside>
-          <BlockTitle label="Stay Connected" />
-          <ul className="space-y-2">
-            <SocialStat
-              icon={Users}
-              colorClass="bg-[#1877f2]"
-              count="24,856"
-              label="Fans"
-              cta="LIKE"
-            />
-            <SocialStat
-              icon={UserPlus}
-              colorClass="bg-sky-500"
-              count="3,915"
-              label="Followers"
-              cta="FOLLOW"
-            />
-            <SocialStat
-              icon={Bell}
-              colorClass="bg-red-600"
-              count="22,800"
-              label="Subscribers"
-              cta="SUBSCRIBE"
-            />
-          </ul>
-          {sideBanners[0] && (
-            <a
-              href={sideBanners[0].url || "#"}
-              target={sideBanners[0].url ? "_blank" : undefined}
-              rel="noopener noreferrer"
-              className="mt-6 block relative h-64 overflow-hidden bg-gray-100"
-            >
-              <Image
-                src={sideBanners[0].src}
-                alt="Ad"
-                fill
-                className="object-cover"
-                sizes="300px"
-              />
-              <p className="absolute bottom-2 right-2 text-[9px] uppercase tracking-wider text-white bg-black/50 px-2 py-0.5">
-                Iklan
-              </p>
-            </a>
-          )}
-        </aside>
-      </section>
-
-      {/* ━━━━━━ LIFESTYLE NEWS + MAKE IT MODERN ━━━━━━ */}
-      <section className="max-w-7xl mx-auto px-6 pb-12 grid grid-cols-1 lg:grid-cols-4 gap-8">
-        <div className="lg:col-span-3">
-          <BlockTitle label="Lifestyle News" accent="green" />
-          <div className="flex flex-wrap gap-2 mb-6 -mt-2">
-            {["All", "Travel", "Recipes", "Health & Fitness", "Music"].map(
-              (t, i) => (
-                <button
-                  key={t}
-                  className={`text-[11px] uppercase tracking-wider font-bold px-3 py-1 transition ${
-                    i === 0
-                      ? "bg-emerald-500 text-white"
-                      : "text-gray-500 hover:text-gray-900"
-                  }`}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 pt-6 border-t border-gray-200">
+              {lifestyleList.map((item) => (
+                <Link
+                  key={item.contentId}
+                  href={`/news/${item.contentId}`}
+                  className="group flex gap-3"
                 >
-                  {t}
-                </button>
-              )
-            )}
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            {lifestyleGrid.map((item, i) => (
-              <Link
-                key={item.contentId}
-                href={`/news/${item.contentId}`}
-                className="group block"
-              >
-                <div className="relative aspect-[16/10] overflow-hidden bg-gray-100 mb-3">
-                  {item.file1 && (
-                    <Image
-                      src={item.file1}
-                      alt={item.altImg1 || item.title}
-                      fill
-                      className="object-cover group-hover:scale-105 transition-transform duration-500"
-                      sizes="(max-width:1024px) 50vw, 33vw"
-                    />
-                  )}
-                  <span className="absolute top-3 left-3">
-                    <CategoryBadge index={i + 2} />
-                  </span>
-                </div>
-                <h3 className="text-base font-bold text-gray-900 leading-snug line-clamp-2 group-hover:text-[var(--primary)] transition">
-                  {item.title}
-                </h3>
-                <Meta date={item.date} />
-                <p
-                  className="text-xs text-gray-600 leading-relaxed line-clamp-2 mt-2"
-                  dangerouslySetInnerHTML={{ __html: item.message }}
-                />
-              </Link>
-            ))}
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 pt-6 border-t border-gray-200">
-            {lifestyleList.map((item) => (
-              <Link
-                key={item.contentId}
-                href={`/news/${item.contentId}`}
-                className="group flex gap-3"
-              >
-                <div className="relative w-20 h-16 flex-shrink-0 overflow-hidden bg-gray-100">
-                  {item.file1 && (
-                    <Image
-                      src={item.file1}
-                      alt={item.altImg1 || item.title}
-                      fill
-                      className="object-cover"
-                      sizes="80px"
-                    />
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h4 className="text-xs font-bold text-gray-900 leading-snug line-clamp-2 group-hover:text-[var(--primary)] transition">
-                    {item.title}
-                  </h4>
-                  <p className="text-[10px] text-gray-500 mt-1">
-                    {formatDate(item.date)}
-                  </p>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div>
-
-        {/* MAKE IT MODERN sidebar */}
-        <aside>
-          <BlockTitle label="Make It Modern" />
-          <ul className="space-y-3">
-            {makeItModern.map((item) => (
-              <li key={item.contentId}>
-                <Link href={`/news/${item.contentId}`} className="group flex gap-3">
                   <div className="relative w-20 h-16 flex-shrink-0 overflow-hidden bg-gray-100">
                     {item.file1 && (
                       <Image
@@ -513,122 +378,178 @@ export default async function Template7Blog2() {
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <span className="text-[9px] uppercase tracking-wider text-[var(--primary)] font-bold">
-                      Make It Modern
-                    </span>
                     <h4 className="text-xs font-bold text-gray-900 leading-snug line-clamp-2 group-hover:text-[var(--primary)] transition">
                       {item.title}
                     </h4>
+                    <p className="text-[10px] text-gray-500 mt-1">
+                      {formatDate(item.date)}
+                    </p>
                   </div>
                 </Link>
-              </li>
-            ))}
-          </ul>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* SHARED SIDEBAR — Stay Connected on top, all side banners stacked below.
+            Stays pinned in view while scrolling, scrolls internally if content
+            exceeds viewport, and releases when the Berita Sekolah section ends. */}
+        <aside className="space-y-6 lg:sticky lg:top-24 lg:self-start lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto lg:pr-1">
+          <div>
+            <div className="mb-5">
+              <h2 className="text-sm font-extrabold text-gray-900 uppercase tracking-wider">
+                Stay Connected
+              </h2>
+              <div className="mt-2 relative h-[1px] bg-gray-200">
+                <span className="absolute left-0 -top-px h-[2px] w-1/3 bg-blue-600" />
+              </div>
+            </div>
+            <div className="space-y-3">
+              {(() => {
+                const findLink = (key: string) =>
+                  footer?.social_links.find((s) =>
+                    s.platform.toLowerCase().includes(key)
+                  )?.link;
+                const cards = [
+                  {
+                    Icon: Users,
+                    bg: "bg-blue-600",
+                    count: "24,856",
+                    label: "FANS",
+                    action: "LIKE",
+                    href: findLink("fb") || findLink("facebook") || "#",
+                  },
+                  {
+                    Icon: UserPlus,
+                    bg: "bg-sky-400",
+                    count: "3,915",
+                    label: "FOLLOWERS",
+                    action: "FOLLOW",
+                    href: findLink("x.svg") || findLink("twitter") || "#",
+                  },
+                  {
+                    Icon: Bell,
+                    bg: "bg-red-600",
+                    count: "22,800",
+                    label: "SUBSCRIBERS",
+                    action: "SUBSCRIBE",
+                    href: findLink("youtube") || "#",
+                  },
+                ];
+                return cards.map((c, i) => (
+                  <a
+                    key={i}
+                    href={c.href}
+                    target={c.href === "#" ? undefined : "_blank"}
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-3 px-3 py-3 bg-white border border-gray-200 hover:shadow-sm transition group"
+                  >
+                    <div
+                      className={`w-11 h-11 ${c.bg} flex items-center justify-center flex-shrink-0 rounded-sm`}
+                    >
+                      <c.Icon className="w-5 h-5 text-white" strokeWidth={2} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-base font-bold text-gray-900 leading-none tabular-nums">
+                        {c.count}
+                      </p>
+                      <p className="text-[10px] uppercase tracking-wider text-gray-500 mt-1">
+                        {c.label}
+                      </p>
+                    </div>
+                    <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 group-hover:text-gray-900 transition">
+                      {c.action}
+                    </span>
+                  </a>
+                ));
+              })()}
+            </div>
+          </div>
+
+          {/* All side banners stacked below Stay Connected */}
+          {sideBanners.map((b, i) => (
+            <a
+              key={i}
+              href={b.url || "#"}
+              target={b.url ? "_blank" : undefined}
+              rel="noopener noreferrer"
+              className="block relative h-64 overflow-hidden bg-gray-100 hover:opacity-95 transition"
+            >
+              <Image
+                src={b.src}
+                alt={`Iklan ${i + 1}`}
+                fill
+                className="object-cover"
+                sizes="300px"
+              />
+              <p className="absolute bottom-2 right-2 text-[9px] uppercase tracking-wider text-white bg-black/50 px-2 py-0.5">
+                Iklan
+              </p>
+            </a>
+          ))}
         </aside>
       </section>
 
-      {/* ━━━━━━ HOUSE DESIGN GRID ━━━━━━ */}
-      {houseDesign.length > 0 && (
+      {/* ━━━━━━ PROMOTION BANNER (Promotag API) — above gallery ━━━━━━ */}
+      {promotag && (
         <section className="max-w-7xl mx-auto px-6 pb-12">
-          <BlockTitle label="House Design" />
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            {houseDesign.map((item, i) => (
+          <a
+            href={promotag.url || "#"}
+            target={promotag.url ? "_blank" : undefined}
+            rel="noopener noreferrer"
+            className="block relative h-40 md:h-52 overflow-hidden bg-gray-100 group"
+          >
+            <Image
+              src={promotag.src}
+              alt="Promosi"
+              fill
+              className="object-cover group-hover:scale-[1.01] transition-transform duration-500"
+              sizes="100vw"
+            />
+            <span className="absolute top-3 right-3 text-[9px] uppercase tracking-wider text-white bg-black/60 px-2 py-0.5">
+              Promosi
+            </span>
+          </a>
+        </section>
+      )}
+
+      {/* ━━━━━━ IMAGE GALLERY ━━━━━━ */}
+      {galleryItems.length > 0 && (
+        <section className="max-w-7xl mx-auto px-6 pb-12">
+          <BlockTitle label="Galeri" />
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {galleryItems.map((item) => (
               <Link
                 key={item.contentId}
                 href={`/news/${item.contentId}`}
-                className="group block"
+                className="group relative block aspect-square overflow-hidden bg-gray-100"
               >
-                <div className="relative aspect-[4/3] overflow-hidden bg-gray-100 mb-3">
-                  {item.file1 && (
-                    <Image
-                      src={item.file1}
-                      alt={item.altImg1 || item.title}
-                      fill
-                      className="object-cover group-hover:scale-105 transition-transform duration-500"
-                      sizes="(max-width:768px) 100vw, 33vw"
-                    />
-                  )}
-                  <span className="absolute top-3 left-3">
-                    <CategoryBadge index={i + 6} />
+                {item.file1 && (
+                  <Image
+                    src={item.file1}
+                    alt={item.altImg1 || item.title}
+                    fill
+                    className="object-cover group-hover:scale-110 transition-transform duration-500"
+                    sizes="(max-width:768px) 50vw, 25vw"
+                  />
+                )}
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors duration-300 flex items-end p-3">
+                  <span className="text-white text-xs font-bold opacity-0 group-hover:opacity-100 transition line-clamp-2">
+                    {item.title}
                   </span>
                 </div>
-                <h3 className="text-base font-bold text-gray-900 leading-snug line-clamp-2 group-hover:text-[var(--primary)] transition">
-                  {item.title}
-                </h3>
-                <Meta date={item.date} />
               </Link>
             ))}
           </div>
         </section>
       )}
 
-      {/* ━━━━━━ PERFORMANCE TRAINING — list with side image ━━━━━━ */}
-      {performance.length > 0 && (
-        <section className="max-w-7xl mx-auto px-6 pb-12 grid grid-cols-1 lg:grid-cols-4 gap-8">
-          <div className="lg:col-span-3">
-            <BlockTitle label="Performance Training" />
-            <div className="space-y-5">
-              {performance.map((item) => (
-                <Link
-                  key={item.contentId}
-                  href={`/news/${item.contentId}`}
-                  className="group flex gap-5 items-start pb-5 border-b border-gray-100 last:border-0"
-                >
-                  <div className="relative w-44 h-28 flex-shrink-0 overflow-hidden bg-gray-100">
-                    {item.file1 && (
-                      <Image
-                        src={item.file1}
-                        alt={item.altImg1 || item.title}
-                        fill
-                        className="object-cover group-hover:scale-105 transition-transform duration-500"
-                        sizes="176px"
-                      />
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-base md:text-lg font-bold text-gray-900 leading-snug line-clamp-2 group-hover:text-[var(--primary)] transition">
-                      {item.title}
-                    </h3>
-                    <Meta date={item.date} />
-                    <p
-                      className="text-xs text-gray-600 leading-relaxed line-clamp-2 mt-2"
-                      dangerouslySetInnerHTML={{ __html: item.message }}
-                    />
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
-          {sideBanners[1] && (
-            <aside>
-              <a
-                href={sideBanners[1].url || "#"}
-                target={sideBanners[1].url ? "_blank" : undefined}
-                rel="noopener noreferrer"
-                className="block relative h-64 overflow-hidden bg-gray-100"
-              >
-                <Image
-                  src={sideBanners[1].src}
-                  alt="Ad"
-                  fill
-                  className="object-cover"
-                  sizes="300px"
-                />
-                <p className="absolute bottom-2 right-2 text-[9px] uppercase tracking-wider text-white bg-black/50 px-2 py-0.5">
-                  Iklan
-                </p>
-              </a>
-            </aside>
-          )}
-        </section>
-      )}
-
       {/* ━━━━━━ LATEST + MOST POPULAR + RECENT COMMENTS ━━━━━━ */}
       <section className="max-w-7xl mx-auto px-6 pb-12 grid grid-cols-1 lg:grid-cols-4 gap-8">
         <div className="lg:col-span-3">
-          <BlockTitle label="Latest Articles" />
+          <BlockTitle label="Berita Terkini" />
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            {latestArticles.map((item, i) => (
+            {latestArticles.map((item) => (
               <Link
                 key={item.contentId}
                 href={`/news/${item.contentId}`}
@@ -645,7 +566,7 @@ export default async function Template7Blog2() {
                     />
                   )}
                   <span className="absolute top-3 left-3">
-                    <CategoryBadge index={i} />
+                    <CategoryBadge contentId={item.contentId} />
                   </span>
                 </div>
                 <h3 className="text-base font-bold text-gray-900 leading-snug line-clamp-2 group-hover:text-[var(--primary)] transition">
@@ -662,15 +583,15 @@ export default async function Template7Blog2() {
               href="/news"
               className="inline-flex items-center gap-2 px-6 py-2.5 bg-gray-900 hover:bg-[var(--primary)] hover:text-gray-900 text-white text-xs font-bold uppercase tracking-wider transition"
             >
-              Load More <ArrowRight className="w-3.5 h-3.5" />
+              Lihat Semua <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
         </div>
 
-        <aside className="space-y-8">
+        <aside className="space-y-8 lg:sticky lg:top-24 lg:self-start">
           {/* MOST POPULAR */}
           <div>
-            <BlockTitle label="Most Popular" />
+            <BlockTitle label="Paling Popular" />
             <ol className="space-y-4">
               {mostPopular.map((item, i) => (
                 <li key={item.contentId} className="flex gap-3 group">
@@ -700,29 +621,32 @@ export default async function Template7Blog2() {
             </ol>
           </div>
 
-          {/* RECENT COMMENTS */}
-          <div>
-            <BlockTitle label="Recent Comments" />
-            <ul className="space-y-3">
-              {recentComments.map((item) => (
-                <li key={item.contentId}>
-                  <p className="text-xs text-gray-600 leading-relaxed">
-                    <span className="font-bold text-gray-900">{AUTHOR}</span> on{" "}
-                    <Link
-                      href={`/news/${item.contentId}`}
-                      className="text-[var(--primary)] hover:underline italic"
-                    >
-                      {item.title}
-                    </Link>
-                  </p>
-                </li>
-              ))}
-            </ul>
-          </div>
         </aside>
       </section>
 
-      <Blog2Newsletter email={footerCfg.email || ""} />
+      {/* ━━━━━━ STATIC CONTENT — admin-controlled intro ━━━━━━ */}
+      {(staticTitle || staticBody) && (
+        <section className="bg-gray-50 border-y border-gray-200 py-14 px-6">
+          <div className="max-w-4xl mx-auto text-center">
+            {(staticTitle || staticFocus) && (
+              <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 leading-tight mb-4">
+                {staticTitle}
+                {staticFocus && (
+                  <>
+                    {staticTitle && " "}
+                    <span className="text-[var(--primary)]">{staticFocus}</span>
+                  </>
+                )}
+              </h2>
+            )}
+            {staticBody && (
+              <p className="text-sm md:text-base text-gray-600 leading-relaxed max-w-2xl mx-auto">
+                {staticBody}
+              </p>
+            )}
+          </div>
+        </section>
+      )}
 
       {faq && faq.items.length > 0 && (
         <Blog2Faq title={faq.title} items={faq.items} />
@@ -738,38 +662,3 @@ export default async function Template7Blog2() {
   );
 }
 
-/* ===== Social stat row ===== */
-function SocialStat({
-  icon: Icon,
-  colorClass,
-  count,
-  label,
-  cta,
-}: {
-  icon: React.ComponentType<{ className?: string }>;
-  colorClass: string;
-  count: string;
-  label: string;
-  cta: string;
-}) {
-  return (
-    <li className="flex items-center justify-between p-2.5 border border-gray-200 hover:shadow-sm transition">
-      <div className="flex items-center gap-3">
-        <div className={`w-9 h-9 flex items-center justify-center text-white ${colorClass}`}>
-          <Icon className="w-4 h-4" />
-        </div>
-        <div>
-          <p className="text-base font-extrabold text-gray-900 leading-none tabular-nums">
-            {count}
-          </p>
-          <p className="text-[10px] text-gray-500 uppercase tracking-wider">
-            {label}
-          </p>
-        </div>
-      </div>
-      <button className="text-[10px] font-bold uppercase tracking-wider text-gray-500 hover:text-[var(--primary)] transition">
-        {cta}
-      </button>
-    </li>
-  );
-}

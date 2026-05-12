@@ -89,6 +89,17 @@ export const getCachedSideBanner = cache(async () => {
   }
 });
 
+export const getCachedPromotagBanner = cache(async () => {
+  try {
+    const sid = getSID();
+    const res = await myAxios.get(`banner?sid=${sid}&type=Promotag`);
+    return res.data?.data || [];
+  } catch (error) {
+    console.error("❌ getCachedPromotagBanner failed:", error);
+    return [];
+  }
+});
+
 export const getCachedNewsDetail = cache(async (contentId: string) => {
   try {
     const sid = getSID();

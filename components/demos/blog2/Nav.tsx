@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect, FormEvent } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import Image from "@/components/ui/FallbackImage";
 import { MenuItem, NavSocialLink } from "@/types/cms";
 import { Menu, X, ChevronDown, Search } from "lucide-react";
@@ -20,6 +21,25 @@ export default function Blog2Nav({
 }: Props) {
   const [open, setOpen] = useState(false);
   const [openSub, setOpenSub] = useState<number | null>(null);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const router = useRouter();
+
+  useEffect(() => {
+    if (searchOpen) {
+      searchInputRef.current?.focus();
+    }
+  }, [searchOpen]);
+
+  const submitSearch = (e: FormEvent) => {
+    e.preventDefault();
+    const q = query.trim();
+    if (!q) return;
+    router.push(`/news?q=${encodeURIComponent(q)}`);
+    setSearchOpen(false);
+    setQuery("");
+  };
 
   const today = new Date().toLocaleDateString("en-US", {
     weekday: "long",
@@ -30,50 +50,31 @@ export default function Blog2Nav({
 
   return (
     <header className="sticky top-0 z-50 bg-white">
-      {/* Top utility bar — dark with date and meta */}
+      {/* Top utility bar — date + social icons */}
       <div className="bg-[#1a1a1a] text-white text-[11px]">
         <div className="max-w-7xl mx-auto px-6 py-1.5 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <span className="text-white/80">{today}</span>
-          </div>
-          <div className="hidden md:flex items-center gap-3">
-            <Link href="#" className="text-white/70 hover:text-[var(--primary)] transition">
-              Sign in / Join
-            </Link>
-            <span className="text-white/20">·</span>
-            <Link href="#newsletter" className="text-white/70 hover:text-[var(--primary)] transition">
-              Newsletter
-            </Link>
-            <span className="text-white/20">·</span>
-            <Link href="#contact" className="text-white/70 hover:text-[var(--primary)] transition">
-              Contact
-            </Link>
-            {socialLinks.length > 0 && (
-              <>
-                <span className="text-white/20">·</span>
-                <div className="flex items-center gap-2">
-                  {socialLinks.slice(0, 4).map((s, i) => (
-                    <a
-                      key={i}
-                      href={s.link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      aria-label={s.platform}
-                      className="opacity-70 hover:opacity-100 transition"
-                    >
-                      <Image
-                        src={s.icon}
-                        alt={s.platform}
-                        width={11}
-                        height={11}
-                        className="brightness-0 invert"
-                      />
-                    </a>
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
+          <span className="text-white">{today}</span>
+          {socialLinks.length > 0 && (
+            <div className="hidden md:flex items-center gap-3">
+              {socialLinks.slice(0, 5).map((s, i) => (
+                <a
+                  key={i}
+                  href={s.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={s.platform}
+                  className="opacity-90 hover:opacity-100 transition"
+                >
+                  <Image
+                    src={s.icon}
+                    alt={s.platform}
+                    width={13}
+                    height={13}
+                  />
+                </a>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
@@ -138,14 +139,56 @@ export default function Blog2Nav({
             ))}
           </nav>
 
-          <div className="hidden lg:flex items-center gap-2">
+          <form
+            onSubmit={submitSearch}
+            className="relative hidden lg:flex items-center"
+          >
+            {/* Overlay input — positioned absolutely so it doesn't shift the nav */}
+            <div
+              className={`absolute right-10 top-1/2 -translate-y-1/2 flex items-center bg-white shadow-lg border border-gray-200 overflow-hidden transition-all duration-300 z-50 ${
+                searchOpen
+                  ? "w-64 opacity-100 px-3 py-1.5 pointer-events-auto"
+                  : "w-0 opacity-0 px-0 py-0 border-transparent pointer-events-none"
+              }`}
+            >
+              <input
+                ref={searchInputRef}
+                type="search"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Cari berita..."
+                className="flex-1 bg-transparent text-sm text-gray-800 placeholder:text-gray-400 outline-none min-w-0"
+                tabIndex={searchOpen ? 0 : -1}
+              />
+            </div>
             <button
-              aria-label="Search"
-              className="w-9 h-9 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-700 transition"
+              type="button"
+              aria-label={searchOpen ? "Submit search" : "Open search"}
+              onClick={() => {
+                if (searchOpen) {
+                  if (query.trim()) {
+                    submitSearch(
+                      new Event("submit") as unknown as FormEvent
+                    );
+                  } else {
+                    setSearchOpen(false);
+                  }
+                } else {
+                  setSearchOpen(true);
+                }
+              }}
+              className={`relative z-50 w-9 h-9 rounded-full flex items-center justify-center transition ${
+                searchOpen
+                  ? "bg-[var(--primary)] text-gray-900"
+                  : "text-gray-700 hover:bg-gray-100"
+              }`}
             >
               <Search className="w-4 h-4" />
             </button>
-          </div>
+            <button type="submit" className="sr-only" tabIndex={-1}>
+              Submit
+            </button>
+          </form>
 
           <button
             onClick={() => setOpen(!open)}

@@ -119,25 +119,14 @@ export default function Blog2Footer({
         {/* About + follow */}
         <div className="grid md:grid-cols-3 gap-10 py-10 border-b border-white/10">
           <div className="md:col-span-2 flex items-start gap-5">
-            {footer.image.image ? (
+            {footer.image.image && (
               <Image
                 src={footer.image.image}
                 alt="Logo"
                 width={150}
                 height={50}
-                className="h-12 w-auto object-contain brightness-0 invert flex-shrink-0"
+                className="h-12 w-auto object-contain flex-shrink-0"
               />
-            ) : (
-              <div className="flex-shrink-0 flex items-baseline gap-0.5">
-                <span className="text-2xl font-extrabold text-white">news</span>
-                <span
-                  className="text-2xl font-extrabold text-gray-900 px-1.5 rounded"
-                  style={{ background: "var(--primary)" }}
-                >
-                  12
-                </span>
-                <span className="text-2xl font-extrabold text-white">paper</span>
-              </div>
             )}
             <div>
               <h5 className="text-sm font-bold uppercase tracking-wider text-white mb-2">
@@ -150,7 +139,7 @@ export default function Blog2Footer({
                 <span className="uppercase tracking-wider text-white/40">Contact us:</span>{" "}
                 <a
                   href={`mailto:${footer.email}`}
-                  className="text-white/80 hover:text-[var(--primary)] transition"
+                  className="text-blue-400 hover:text-blue-300 transition"
                 >
                   {footer.email}
                 </a>
@@ -189,12 +178,9 @@ export default function Blog2Footer({
         {/* Bottom bar */}
         <div className="pt-6 flex flex-col md:flex-row items-center justify-between gap-3 text-xs text-white/50">
           <p>{footer.copyright || `© ${year}. All Rights Reserved.`}</p>
-          <div className="flex items-center gap-5">
-            <a href="#" className="hover:text-white transition">Disclaimer</a>
-            <a href="#" className="hover:text-white transition">Privacy</a>
-            <a href="#" className="hover:text-white transition">Advertisement</a>
-            <a href="#contact" className="hover:text-white transition">Contact us</a>
-          </div>
+          <a href="#contact" className="hover:text-white transition">
+            Contact us
+          </a>
         </div>
       </div>
     </footer>

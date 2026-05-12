@@ -65,8 +65,8 @@ export default function Blog2Contact({ email, phone, address, state }: Props) {
                   href={c.href}
                   className="flex items-start gap-4 p-5 bg-gray-50 hover:bg-white border border-gray-200 hover:border-[var(--primary)] hover:shadow-sm transition"
                 >
-                  <div className="w-10 h-10 bg-[var(--primary)] text-gray-900 flex items-center justify-center flex-shrink-0">
-                    <c.icon className="w-4 h-4" />
+                  <div className="w-10 h-10 text-[var(--primary)] flex items-center justify-center flex-shrink-0">
+                    <c.icon className="w-5 h-5" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[10px] uppercase tracking-[0.2em] text-gray-500 font-bold mb-1">
