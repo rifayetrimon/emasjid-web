@@ -1,7 +1,7 @@
 import { getCachedConfig } from "@/services/apiCache";
 import type { TemplateId } from "@/components/TemplateLayout";
 
-const VALID: TemplateId[] = ["1", "2", "3", "4", "5", "6"];
+const VALID: TemplateId[] = ["1", "2", "3", "4", "5", "6", "7"];
 
 export async function getActiveTemplateId(): Promise<TemplateId> {
   try {

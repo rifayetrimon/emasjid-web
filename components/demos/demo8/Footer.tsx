@@ -1,13 +1,19 @@
 import Image from "@/components/ui/FallbackImage";
 import { FooterProps } from "@/types/cms";
+import VisitorList from "@/components/visitor/VisitorList";
+import type { VisitorStats } from "@/services/visitorService";
 
-export default function Demo8Footer({ footer }: FooterProps) {
+interface Props extends FooterProps {
+  visitors?: VisitorStats;
+}
+
+export default function Demo8Footer({ footer, visitors }: Props) {
   if (!footer) return null;
   return (
     <footer className="bg-black border-t border-white/5 py-14 px-6">
       <div className="max-w-[1400px] mx-auto">
-        <div className="grid md:grid-cols-12 gap-10 pb-10 border-b border-white/10">
-          <div className="md:col-span-5">
+        <div className="grid md:grid-cols-2 lg:grid-cols-12 gap-10 pb-10 border-b border-white/10">
+          <div className="lg:col-span-4">
             {footer.image.image && (
               <Image
                 src={footer.image.image}
@@ -24,7 +30,7 @@ export default function Demo8Footer({ footer }: FooterProps) {
               {footer.text}
             </p>
           </div>
-          <div className="md:col-span-3">
+          <div className="lg:col-span-3">
             <h4 className="text-xs uppercase tracking-[0.25em] font-bold text-[var(--primary)] mb-4">
               Hubungi
             </h4>
@@ -44,31 +50,37 @@ export default function Demo8Footer({ footer }: FooterProps) {
                 </a>
               )}
             </div>
-          </div>
-          <div className="md:col-span-4">
-            <h4 className="text-xs uppercase tracking-[0.25em] font-bold text-[var(--primary)] mb-4">
-              Sosial
-            </h4>
-            <div className="flex flex-wrap gap-2">
-              {footer.social_links.map((s, i) => (
-                <a
-                  key={i}
-                  href={s.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-10 h-10 rounded-full border border-white/15 hover:border-[var(--primary)] hover:bg-[var(--primary)]/10 flex items-center justify-center transition"
-                >
-                  <Image
-                    src={s.platform}
-                    alt="Social"
-                    width={16}
-                    height={16}
-                    className="brightness-0 invert"
-                  />
-                </a>
-              ))}
+            <div className="mt-6">
+              <h4 className="text-xs uppercase tracking-[0.25em] font-bold text-[var(--primary)] mb-3">
+                Sosial
+              </h4>
+              <div className="flex flex-wrap gap-2">
+                {footer.social_links.map((s, i) => (
+                  <a
+                    key={i}
+                    href={s.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-9 h-9 rounded-full border border-white/15 hover:border-[var(--primary)] hover:bg-[var(--primary)]/10 flex items-center justify-center transition"
+                  >
+                    <Image
+                      src={s.platform}
+                      alt="Social"
+                      width={14}
+                      height={14}
+                      className="brightness-0 invert"
+                    />
+                  </a>
+                ))}
+              </div>
             </div>
           </div>
+
+          {visitors && (
+            <div className="lg:col-span-5">
+              <VisitorList stats={visitors} tone="dark" />
+            </div>
+          )}
         </div>
         <p className="text-xs text-white/40 text-center pt-8">
           {footer.copyright}

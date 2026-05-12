@@ -12,8 +12,6 @@ import {
   getCachedNews,
   getCachedSideBanner,
 } from "@/services/apiCache";
-import { getVisitorStats } from "@/services/visitorService";
-import VisitorStats from "@/components/visitor/VisitorStats";
 
 interface NewsItem {
   contentId: number;
@@ -59,7 +57,6 @@ export default async function Template5Portfolio() {
     sideBannerRaw,
     faq,
     config,
-    visitors,
   ] = await Promise.all([
     getBannerData(),
     getNewsData(),
@@ -67,7 +64,6 @@ export default async function Template5Portfolio() {
     getCachedSideBanner(),
     getFaqData(),
     getCachedConfig(),
-    getVisitorStats(),
   ]);
 
   const footerCfg = config.footerConfig || {};
@@ -339,13 +335,6 @@ export default async function Template5Portfolio() {
           </div>
         </section>
       )}
-
-      <VisitorStats
-        stats={visitors}
-        variant="heritage"
-        eyebrow="Statistik"
-        title="Pelawat Laman Web"
-      />
 
       {faq && faq.items.length > 0 && (
         <Demo5Faq title={faq.title} items={faq.items} />

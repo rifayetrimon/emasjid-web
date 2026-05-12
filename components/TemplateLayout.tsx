@@ -1,7 +1,9 @@
 import { ReactNode } from "react";
 import { getNavData } from "@/services/navService";
 import { getFooterData } from "@/services/footerService";
-import { getCachedConfig } from "@/services/apiCache";
+import { getCachedConfig, getCachedNews } from "@/services/apiCache";
+import { getNewsData } from "@/services/newsService";
+import { getVisitorStats } from "@/services/visitorService";
 
 import Demo7Nav from "@/components/demos/demo7/Nav";
 import Demo7Footer from "@/components/demos/demo7/Footer";
@@ -13,10 +15,13 @@ import Demo2Nav from "@/components/demos/demo2/Nav";
 import Demo2Footer from "@/components/demos/demo2/Footer";
 import Demo5Nav from "@/components/demos/demo5/Nav";
 import Demo5Footer from "@/components/demos/demo5/Footer";
+import Blog2Nav from "@/components/demos/blog2/Nav";
+import Blog2Footer from "@/components/demos/blog2/Footer";
+import type { HighlightNewsItem } from "@/services/newsService";
 import ClassicNavbar from "@/components/layouts/navbar";
 import ClassicFooter from "@/components/layouts/footer";
 
-export type TemplateId = "1" | "2" | "3" | "4" | "5" | "6";
+export type TemplateId = "1" | "2" | "3" | "4" | "5" | "6" | "7";
 
 interface Props {
   templateId: TemplateId;
@@ -65,6 +70,12 @@ const TEMPLATE_DEFAULTS: Record<
     text: "#1a1a1a",
     bg: "bg-white",
   },
+  "7": {
+    primary: "#fbbe21",
+    secondary: "#1f2937",
+    text: "#111827",
+    bg: "bg-white",
+  },
 };
 
 export default async function TemplateLayout({
@@ -72,11 +83,38 @@ export default async function TemplateLayout({
   children,
   padForFixedNav = false,
 }: Props) {
-  const [nav, footer, config] = await Promise.all([
+  const [nav, footer, config, visitors, highlighted, newsRaw] = await Promise.all([
     getNavData(),
     getFooterData(),
     getCachedConfig(),
+    getVisitorStats(),
+    // News data — only used by Template 7's nav (trending bar) and footer columns.
+    // React cache() dedupes with page-level fetches, so no double-fetch.
+    templateId === "7" ? getNewsData() : Promise.resolve([] as HighlightNewsItem[]),
+    templateId === "7" ? getCachedNews() : Promise.resolve(null),
   ]);
+
+  // Build Popular/Trending lists for Template 7 footer
+  const allNews = newsRaw?.dataset || (Array.isArray(newsRaw) ? newsRaw : []);
+  const popularPosts = (highlighted.length > 0 ? highlighted : allNews)
+    .slice(0, 2)
+    .map((n: { contentId: number; title: string; date: string; image?: string | null; file1?: string | null; altImg1: string }) => ({
+      contentId: n.contentId,
+      title: n.title,
+      date: n.date,
+      file1: n.image ?? n.file1 ?? null,
+      altImg1: n.altImg1,
+    }));
+  const trendingPosts = allNews
+    .slice(0, 2)
+    .map((n: { contentId: number; title: string; date: string; file1: string | null; altImg1: string }) => ({
+      contentId: n.contentId,
+      title: n.title,
+      date: n.date,
+      file1: n.file1,
+      altImg1: n.altImg1,
+    }));
+  const trendingTitle = highlighted[0]?.title || allNews[0]?.title;
 
   const general = config.generalSettings || {};
   const footerCfg = config.footerConfig || {};
@@ -92,64 +130,90 @@ export default async function TemplateLayout({
   let footerElement: ReactNode = null;
   let usesFixedNav = false;
 
+  // Marketplace template already IS the shop — don't show "E-shop" in its nav
+  const menuItems =
+    templateId === "3"
+      ? nav.menuItems.filter((m) => m.link !== "/shop")
+      : nav.menuItems;
+
   switch (templateId) {
     case "1":
       navElement = (
         <Demo7Nav
-          menuItems={nav.menuItems}
+          menuItems={menuItems}
           logo={nav.logo}
           socialLinks={nav.socialLinks}
         />
       );
-      footerElement = footer && <Demo7Footer footer={footer} />;
+      footerElement = footer && <Demo7Footer footer={footer} visitors={visitors} />;
       break;
     case "2":
       navElement = (
         <Demo4Nav
-          menuItems={nav.menuItems}
+          menuItems={menuItems}
           logo={nav.logo}
           socialLinks={nav.socialLinks}
         />
       );
-      footerElement = footer && <Demo4Footer footer={footer} />;
+      footerElement = footer && <Demo4Footer footer={footer} visitors={visitors} />;
       break;
     case "3":
       navElement = (
         <Demo8Nav
-          menuItems={nav.menuItems}
+          menuItems={menuItems}
           logo={nav.logo}
           socialLinks={nav.socialLinks}
         />
       );
-      footerElement = footer && <Demo8Footer footer={footer} />;
+      footerElement = footer && <Demo8Footer footer={footer} visitors={visitors} />;
       usesFixedNav = true;
       break;
     case "4":
       navElement = (
         <Demo2Nav
-          menuItems={nav.menuItems}
+          menuItems={menuItems}
           logo={nav.logo}
           socialLinks={nav.socialLinks}
           email={footerCfg.email || ""}
           phone={footerCfg.phonenum || ""}
         />
       );
-      footerElement = footer && <Demo2Footer footer={footer} />;
+      footerElement = footer && <Demo2Footer footer={footer} visitors={visitors} />;
       break;
     case "5":
       navElement = (
         <Demo5Nav
-          menuItems={nav.menuItems}
+          menuItems={menuItems}
           logo={nav.logo}
           socialLinks={nav.socialLinks}
         />
       );
-      footerElement = footer && <Demo5Footer footer={footer} />;
+      footerElement = footer && <Demo5Footer footer={footer} visitors={visitors} />;
       break;
     case "6":
       navElement = <ClassicNavbar />;
+      // Classic Footer fetches its own visitor data
       footerElement = <ClassicFooter />;
       break;
+    case "7": {
+      navElement = (
+        <Blog2Nav
+          menuItems={menuItems}
+          logo={nav.logo}
+          socialLinks={nav.socialLinks}
+          trendingTitle={trendingTitle}
+        />
+      );
+      footerElement = footer && (
+        <Blog2Footer
+          footer={footer}
+          visitors={visitors}
+          popular={popularPosts}
+          trending={trendingPosts}
+        />
+      );
+      break;
+    }
   }
 
   return (

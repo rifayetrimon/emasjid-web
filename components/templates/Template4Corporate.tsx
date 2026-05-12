@@ -12,8 +12,6 @@ import {
   getCachedNews,
   getCachedSideBanner,
 } from "@/services/apiCache";
-import { getVisitorStats } from "@/services/visitorService";
-import VisitorStats from "@/components/visitor/VisitorStats";
 
 interface NewsItem {
   contentId: number;
@@ -33,7 +31,6 @@ export default async function Template4Corporate() {
     sideBannerRaw,
     faq,
     config,
-    visitors,
   ] = await Promise.all([
     getBannerData(),
     getNewsData(),
@@ -41,7 +38,6 @@ export default async function Template4Corporate() {
     getCachedSideBanner(),
     getFaqData(),
     getCachedConfig(),
-    getVisitorStats(),
   ]);
 
   const footerCfg = config.footerConfig || {};
@@ -126,13 +122,6 @@ export default async function Template4Corporate() {
           </div>
         </section>
       )}
-
-      <VisitorStats
-        stats={visitors}
-        variant="editorial"
-        eyebrow="Statistik"
-        title="Pelawat Laman Web"
-      />
 
       {featured && (
         <section className="py-16 px-6 border-t border-gray-200">

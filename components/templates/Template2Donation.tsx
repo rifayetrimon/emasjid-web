@@ -4,11 +4,9 @@ import BannerSlideshow from "@/components/main/BannerSlideshow";
 import TemplateLayout from "@/components/TemplateLayout";
 import Demo4Faq from "@/components/demos/demo4/Faq";
 import Demo4Contact from "@/components/demos/demo4/Contact";
-import VisitorStats from "@/components/visitor/VisitorStats";
 import { getBannerData } from "@/services/bannerService";
 import { getNewsData } from "@/services/newsService";
 import { getFaqData } from "@/services/faqService";
-import { getVisitorStats } from "@/services/visitorService";
 import {
   getCachedConfig,
   getCachedNews,
@@ -33,7 +31,6 @@ export default async function Template2Donation() {
     sideBannerRaw,
     faq,
     config,
-    visitors,
   ] = await Promise.all([
     getBannerData(),
     getNewsData(),
@@ -41,7 +38,6 @@ export default async function Template2Donation() {
     getCachedSideBanner(),
     getFaqData(),
     getCachedConfig(),
-    getVisitorStats(),
   ]);
 
   const footerCfg = config.footerConfig || {};
@@ -72,8 +68,8 @@ export default async function Template2Donation() {
     <TemplateLayout templateId="2">
       <main className="max-w-[1400px] mx-auto px-6 py-6">
         {banner && banner.background_images?.length > 0 && (
-          <section className="grid grid-cols-1 lg:grid-cols-12 gap-4 mb-4">
-            <div className="lg:col-span-8 relative rounded-3xl overflow-hidden h-[420px] lg:h-[480px]">
+          <section className="mb-4">
+            <div className="relative rounded-3xl overflow-hidden h-[420px] lg:h-[520px]">
               <BannerSlideshow media={banner.background_images} interval={6500} />
               <div className="absolute inset-0 bg-gradient-to-tr from-black/80 via-black/40 to-transparent" />
               {banner.overlayColor && (
@@ -85,12 +81,12 @@ export default async function Template2Donation() {
                   }}
                 />
               )}
-              <div className="absolute inset-0 flex flex-col justify-end p-8 md:p-12 text-white">
+              <div className="absolute inset-0 flex flex-col justify-end p-8 md:p-14 text-white">
                 <span className="inline-flex items-center gap-2 self-start px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-xs font-semibold mb-5">
                   <span className="w-1.5 h-1.5 rounded-full bg-[var(--primary)] animate-pulse" />
                   Live Sekarang
                 </span>
-                <h1 className="text-3xl md:text-5xl font-bold leading-tight mb-4 max-w-2xl">
+                <h1 className="text-4xl md:text-6xl font-bold leading-tight mb-4 max-w-3xl">
                   {banner.title?.general}{" "}
                   {banner.title?.focus?.text && (
                     <span className="text-[var(--primary)]">
@@ -99,7 +95,7 @@ export default async function Template2Donation() {
                   )}
                 </h1>
                 {banner.supporting_text && (
-                  <p className="text-sm md:text-base text-white/80 leading-relaxed max-w-xl mb-6">
+                  <p className="text-sm md:text-lg text-white/80 leading-relaxed max-w-2xl mb-6">
                     {banner.supporting_text}
                   </p>
                 )}
@@ -111,10 +107,6 @@ export default async function Template2Donation() {
                   <ArrowUpRight className="w-4 h-4" />
                 </Link>
               </div>
-            </div>
-
-            <div className="lg:col-span-4">
-              <VisitorStats stats={visitors} variant="bento" />
             </div>
           </section>
         )}

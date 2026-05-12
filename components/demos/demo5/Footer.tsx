@@ -1,5 +1,11 @@
 import Image from "@/components/ui/FallbackImage";
 import { FooterProps } from "@/types/cms";
+import VisitorList from "@/components/visitor/VisitorList";
+import type { VisitorStats } from "@/services/visitorService";
+
+interface Props extends FooterProps {
+  visitors?: VisitorStats;
+}
 
 function StarOrnament({ className = "" }: { className?: string }) {
   return (
@@ -28,7 +34,7 @@ function Divider({ className = "" }: { className?: string }) {
   );
 }
 
-export default function Demo5Footer({ footer }: FooterProps) {
+export default function Demo5Footer({ footer, visitors }: Props) {
   if (!footer) return null;
   return (
     <footer className="bg-[#082a29] text-[#e8d5a8] py-16 px-6 relative overflow-hidden">
@@ -43,8 +49,8 @@ export default function Demo5Footer({ footer }: FooterProps) {
         <div className="text-center mb-12">
           <Divider className="mb-6" />
         </div>
-        <div className="grid md:grid-cols-3 gap-10 pb-10 border-b border-[#e8d5a8]/20 text-center md:text-left">
-          <div>
+        <div className="grid md:grid-cols-2 lg:grid-cols-12 gap-10 pb-10 border-b border-[#e8d5a8]/20 text-center md:text-left">
+          <div className="lg:col-span-4">
             {footer.image.image && (
               <div className="flex md:justify-start justify-center mb-5">
                 <Image
@@ -66,7 +72,7 @@ export default function Demo5Footer({ footer }: FooterProps) {
               {footer.text}
             </p>
           </div>
-          <div>
+          <div className="lg:col-span-3">
             <h4
               className="text-sm uppercase tracking-[0.2em] font-bold mb-4 text-[#fdfaf3]"
               style={{ fontFamily: "'Times New Roman', serif" }}
@@ -92,34 +98,44 @@ export default function Demo5Footer({ footer }: FooterProps) {
                 </a>
               )}
             </div>
-          </div>
-          <div>
-            <h4
-              className="text-sm uppercase tracking-[0.2em] font-bold mb-4 text-[#fdfaf3]"
-              style={{ fontFamily: "'Times New Roman', serif" }}
-            >
-              Ikuti
-            </h4>
-            <div className="flex flex-wrap gap-3 md:justify-start justify-center">
-              {footer.social_links.map((s, i) => (
-                <a
-                  key={i}
-                  href={s.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-10 h-10 rounded-full border-2 border-[#e8d5a8]/30 hover:border-[#e8d5a8] hover:bg-[#e8d5a8]/10 flex items-center justify-center transition"
-                >
-                  <Image
-                    src={s.platform}
-                    alt="Social"
-                    width={16}
-                    height={16}
-                    className="brightness-0 invert"
-                  />
-                </a>
-              ))}
+            <div className="mt-6">
+              <h4
+                className="text-sm uppercase tracking-[0.2em] font-bold mb-3 text-[#fdfaf3]"
+                style={{ fontFamily: "'Times New Roman', serif" }}
+              >
+                Ikuti
+              </h4>
+              <div className="flex flex-wrap gap-2 md:justify-start justify-center">
+                {footer.social_links.map((s, i) => (
+                  <a
+                    key={i}
+                    href={s.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-9 h-9 rounded-full border-2 border-[#e8d5a8]/30 hover:border-[#e8d5a8] hover:bg-[#e8d5a8]/10 flex items-center justify-center transition"
+                  >
+                    <Image
+                      src={s.platform}
+                      alt="Social"
+                      width={14}
+                      height={14}
+                      className="brightness-0 invert"
+                    />
+                  </a>
+                ))}
+              </div>
             </div>
           </div>
+
+          {visitors && (
+            <div className="lg:col-span-5 text-left">
+              <VisitorList
+                stats={visitors}
+                tone="dark"
+                titleClass="text-2xl font-bold uppercase tracking-wider text-[#fdfaf3] mb-4"
+              />
+            </div>
+          )}
         </div>
         <p className="text-xs text-[#e8d5a8]/50 text-center pt-8 uppercase tracking-[0.2em]">
           {footer.copyright}

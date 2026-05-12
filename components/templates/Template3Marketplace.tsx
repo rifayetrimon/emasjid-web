@@ -13,8 +13,6 @@ import {
   getCachedNews,
   getCachedSideBanner,
 } from "@/services/apiCache";
-import { getVisitorStats } from "@/services/visitorService";
-import VisitorStats from "@/components/visitor/VisitorStats";
 import { Play, Info } from "lucide-react";
 
 interface NewsItem {
@@ -34,7 +32,6 @@ export default async function Template3Marketplace() {
     sideBannerRaw,
     faq,
     config,
-    visitors,
   ] = await Promise.all([
     getBannerData(),
     getNewsData(),
@@ -42,7 +39,6 @@ export default async function Template3Marketplace() {
     getCachedSideBanner(),
     getFaqData(),
     getCachedConfig(),
-    getVisitorStats(),
   ]);
 
   const footerCfg = config.footerConfig || {};
@@ -158,13 +154,6 @@ export default async function Template3Marketplace() {
       {allNews.length > 0 && (
         <Demo8Carousel title="Berita Terkini" items={carouselLatest} />
       )}
-
-      <VisitorStats
-        stats={visitors}
-        variant="dark"
-        eyebrow="Statistik"
-        title="Pelawat Laman Web"
-      />
 
       <section id="about" className="py-20 px-6">
         <div className="max-w-[1400px] mx-auto">

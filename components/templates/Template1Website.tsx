@@ -12,8 +12,6 @@ import {
   getCachedNews,
   getCachedSideBanner,
 } from "@/services/apiCache";
-import { getVisitorStats } from "@/services/visitorService";
-import VisitorStats from "@/components/visitor/VisitorStats";
 import { ArrowRight, Sparkles } from "lucide-react";
 
 interface NewsItem {
@@ -33,7 +31,6 @@ export default async function Template1Website() {
     sideBannerRaw,
     faq,
     config,
-    visitors,
   ] = await Promise.all([
     getBannerData(),
     getNewsData(),
@@ -41,7 +38,6 @@ export default async function Template1Website() {
     getCachedSideBanner(),
     getFaqData(),
     getCachedConfig(),
-    getVisitorStats(),
   ]);
 
   const footerCfg = config.footerConfig || {};
@@ -285,13 +281,6 @@ export default async function Template1Website() {
           </div>
         </section>
       )}
-
-      <VisitorStats
-        stats={visitors}
-        variant="light"
-        eyebrow="Statistik"
-        title="Pelawat Laman Web"
-      />
 
       <div id="faq">
         {faq && faq.items.length > 0 && (

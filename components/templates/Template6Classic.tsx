@@ -5,8 +5,6 @@ import Segment from "@/components/main/Segment";
 import NewsList from "@/components/main/NewsList";
 import Faq from "@/components/main/Faq";
 import ContactUs from "@/components/main/ContactUs";
-import VisitorStats from "@/components/visitor/VisitorStats";
-import { getVisitorStats } from "@/services/visitorService";
 
 function SectionLoader() {
   return (
@@ -16,9 +14,7 @@ function SectionLoader() {
   );
 }
 
-export default async function Template6Classic() {
-  const visitors = await getVisitorStats();
-
+export default function Template6Classic() {
   return (
     <TemplateLayout templateId="6">
       <Suspense fallback={<SectionLoader />}>
@@ -32,13 +28,6 @@ export default async function Template6Classic() {
       <Suspense fallback={<SectionLoader />}>
         <NewsList />
       </Suspense>
-
-      <VisitorStats
-        stats={visitors}
-        variant="light"
-        eyebrow="Statistik"
-        title="Pelawat Laman Web"
-      />
 
       <Suspense fallback={<SectionLoader />}>
         <Faq />
