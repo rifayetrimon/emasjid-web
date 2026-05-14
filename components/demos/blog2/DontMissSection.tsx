@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "@/components/ui/FallbackImage";
-import { categoryFor } from "@/lib/blog2Categories";
+import { categoryFor, colorForCategoryName } from "@/lib/blog2Categories";
 
 interface NewsItem {
   contentId: number;
@@ -12,12 +12,20 @@ interface NewsItem {
   date: string;
   file1: string | null;
   altImg1: string;
+  /** Optional admin-supplied category (e.g. "NEWS", "SPORTS", "Akademik"). */
+  category?: string;
 }
 
 interface Props {
   items: NewsItem[];
   excludeIds: number[];
-  tabs: string[];
+  /**
+   * Hard override for tabs. Leave empty to auto-derive from each item's
+   * `category` field (admin-driven). The first tab is always the "all" filter.
+   */
+  tabs?: string[];
+  /** Label for the "all news" tab. Defaults to "Semua" (ms). */
+  allLabel?: string;
 }
 
 function formatDate(d: string): string {
@@ -33,11 +41,43 @@ function formatDate(d: string): string {
   }
 }
 
+function resolveLabel(item: NewsItem): string {
+  if (item.category && item.category.trim()) return item.category;
+  return categoryFor(item.contentId).label;
+}
+
+function resolveColor(item: NewsItem): string {
+  // Admin-supplied category → stable color across all cards.
+  if (item.category && item.category.trim()) {
+    return colorForCategoryName(item.category);
+  }
+  // No category from admin → deterministic per contentId.
+  return categoryFor(item.contentId).color;
+}
+
 export default function DontMissSection({
   items,
   excludeIds,
-  tabs,
+  tabs: tabsProp,
+  allLabel = "Semua",
 }: Props) {
+  const tabs = useMemo(() => {
+    if (tabsProp && tabsProp.length > 0) return tabsProp;
+    // Auto-derive from admin-provided categories on each news item.
+    // "All" tab is always first; remaining tabs are unique categories
+    // ordered by how often they appear (most common first).
+    const counts = new Map<string, number>();
+    for (const i of items) {
+      const label = resolveLabel(i);
+      if (!label) continue;
+      counts.set(label, (counts.get(label) || 0) + 1);
+    }
+    const ordered = Array.from(counts.entries())
+      .sort((a, b) => b[1] - a[1])
+      .map(([label]) => label);
+    return [allLabel, ...ordered];
+  }, [tabsProp, items, allLabel]);
+
   const [active, setActive] = useState(tabs[0]);
 
   const excludeSet = new Set(excludeIds);
@@ -46,14 +86,13 @@ export default function DontMissSection({
   const filtered =
     active === tabs[0]
       ? available
-      : available.filter((i) => categoryFor(i.contentId).label === active);
+      : available.filter((i) => resolveLabel(i).toLowerCase() === active.toLowerCase());
 
   const featured = filtered[0];
   const list = filtered.slice(1, 5);
 
   return (
     <>
-      {/* Tabs */}
       <div className="flex flex-wrap gap-2 mb-6 -mt-2">
         {tabs.map((t) => {
           const isActive = active === t;
@@ -80,7 +119,6 @@ export default function DontMissSection({
         </p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Featured card */}
           {featured && (
             <Link href={`/news/${featured.contentId}`} className="group block">
               <div className="relative aspect-[16/10] overflow-hidden bg-gray-100 mb-3">
@@ -94,13 +132,14 @@ export default function DontMissSection({
                   />
                 )}
                 {(() => {
-                  const c = categoryFor(featured.contentId);
+                  const label = resolveLabel(featured);
+                  const color = resolveColor(featured);
                   return (
                     <span className="absolute top-3 left-3">
                       <span
-                        className={`inline-block px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white ${c.color}`}
+                        className={`inline-block px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white ${color}`}
                       >
-                        {c.label}
+                        {label}
                       </span>
                     </span>
                   );
@@ -114,7 +153,6 @@ export default function DontMissSection({
               </p>
             </Link>
           )}
-          {/* Right list */}
           <div className="space-y-4">
             {list.map((item) => (
               <Link

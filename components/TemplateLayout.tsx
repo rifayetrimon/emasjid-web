@@ -3,7 +3,8 @@ import { getNavData } from "@/services/navService";
 import { getFooterData } from "@/services/footerService";
 import { getCachedConfig, getCachedNews } from "@/services/apiCache";
 import { getNewsData } from "@/services/newsService";
-import { getVisitorStats } from "@/services/visitorService";
+import { getVisitorStats, EMPTY_VISITOR_STATS } from "@/services/visitorService";
+import { getSiteTheme } from "@/services/themeService";
 
 import Demo7Nav from "@/components/demos/demo7/Nav";
 import Demo7Footer from "@/components/demos/demo7/Footer";
@@ -17,6 +18,7 @@ import Demo5Nav from "@/components/demos/demo5/Nav";
 import Demo5Footer from "@/components/demos/demo5/Footer";
 import Blog2Nav from "@/components/demos/blog2/Nav";
 import Blog2Footer from "@/components/demos/blog2/Footer";
+import ScrollToTop from "@/components/ui/ScrollToTop";
 import type { HighlightNewsItem } from "@/services/newsService";
 
 export type TemplateId = "1" | "2" | "3" | "4" | "5" | "6";
@@ -75,16 +77,22 @@ export default async function TemplateLayout({
   children,
   padForFixedNav = false,
 }: Props) {
-  const [nav, footer, config, visitors, highlighted, newsRaw] = await Promise.all([
+  const [nav, footer, config, theme, visitorsRaw, highlighted, newsRaw] = await Promise.all([
     getNavData(),
     getFooterData(),
     getCachedConfig(),
+    getSiteTheme(),
     getVisitorStats(),
     // News data — only used by Template 6 (Blog) nav (trending bar) and footer columns.
     // React cache() dedupes with page-level fetches, so no double-fetch.
     templateId === "6" ? getNewsData() : Promise.resolve([] as HighlightNewsItem[]),
     templateId === "6" ? getCachedNews() : Promise.resolve(null),
   ]);
+
+  // Suppress visitor stats when admin disabled the counter.
+  const visitors = footer?.showVisitorCounter ?? theme.showVisitorCounter
+    ? visitorsRaw
+    : EMPTY_VISITOR_STATS;
 
   // Build Popular/Trending lists for the Blog template footer
   const allNews = newsRaw?.dataset || (Array.isArray(newsRaw) ? newsRaw : []);
@@ -112,10 +120,21 @@ export default async function TemplateLayout({
   const footerCfg = config.footerConfig || {};
   const defaults = TEMPLATE_DEFAULTS[templateId];
 
+  // CSS variable theme — read from SiteTheme so all admin color fields are
+  // available to components via var(...).
   const cssVars = {
-    "--primary": general.primaryColor || defaults.primary,
-    "--secondary": general.secondaryColor || defaults.secondary,
-    "--text": general.textColor || defaults.text,
+    "--primary": theme.primaryColor || general.primaryColor || defaults.primary,
+    "--secondary": theme.secondaryColor || general.secondaryColor || defaults.secondary,
+    "--text": theme.textColor || general.textColor || defaults.text,
+    "--bg-header": theme.bgColorHeader || "",
+    "--text-header-footer": theme.textColorHeaderFooter || "",
+    "--nav-line": theme.colorNavHeaderLine || "",
+    "--nav-line-text": theme.textColorNavHeaderLine || "",
+    "--bg-news": theme.backgroundColorNews || "",
+    "--bg-trending": theme.backgroundColorTrending || "",
+    "--bg-footer": theme.bgColorFooter || "",
+    "--footer-area": theme.colorFooterArea || "",
+    "--footer-area-text": theme.colorFooterAreaText || "",
   } as React.CSSProperties;
 
   let navElement: ReactNode = null;
@@ -215,6 +234,7 @@ export default async function TemplateLayout({
         {children}
       </main>
       {footerElement}
+      <ScrollToTop />
     </div>
   );
 }

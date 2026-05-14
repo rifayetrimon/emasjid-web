@@ -5,36 +5,23 @@ import BannerSlideshow from "@/components/main/BannerSlideshow";
 import Blog2Faq from "@/components/demos/blog2/Faq";
 import Blog2Contact from "@/components/demos/blog2/Contact";
 import DontMissSection from "@/components/demos/blog2/DontMissSection";
-import { categoryFor } from "@/lib/blog2Categories";
-import { getBannerData } from "@/services/bannerService";
-import { getNewsData } from "@/services/newsService";
+import Blog2GallerySection from "@/components/demos/blog2/GallerySection";
+import Blog2DonationBlock from "@/components/demos/blog2/DonationBlock";
+import Blog2ComplaintBanner from "@/components/demos/blog2/ComplaintBanner";
+import NewsCardCarousel from "@/components/news/NewsCardCarousel";
+import { categoryFor, colorForCategoryName } from "@/lib/blog2Categories";
+import { getBannerData, getSideBanners, getPromotagBanners } from "@/services/bannerService";
+import { getAllNews } from "@/services/newsService";
 import { getFaqData } from "@/services/faqService";
 import { getFooterData } from "@/services/footerService";
-import {
-  getCachedConfig,
-  getCachedNews,
-  getCachedSideBanner,
-  getCachedPromotagBanner,
-} from "@/services/apiCache";
+import { getCachedConfig } from "@/services/apiCache";
+import { getGalleryPage } from "@/services/galleryService";
+import { getPluginsByCate } from "@/services/pluginService";
+import { getSiteTheme, getDonationConfig } from "@/services/themeService";
 import { ArrowRight, Users, UserPlus, Bell } from "lucide-react";
+import type { NewsItem, BannerRecord } from "@/types/cms";
 
-interface NewsItem {
-  contentId: number;
-  title: string;
-  message: string;
-  date: string;
-  file1: string | null;
-  altImg1: string;
-}
-
-interface HasImage {
-  image?: string | null;
-  file1?: string | null;
-}
-
-function getImg(item: HasImage): string | null {
-  return item?.image ?? item?.file1 ?? null;
-}
+const AUTHOR = "Pentadbir";
 
 function formatDate(d: string): string {
   if (!d) return "";
@@ -49,15 +36,24 @@ function formatDate(d: string): string {
   }
 }
 
-// Categories + resolver live in lib/blog2Categories.ts so they can be shared
-// between server and client components.
-const cat = categoryFor;
+function categoryLabelFor(item: NewsItem): string {
+  if (item.category && item.category.trim()) return item.category;
+  return categoryFor(item.contentId).label;
+}
 
-const AUTHOR = "Pentadbir";
+function categoryColorFor(item: NewsItem): string {
+  // Admin-supplied category → stable color across all cards.
+  if (item.category && item.category.trim()) {
+    return colorForCategoryName(item.category);
+  }
+  // No category from admin → deterministic per contentId.
+  return categoryFor(item.contentId).color;
+}
 
-/* ============================================================ */
-/*  Section title with yellow underline                        */
-/* ============================================================ */
+function applyMaxDisplay<T>(list: T[], cap: number): T[] {
+  return cap > 0 ? list.slice(0, cap) : list;
+}
+
 function BlockTitle({
   label,
   accent = "primary",
@@ -94,38 +90,111 @@ function Meta({ date, author = AUTHOR }: { date: string; author?: string }) {
   );
 }
 
-function CategoryBadge({ contentId }: { contentId: number }) {
-  const c = cat(contentId);
+function CategoryBadge({ item }: { item: NewsItem }) {
+  const label = categoryLabelFor(item);
+  const color = categoryColorFor(item);
   return (
     <span
-      className={`inline-block px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white ${c.color}`}
+      className={`inline-block px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white ${color}`}
     >
-      {c.label}
+      {label}
     </span>
   );
 }
 
-/* ============================================================ */
+function NewsCardImage({
+  item,
+  sizes = "(max-width:1024px) 100vw, 50vw",
+  priority = false,
+}: {
+  item: NewsItem;
+  sizes?: string;
+  priority?: boolean;
+}) {
+  if (item.urlIframe) {
+    return (
+      <iframe
+        src={item.urlIframe}
+        title={item.title}
+        className="absolute inset-0 w-full h-full"
+        loading="lazy"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allowFullScreen
+      />
+    );
+  }
+  // Multi-image: auto-cycle through file1/file2/file3
+  if (item.images.length > 1) {
+    return (
+      <NewsCardCarousel
+        images={item.images}
+        sizes={sizes}
+        priority={priority}
+      />
+    );
+  }
+  if (!item.file1) return null;
+  return (
+    <Image
+      src={item.file1}
+      alt={item.altImg1 || item.title}
+      fill
+      className="object-cover group-hover:scale-105 transition-transform duration-500"
+      sizes={sizes}
+      priority={priority}
+    />
+  );
+}
+
+function PromotagSlide({ banner }: { banner: BannerRecord }) {
+  const slide = banner.slides[0];
+  if (!slide) return null;
+  return (
+    <a
+      href={slide.url || "#"}
+      target={slide.url ? "_blank" : undefined}
+      rel="noopener noreferrer"
+      className="block relative h-40 md:h-52 overflow-hidden bg-gray-100 group"
+    >
+      <Image
+        src={slide.src}
+        alt="Promosi"
+        fill
+        className="object-cover group-hover:scale-[1.01] transition-transform duration-500"
+        sizes="100vw"
+      />
+      <span className="absolute top-3 right-3 text-[9px] uppercase tracking-wider text-white bg-black/60 px-2 py-0.5">
+        Promosi
+      </span>
+    </a>
+  );
+}
 
 export default async function Template6Blog() {
   const [
     banner,
-    highlighted,
-    newsRaw,
-    sideBannerRaw,
-    promotagRaw,
+    allNews,
+    sideBanners,
+    promotagBanners,
     faq,
     config,
     footer,
+    galleryPage,
+    sidebarPlugins,
+    theme,
+    donation,
   ] = await Promise.all([
     getBannerData(),
-    getNewsData(),
-    getCachedNews(),
-    getCachedSideBanner(),
-    getCachedPromotagBanner(),
+    getAllNews(),
+    getSideBanners(),
+    getPromotagBanners(),
     getFaqData(),
     getCachedConfig(),
     getFooterData(),
+    getGalleryPage(1, 10),
+    getPluginsByCate("sidebar"),
+    getSiteTheme(),
+    getDonationConfig(),
   ]);
 
   const footerCfg = config.footerConfig || {};
@@ -139,78 +208,91 @@ export default async function Template6Blog() {
     .filter(Boolean)
     .join(", ");
 
-  const allNews: NewsItem[] =
-    newsRaw?.dataset || (Array.isArray(newsRaw) ? newsRaw : []);
+  // `theme.maxDisplay` is admin's pagination cap. Don't apply it to the
+  // master list — that starves smaller sections like "Jangan Lepaskan"
+  // when the hero consumes the only few items. Apply per-section instead.
+  const maxDisplay = theme.maxDisplay;
+  const newsList = allNews;
 
-  const sideBanners = (
-    sideBannerRaw?.dataset || (Array.isArray(sideBannerRaw) ? sideBannerRaw : [])
-  )
-    .map((b: { files?: { file?: string }[]; url?: string }) => {
-      const file = b.files?.find((f) => f.file && f.file.trim());
-      return file ? { src: file.file as string, url: b.url || "" } : null;
-    })
-    .filter(Boolean) as { src: string; url: string }[];
+  const frontPageNews = newsList.filter((n) => n.isFrontPage);
+  const featuredPool = frontPageNews.length > 0 ? frontPageNews : newsList;
 
-  // Promotion banner (Promotag) — separate API: banner?type=Promotag
-  const promotag = (() => {
-    const dataset =
-      promotagRaw?.dataset || (Array.isArray(promotagRaw) ? promotagRaw : []);
-    const first = dataset?.[0];
-    if (!first) return null;
-    const file = first.files?.find(
-      (f: { file?: string }) => f.file && f.file.trim()
-    );
-    if (!file?.file) return null;
-    return {
-      src: file.file as string,
-      url: first.url || "",
-    };
-  })();
-
-  // Hero
-  const heroFeatured = highlighted[0] || allNews[0];
-  // Right-column cards beside the banner: news with contentId 1 and 2 (admin-pinned),
-  // falling back to the next two newest if those IDs don't exist.
-  const findById = (id: number) => allNews.find((n) => n.contentId === id);
-  const pinnedHeroItems = [findById(1), findById(2)].filter(
-    (n): n is NewsItem => Boolean(n)
+  // Sort by date + time descending so "most recent" works on real data.
+  const recencyKey = (n: NewsItem) =>
+    new Date(`${n.date}T${n.time || "00:00:00"}`).getTime();
+  const newsByRecency = [...newsList].sort(
+    (a, b) => recencyKey(b) - recencyKey(a)
   );
-  const heroSideItems =
-    pinnedHeroItems.length > 0 ? pinnedHeroItems : allNews.slice(1, 3);
 
-  // Don't Miss — exclude the items shown beside the banner so the user
-  // doesn't see the same articles repeated at the top of the "Semua" tab.
+  // Hero featured: prefer highlight, else the first front-page-flagged article.
+  const heroFeatured: NewsItem | undefined =
+    newsList.find((n) => n.isHighlight) ||
+    featuredPool[0] ||
+    newsList[0];
+
+  // Beside the banner: the 2 most recent news items by date+time
+  // (excluding whatever is showing in the hero featured slot).
+  const heroSideItems = newsByRecency
+    .filter((n) => n.contentId !== heroFeatured?.contentId)
+    .slice(0, 2);
+
   const heroExcludeIds = [
     heroFeatured?.contentId,
     ...heroSideItems.map((i) => i.contentId),
   ].filter((id): id is number => typeof id === "number");
-  const dontMissTabs = ["Semua", "Akademik", "Pengumuman", "Aktiviti"];
 
-  // Lifestyle News
-  const lifestyleGrid = allNews.slice(0, 2);
-  const lifestyleList = allNews.slice(0, 4);
+  // Layout per news item — split by posDisplay
+  const gridNews = newsList.filter((n) => n.posDisplay === "grid");
+  const sidebarNews = newsList.filter((n) => n.posDisplay === "sidebar");
+  const fullNews = newsList.filter(
+    (n) => n.posDisplay === "full" || n.posDisplay === "slide"
+  );
+
+  // Lifestyle / Berita Sekolah (driven by news, not static content)
+  const lifestyleGrid = applyMaxDisplay(
+    (gridNews.length > 0 ? gridNews : fullNews).filter(
+      (n) => !heroExcludeIds.includes(n.contentId)
+    ),
+    maxDisplay > 0 ? Math.min(maxDisplay, 2) : 2
+  );
+  const lifestyleList = applyMaxDisplay(
+    newsList.filter((n) => !heroExcludeIds.includes(n.contentId)),
+    maxDisplay > 0 ? Math.min(maxDisplay, 4) : 4
+  );
 
   // Latest Articles
-  const latestArticles = allNews.slice(0, 8);
+  const latestArticles = applyMaxDisplay(
+    newsList,
+    maxDisplay > 0 ? Math.min(maxDisplay, 8) : 8
+  );
 
-  // Image Gallery (news photos as visual grid)
-  const galleryItems = allNews
-    .filter((n) => n.file1)
-    .slice(0, 8);
+  // Most Popular
+  const mostPopular = applyMaxDisplay(
+    newsList.filter((n) => n.isHighlight),
+    3
+  );
+  const popularList = mostPopular.length > 0 ? mostPopular : newsList.slice(0, 3);
 
-  // Sidebar widgets data
-  const mostPopular = allNews.slice(0, 3);
+  // Sidebar plugins (admin-placed widgets)
+  const sidebarPluginList = sidebarPlugins;
 
-  // Static content (admin-controlled intro text from banner config)
-  const staticTitle = banner?.title?.general || "";
-  const staticFocus = banner?.title?.focus?.text || "";
-  const staticBody = banner?.supporting_text || "";
+  // Side banner shaping (multi-image, per-slide urls — admin can ship 3 slides
+  // per banner record now).
+  type SideBannerSlide = { src: string; url: string };
+  const sideBannerSlides: SideBannerSlide[] = sideBanners.flatMap((b) =>
+    b.slides.map((s) => ({ src: s.src, url: s.url }))
+  );
 
   return (
     <TemplateLayout templateId="6">
       {/* ━━━━━━ TRENDING NOW STRIP ━━━━━━ */}
       {heroFeatured && (
-        <div className="bg-gray-50 border-b border-gray-200">
+        <div
+          className="border-b border-gray-200"
+          style={{
+            backgroundColor: theme.backgroundColorTrending || undefined,
+          }}
+        >
           <div className="max-w-7xl mx-auto px-6 py-2.5 flex items-center gap-4">
             <span className="flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-1 bg-red-600 text-white text-[10px] font-bold uppercase tracking-wider">
               <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
@@ -222,6 +304,15 @@ export default async function Template6Blog() {
             >
               {heroFeatured.title}
             </Link>
+          </div>
+        </div>
+      )}
+
+      {/* ━━━━━━ SUBHEADER (admin-driven) ━━━━━━ */}
+      {theme.subheader && (
+        <div className="bg-gray-100 border-b border-gray-200">
+          <div className="max-w-7xl mx-auto px-6 py-2 text-center text-xs text-gray-700">
+            {theme.subheader}
           </div>
         </div>
       )}
@@ -247,25 +338,43 @@ export default async function Template6Blog() {
                     }}
                   />
                 )}
+                {(banner?.title?.general ||
+                  banner?.title?.focus?.text ||
+                  banner?.supporting_text) && (
+                  <div className="absolute inset-0 flex flex-col justify-end pointer-events-none">
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent" />
+                    <div className="relative p-6 md:p-8 text-white pointer-events-auto">
+                      {(banner.title?.general || banner.title?.focus?.text) && (
+                        <h1 className="text-2xl md:text-4xl font-extrabold leading-tight drop-shadow-lg">
+                          {banner.title?.general}
+                          {banner.title?.focus?.text && (
+                            <>
+                              {banner.title?.general ? " " : ""}
+                              <span className="text-[var(--primary)]">
+                                {banner.title.focus.text}
+                              </span>
+                            </>
+                          )}
+                        </h1>
+                      )}
+                      {banner.supporting_text && (
+                        <p className="mt-3 max-w-2xl text-sm md:text-base text-white/85 leading-relaxed drop-shadow">
+                          {banner.supporting_text}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               <Link
                 href={`/news/${heroFeatured.contentId}`}
                 className="lg:col-span-2 group relative block aspect-[16/9] overflow-hidden bg-gray-900"
               >
-                {getImg(heroFeatured) && (
-                  <Image
-                    src={getImg(heroFeatured)}
-                    alt={heroFeatured.altImg1 || heroFeatured.title}
-                    fill
-                    className="object-cover group-hover:scale-[1.02] transition-transform duration-700"
-                    sizes="(max-width:1024px) 100vw, 66vw"
-                    priority
-                  />
-                )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
+                <NewsCardImage item={heroFeatured} />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent pointer-events-none" />
                 <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-                  <CategoryBadge contentId={heroFeatured.contentId} />
+                  <CategoryBadge item={heroFeatured} />
                   <h1 className="mt-3 text-2xl md:text-3xl font-bold leading-tight line-clamp-3 group-hover:text-[var(--primary)] transition">
                     {heroFeatured.title}
                   </h1>
@@ -274,54 +383,67 @@ export default async function Template6Blog() {
                     <span>·</span>
                     <span>{formatDate(heroFeatured.date)}</span>
                   </div>
+                  {heroFeatured.mobileDes && (
+                    <p className="md:hidden text-xs text-white/80 mt-2 line-clamp-2">
+                      {heroFeatured.mobileDes}
+                    </p>
+                  )}
                 </div>
               </Link>
             )}
 
-            {/* Right column — pinned news (IDs 1 & 2) stacked beside the banner */}
+            {/* Right column — pinned/front-page news */}
             <div className="grid grid-cols-1 gap-4">
-              {heroSideItems.slice(0, 2).map((item) => {
-                const img = getImg(item);
-                return (
-                  <Link
-                    key={item.contentId}
-                    href={`/news/${item.contentId}`}
-                    className="group relative block aspect-[16/9] overflow-hidden bg-gray-100"
-                  >
-                    {img && (
-                      <Image
-                        src={img}
-                        alt={item.altImg1 || item.title}
-                        fill
-                        className="object-cover group-hover:scale-105 transition-transform duration-500"
-                        sizes="(max-width:1024px) 100vw, 33vw"
-                      />
-                    )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
-                    <div className="absolute bottom-0 left-0 right-0 p-3 text-white">
-                      <CategoryBadge contentId={item.contentId} />
-                      <h3 className="mt-2 text-sm font-bold leading-snug line-clamp-2 group-hover:text-[var(--primary)] transition">
-                        {item.title}
-                      </h3>
-                    </div>
-                  </Link>
-                );
-              })}
+              {heroSideItems.slice(0, 2).map((item) => (
+                <Link
+                  key={item.contentId}
+                  href={`/news/${item.contentId}`}
+                  className="group relative block aspect-[16/9] overflow-hidden bg-gray-100"
+                >
+                  <NewsCardImage item={item} />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent pointer-events-none" />
+                  <div className="absolute bottom-0 left-0 right-0 p-3 text-white">
+                    <CategoryBadge item={item} />
+                    <h3 className="mt-2 text-sm font-bold leading-snug line-clamp-2 group-hover:text-[var(--primary)] transition">
+                      {item.title}
+                    </h3>
+                  </div>
+                </Link>
+              ))}
             </div>
           </div>
         </section>
       )}
 
-      {/* ━━━━━━ DON'T MISS + BERITA SEKOLAH (shared sidebar) ━━━━━━ */}
-      <section className="max-w-7xl mx-auto px-6 pb-12 grid grid-cols-1 lg:grid-cols-4 gap-8">
-        {/* MAIN COLUMN — Don't Miss + Berita Sekolah stacked */}
+      {/* ━━━━━━ MID BANNER HEADING (admin-driven) ━━━━━━ */}
+      {theme.midBannerMainTitle && (
+        <section className="max-w-7xl mx-auto px-6 pb-6">
+          <h2 className="text-center text-xl md:text-2xl font-bold text-gray-900">
+            {theme.midBannerMainTitle}
+          </h2>
+        </section>
+      )}
+
+      {/* ━━━━━━ DON'T MISS + BERITA SEKOLAH ━━━━━━ */}
+      <section
+        className="max-w-7xl mx-auto px-6 pb-12 grid grid-cols-1 lg:grid-cols-4 gap-8"
+        style={{ backgroundColor: theme.backgroundColorNews || undefined }}
+      >
         <div className="lg:col-span-3 space-y-12">
           <div>
             <BlockTitle label="Jangan Lepaskan" />
             <DontMissSection
-              items={allNews}
+              items={newsList.map((n) => ({
+                contentId: n.contentId,
+                title: n.title,
+                message: n.message,
+                date: n.date,
+                file1: n.file1,
+                altImg1: n.altImg1,
+                category: n.category,
+              }))}
               excludeIds={heroExcludeIds}
-              tabs={dontMissTabs}
+              tabs={["Semua"]}
             />
           </div>
 
@@ -335,17 +457,9 @@ export default async function Template6Blog() {
                   className="group block"
                 >
                   <div className="relative aspect-[16/10] overflow-hidden bg-gray-100 mb-3">
-                    {item.file1 && (
-                      <Image
-                        src={item.file1}
-                        alt={item.altImg1 || item.title}
-                        fill
-                        className="object-cover group-hover:scale-105 transition-transform duration-500"
-                        sizes="(max-width:1024px) 50vw, 33vw"
-                      />
-                    )}
+                    <NewsCardImage item={item} />
                     <span className="absolute top-3 left-3">
-                      <CategoryBadge contentId={item.contentId} />
+                      <CategoryBadge item={item} />
                     </span>
                   </div>
                   <h3 className="text-base font-bold text-gray-900 leading-snug line-clamp-2 group-hover:text-[var(--primary)] transition">
@@ -354,7 +468,9 @@ export default async function Template6Blog() {
                   <Meta date={item.date} />
                   <div
                     className="text-xs text-gray-600 leading-relaxed line-clamp-2 mt-2"
-                    dangerouslySetInnerHTML={{ __html: item.message }}
+                    dangerouslySetInnerHTML={{
+                      __html: item.mobileDes || item.message,
+                    }}
                   />
                 </Link>
               ))}
@@ -391,10 +507,8 @@ export default async function Template6Blog() {
           </div>
         </div>
 
-        {/* SHARED SIDEBAR — Stay Connected on top, all side banners stacked below.
-            Stays pinned in view while scrolling, scrolls internally if content
-            exceeds viewport, and releases when the Berita Sekolah section ends. */}
-        <aside className="space-y-6 lg:sticky lg:top-24 lg:self-start lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto lg:pr-1">
+        {/* SHARED SIDEBAR */}
+        <aside className="space-y-6 lg:self-start">
           <div>
             <div className="mb-5">
               <h2 className="text-sm font-extrabold text-gray-900 uppercase tracking-wider">
@@ -466,85 +580,103 @@ export default async function Template6Blog() {
             </div>
           </div>
 
-          {/* All side banners stacked below Stay Connected */}
-          {sideBanners.map((b, i) => (
-            <a
-              key={i}
-              href={b.url || "#"}
-              target={b.url ? "_blank" : undefined}
-              rel="noopener noreferrer"
-              className="block relative h-64 overflow-hidden bg-gray-100 hover:opacity-95 transition"
-            >
-              <Image
-                src={b.src}
-                alt={`Iklan ${i + 1}`}
-                fill
-                className="object-cover"
-                sizes="300px"
-              />
-              <p className="absolute bottom-2 right-2 text-[9px] uppercase tracking-wider text-white bg-black/50 px-2 py-0.5">
-                Iklan
-              </p>
-            </a>
-          ))}
+          {/* Sidebar news (posDisplay === "sidebar") */}
+          {sidebarNews.length > 0 && (
+            <div>
+              <BlockTitle label="Pilihan Editor" />
+              <ul className="space-y-3">
+                {sidebarNews.slice(0, 4).map((n) => (
+                  <li key={n.contentId} className="flex gap-3">
+                    <div className="relative w-16 h-16 flex-shrink-0 overflow-hidden bg-gray-100">
+                      {n.file1 && (
+                        <Image
+                          src={n.file1}
+                          alt={n.altImg1 || n.title}
+                          fill
+                          className="object-cover"
+                          sizes="64px"
+                        />
+                      )}
+                    </div>
+                    <Link
+                      href={`/news/${n.contentId}`}
+                      className="flex-1 text-xs font-bold text-gray-900 leading-snug line-clamp-3 hover:text-[var(--primary)]"
+                    >
+                      {n.title}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Sidebar plugins (admin-placed widgets via /plugin?cate=sidebar) */}
+          {sidebarPluginList.length > 0 && (
+            <div className="space-y-4">
+              {sidebarPluginList.map((p) => (
+                <a
+                  key={p.pluginId}
+                  href={p.urlLink || "#"}
+                  target={p.urlLink ? "_blank" : undefined}
+                  rel="noopener noreferrer"
+                  className="block p-4 border border-gray-200 hover:border-[var(--primary)] hover:shadow-sm transition"
+                >
+                  <p className="text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">
+                    {p.title}
+                  </p>
+                  <div
+                    className="text-xs text-gray-600 leading-relaxed line-clamp-3"
+                    dangerouslySetInnerHTML={{ __html: p.message }}
+                  />
+                </a>
+              ))}
+            </div>
+          )}
+
+          {/* Side banners (sta===1 enforced; per-slide urllinks honored) */}
+          {sideBannerSlides.length > 0 && (
+            <div className="max-h-[840px] overflow-y-auto space-y-4 pr-1">
+              {sideBannerSlides.map((b, i) => (
+                <a
+                  key={i}
+                  href={b.url || "#"}
+                  target={b.url ? "_blank" : undefined}
+                  rel="noopener noreferrer"
+                  className="block relative h-64 overflow-hidden bg-gray-100 hover:opacity-95 transition"
+                >
+                  <Image
+                    src={b.src}
+                    alt={`Iklan ${i + 1}`}
+                    fill
+                    className="object-cover"
+                    sizes="300px"
+                  />
+                  <p className="absolute bottom-2 right-2 text-[9px] uppercase tracking-wider text-white bg-black/50 px-2 py-0.5">
+                    Iklan
+                  </p>
+                </a>
+              ))}
+            </div>
+          )}
         </aside>
       </section>
 
-      {/* ━━━━━━ PROMOTION BANNER (Promotag API) — above gallery ━━━━━━ */}
-      {promotag && (
-        <section className="max-w-7xl mx-auto px-6 pb-12">
-          <a
-            href={promotag.url || "#"}
-            target={promotag.url ? "_blank" : undefined}
-            rel="noopener noreferrer"
-            className="block relative h-40 md:h-52 overflow-hidden bg-gray-100 group"
-          >
-            <Image
-              src={promotag.src}
-              alt="Promosi"
-              fill
-              className="object-cover group-hover:scale-[1.01] transition-transform duration-500"
-              sizes="100vw"
-            />
-            <span className="absolute top-3 right-3 text-[9px] uppercase tracking-wider text-white bg-black/60 px-2 py-0.5">
-              Promosi
-            </span>
-          </a>
+      {/* ━━━━━━ PROMOTAG (live + multiple records supported) ━━━━━━ */}
+      {promotagBanners.length > 0 && (
+        <section className="max-w-7xl mx-auto px-6 pb-12 space-y-4">
+          {promotagBanners.map((b) => (
+            <PromotagSlide key={b.bannerId} banner={b} />
+          ))}
         </section>
       )}
 
-      {/* ━━━━━━ IMAGE GALLERY ━━━━━━ */}
-      {galleryItems.length > 0 && (
-        <section className="max-w-7xl mx-auto px-6 pb-12">
-          <BlockTitle label="Galeri" />
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {galleryItems.map((item) => (
-              <Link
-                key={item.contentId}
-                href={`/news/${item.contentId}`}
-                className="group relative block aspect-square overflow-hidden bg-gray-100"
-              >
-                {item.file1 && (
-                  <Image
-                    src={item.file1}
-                    alt={item.altImg1 || item.title}
-                    fill
-                    className="object-cover group-hover:scale-110 transition-transform duration-500"
-                    sizes="(max-width:768px) 50vw, 25vw"
-                  />
-                )}
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors duration-300 flex items-end p-3">
-                  <span className="text-white text-xs font-bold opacity-0 group-hover:opacity-100 transition line-clamp-2">
-                    {item.title}
-                  </span>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </section>
-      )}
+      {/* ━━━━━━ DONATION (Config-driven, admin toggle) ━━━━━━ */}
+      <Blog2DonationBlock donation={donation} />
 
-      {/* ━━━━━━ LATEST + MOST POPULAR + RECENT COMMENTS ━━━━━━ */}
+      {/* ━━━━━━ GALLERY (10 items / page, 5×2 grid + pagination) ━━━━━━ */}
+      <Blog2GallerySection initial={galleryPage} />
+
+      {/* ━━━━━━ LATEST + MOST POPULAR ━━━━━━ */}
       <section className="max-w-7xl mx-auto px-6 pb-12 grid grid-cols-1 lg:grid-cols-4 gap-8">
         <div className="lg:col-span-3">
           <BlockTitle label="Berita Terkini" />
@@ -556,17 +688,9 @@ export default async function Template6Blog() {
                 className="group block"
               >
                 <div className="relative aspect-[16/10] overflow-hidden bg-gray-100 mb-3">
-                  {item.file1 && (
-                    <Image
-                      src={item.file1}
-                      alt={item.altImg1 || item.title}
-                      fill
-                      className="object-cover group-hover:scale-105 transition-transform duration-500"
-                      sizes="(max-width:768px) 100vw, 33vw"
-                    />
-                  )}
+                  <NewsCardImage item={item} />
                   <span className="absolute top-3 left-3">
-                    <CategoryBadge contentId={item.contentId} />
+                    <CategoryBadge item={item} />
                   </span>
                 </div>
                 <h3 className="text-base font-bold text-gray-900 leading-snug line-clamp-2 group-hover:text-[var(--primary)] transition">
@@ -589,11 +713,10 @@ export default async function Template6Blog() {
         </div>
 
         <aside className="space-y-8 lg:sticky lg:top-24 lg:self-start">
-          {/* MOST POPULAR */}
           <div>
             <BlockTitle label="Paling Popular" />
             <ol className="space-y-4">
-              {mostPopular.map((item, i) => (
+              {popularList.map((item, i) => (
                 <li key={item.contentId} className="flex gap-3 group">
                   <span
                     className="flex-shrink-0 text-3xl font-extrabold text-gray-200 leading-none w-8"
@@ -620,32 +743,15 @@ export default async function Template6Blog() {
               ))}
             </ol>
           </div>
-
         </aside>
       </section>
 
-      {/* ━━━━━━ STATIC CONTENT — admin-controlled intro ━━━━━━ */}
-      {(staticTitle || staticBody) && (
-        <section className="bg-gray-50 border-y border-gray-200 py-14 px-6">
-          <div className="max-w-4xl mx-auto text-center">
-            {(staticTitle || staticFocus) && (
-              <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 leading-tight mb-4">
-                {staticTitle}
-                {staticFocus && (
-                  <>
-                    {staticTitle && " "}
-                    <span className="text-[var(--primary)]">{staticFocus}</span>
-                  </>
-                )}
-              </h2>
-            )}
-            {staticBody && (
-              <p className="text-sm md:text-base text-gray-600 leading-relaxed max-w-2xl mx-auto">
-                {staticBody}
-              </p>
-            )}
-          </div>
-        </section>
+      {/* ━━━━━━ COMPLAINT (toggle via Config.complaint) ━━━━━━ */}
+      {theme.complaintEnabled && (
+        <Blog2ComplaintBanner
+          email={footerCfg.email}
+          phone={footerCfg.phonenum}
+        />
       )}
 
       {faq && faq.items.length > 0 && (
@@ -661,4 +767,3 @@ export default async function Template6Blog() {
     </TemplateLayout>
   );
 }
-

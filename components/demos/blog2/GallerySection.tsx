@@ -1,0 +1,206 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import Image from "@/components/ui/FallbackImage";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import type { GalleryItem } from "@/types/cms";
+
+interface GalleryPagePayload {
+  items: GalleryItem[];
+  total: number;
+  currentPage: number;
+  perPage: number;
+  totalPages: number;
+}
+
+interface Props {
+  initial: GalleryPagePayload;
+  title?: string;
+}
+
+const PER_PAGE = 10;
+
+export default function Blog2GallerySection({
+  initial,
+  title = "Galeri",
+}: Props) {
+  const [data, setData] = useState<GalleryPagePayload>(initial);
+  const [loading, setLoading] = useState(false);
+  const [lightbox, setLightbox] = useState<GalleryItem | null>(null);
+
+  const pages = useMemo(
+    () => Array.from({ length: data.totalPages }, (_, i) => i + 1),
+    [data.totalPages]
+  );
+
+  // Pad to fill 2 rows × 5 cols so the grid keeps a consistent footprint
+  // even when fewer than 10 image items came back on a page.
+  const slots = useMemo(() => {
+    const n = Math.max(PER_PAGE, data.items.length);
+    return Array.from({ length: n }, (_, i) => data.items[i] || null);
+  }, [data.items]);
+
+  async function load(page: number) {
+    if (page === data.currentPage || loading) return;
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/gallery?page=${page}&perPage=${PER_PAGE}`, {
+        cache: "no-store",
+      });
+      if (res.ok) {
+        const next = (await res.json()) as GalleryPagePayload;
+        setData(next);
+      }
+    } catch (err) {
+      console.error("Gallery page load failed:", err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    if (lightbox) {
+      const onKey = (e: KeyboardEvent) => {
+        if (e.key === "Escape") setLightbox(null);
+      };
+      window.addEventListener("keydown", onKey);
+      return () => window.removeEventListener("keydown", onKey);
+    }
+  }, [lightbox]);
+
+  if (data.total === 0 && data.items.length === 0) return null;
+
+  return (
+    <section className="max-w-7xl mx-auto px-6 pb-12">
+      <div className="mb-5 pb-2 border-b border-gray-200">
+        <h2 className="inline-block text-sm md:text-base font-extrabold text-gray-900 uppercase tracking-wider border-b-4 border-[var(--primary)] pb-2 -mb-[10px]">
+          {title}
+        </h2>
+      </div>
+
+      <div
+        className={`grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 transition-opacity ${
+          loading ? "opacity-60" : "opacity-100"
+        }`}
+      >
+        {slots.map((item, i) =>
+          item ? (
+            <button
+              type="button"
+              key={item.galleryId}
+              onClick={() => setLightbox(item)}
+              className="group relative block aspect-square overflow-hidden bg-gray-100 border border-gray-200"
+            >
+              {/* `object-contain` so banner-shaped images (e.g. wide headers)
+                  display fully instead of being cropped to a tiny center crop.
+                  Gray surround acts as a neutral matte. */}
+              <Image
+                src={item.file}
+                alt={item.title || "Galeri"}
+                fill
+                className="object-contain p-1.5 group-hover:scale-105 transition-transform duration-500"
+                sizes="(max-width:640px) 50vw, (max-width:1024px) 33vw, 20vw"
+              />
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors duration-300 flex items-end p-3 pointer-events-none">
+                <span className="text-white text-xs font-bold opacity-0 group-hover:opacity-100 transition line-clamp-2 text-left">
+                  {item.title}
+                </span>
+              </div>
+            </button>
+          ) : (
+            <div
+              key={`empty-${i}`}
+              className="relative aspect-square bg-gray-50 border border-dashed border-gray-200"
+              aria-hidden="true"
+            />
+          )
+        )}
+      </div>
+
+      {/* Pagination */}
+      {data.totalPages > 1 && (
+        <div className="mt-6 flex items-center justify-center gap-2">
+          <button
+            type="button"
+            aria-label="Halaman sebelumnya"
+            disabled={data.currentPage <= 1 || loading}
+            onClick={() => load(data.currentPage - 1)}
+            className="w-9 h-9 flex items-center justify-center rounded-full bg-white border border-gray-200 text-gray-700 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+
+          {pages.map((p) => {
+            const isActive = p === data.currentPage;
+            return (
+              <button
+                key={p}
+                type="button"
+                aria-label={`Halaman ${p}`}
+                aria-current={isActive ? "page" : undefined}
+                onClick={() => load(p)}
+                disabled={loading}
+                className={`w-9 h-9 flex items-center justify-center rounded-full text-xs font-bold tabular-nums transition border ${
+                  isActive
+                    ? "bg-[var(--primary)] text-gray-900 border-[var(--primary)]"
+                    : "bg-white text-gray-700 border-gray-200 hover:bg-gray-100"
+                }`}
+              >
+                {p}
+              </button>
+            );
+          })}
+
+          <button
+            type="button"
+            aria-label="Halaman seterusnya"
+            disabled={data.currentPage >= data.totalPages || loading}
+            onClick={() => load(data.currentPage + 1)}
+            className="w-9 h-9 flex items-center justify-center rounded-full bg-white border border-gray-200 text-gray-700 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
+      {/* Lightbox */}
+      {lightbox && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-[100] bg-black/85 flex items-center justify-center p-6"
+          onClick={() => setLightbox(null)}
+        >
+          <button
+            type="button"
+            aria-label="Tutup"
+            className="absolute top-4 right-4 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center"
+            onClick={(e) => {
+              e.stopPropagation();
+              setLightbox(null);
+            }}
+          >
+            ×
+          </button>
+          <div
+            className="relative max-w-5xl w-full max-h-[85vh]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Image
+              src={lightbox.file}
+              alt={lightbox.title}
+              width={1600}
+              height={1200}
+              className="w-full h-auto max-h-[85vh] object-contain"
+            />
+            {lightbox.title && (
+              <p className="mt-3 text-center text-sm text-white/80">
+                {lightbox.title}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}

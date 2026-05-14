@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "@/components/ui/FallbackImage";
 
 interface GalleryImage {
@@ -13,26 +13,48 @@ type ViewMode = "slide" | "grid" | "full";
 interface Props {
   images: GalleryImage[];
   defaultMode?: ViewMode;
+  /** Auto-rotate interval in ms for slide mode. Default 4500ms. */
+  interval?: number;
 }
 
-export default function NewsImageGallery({ images, defaultMode }: Props) {
+export default function NewsImageGallery({
+  images,
+  defaultMode,
+  interval = 3000,
+}: Props) {
   const viewMode = defaultMode || (images.length > 1 ? "slide" : "full");
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [paused, setPaused] = useState(false);
+
+  // Auto-rotate slide mode unless paused (hover/focus).
+  useEffect(() => {
+    if (viewMode !== "slide" || images.length <= 1 || paused) return;
+    const t = setInterval(() => {
+      setCurrentIndex((i) => (i + 1) % images.length);
+    }, interval);
+    return () => clearInterval(t);
+  }, [viewMode, images.length, interval, paused]);
 
   if (images.length === 0) return null;
 
   return (
     <div>
-
       {/* Slide View */}
       {viewMode === "slide" && (
         <div className="relative">
-          <div className="relative w-full h-[300px] md:h-[500px] rounded-xl overflow-hidden bg-gray-100">
+          <div
+            className="relative w-full h-[300px] md:h-[500px] rounded-xl overflow-hidden bg-gray-100"
+            onMouseEnter={() => setPaused(true)}
+            onMouseLeave={() => setPaused(false)}
+            onFocus={() => setPaused(true)}
+            onBlur={() => setPaused(false)}
+          >
             {images.map((img, index) => (
               <div
                 key={index}
                 className="absolute inset-0 transition-opacity duration-700 ease-in-out"
                 style={{ opacity: index === currentIndex ? 1 : 0 }}
+                aria-hidden={index !== currentIndex}
               >
                 <Image
                   src={img.src}
@@ -45,46 +67,29 @@ export default function NewsImageGallery({ images, defaultMode }: Props) {
               </div>
             ))}
 
-            {/* Image counter */}
-            <div className="absolute top-4 right-4 bg-black/50 text-white text-xs px-3 py-1 rounded-full">
-              {currentIndex + 1} / {images.length}
-            </div>
-          </div>
-
-          {/* Navigation arrows */}
-          {images.length > 1 && (
-            <>
-              <button
-                onClick={() => setCurrentIndex((prev) => (prev - 1 + images.length) % images.length)}
-                className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center transition-colors text-xl"
-              >
-                &#8249;
-              </button>
-              <button
-                onClick={() => setCurrentIndex((prev) => (prev + 1) % images.length)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center transition-colors text-xl"
-              >
-                &#8250;
-              </button>
-
-              {/* Thumbnail strip */}
-              <div className="flex justify-center gap-2 mt-3">
-                {images.map((img, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setCurrentIndex(index)}
-                    className={`relative w-14 h-10 rounded overflow-hidden border-2 transition-all ${
-                      index === currentIndex
-                        ? "border-[var(--primary)] opacity-100"
-                        : "border-transparent opacity-60 hover:opacity-90"
-                    }`}
-                  >
-                    <Image src={img.src} alt="" fill className="object-cover" sizes="56px" />
-                  </button>
-                ))}
+            {/* Circle indicator dots — centered below middle of the image */}
+            {images.length > 1 && (
+              <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex items-center gap-2.5">
+                {images.map((_, index) => {
+                  const isActive = index === currentIndex;
+                  return (
+                    <button
+                      key={index}
+                      type="button"
+                      aria-label={`Tunjuk gambar ${index + 1}`}
+                      aria-current={isActive ? "true" : undefined}
+                      onClick={() => setCurrentIndex(index)}
+                      className={`rounded-full transition-all shadow-md ring-1 ring-white/70 ${
+                        isActive
+                          ? "w-3.5 h-3.5 bg-white"
+                          : "w-3 h-3 bg-white/45 hover:bg-white/70"
+                      }`}
+                    />
+                  );
+                })}
               </div>
-            </>
-          )}
+            )}
+          </div>
         </div>
       )}
 

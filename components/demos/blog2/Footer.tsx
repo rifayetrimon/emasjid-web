@@ -27,8 +27,23 @@ export default function Blog2Footer({
   if (!footer) return null;
   const year = new Date().getFullYear();
 
+  const columns = footer.columns || [];
+  const extraColumns = columns.slice(1); // col2 + col3 (col1 is rendered as "About Us")
+  const showVisitor = !!visitors && footer.showVisitorCounter;
+
   return (
-    <footer className="bg-[#1a1a1a] text-gray-400">
+    <footer
+      className="text-gray-400"
+      style={{
+        backgroundColor: footer.bgColor || "#1a1a1a",
+        color: footer.textColor || undefined,
+        backgroundImage: footer.backgroundImage
+          ? `url(${footer.backgroundImage})`
+          : undefined,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}
+    >
       <div className="max-w-7xl mx-auto px-6 pt-14 pb-8">
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-10 pb-12 border-b border-white/10">
           {/* Editor Picks */}
@@ -103,11 +118,11 @@ export default function Blog2Footer({
             </div>
           )}
 
-          {/* Visitor stats */}
-          {visitors && (
+          {/* Visitor stats — only when admin enabled countingVisitorFooter */}
+          {showVisitor && (
             <div>
               <VisitorList
-                stats={visitors}
+                stats={visitors!}
                 tone="dark"
                 align="left"
                 titleClass="text-sm font-extrabold uppercase tracking-wider text-white mb-5 border-b border-[var(--primary)] pb-2 inline-block"
@@ -116,9 +131,9 @@ export default function Blog2Footer({
           )}
         </div>
 
-        {/* About + follow */}
+        {/* About + admin-driven columns + follow */}
         <div className="grid md:grid-cols-3 gap-10 py-10 border-b border-white/10">
-          <div className="md:col-span-2 flex items-start gap-5">
+          <div className="md:col-span-1 flex items-start gap-5">
             {footer.image.image && (
               <Image
                 src={footer.image.image}
@@ -130,23 +145,46 @@ export default function Blog2Footer({
             )}
             <div>
               <h5 className="text-sm font-bold uppercase tracking-wider text-white mb-2">
-                About Us
+                {footer.footer_title || "About Us"}
               </h5>
-              <p className="text-xs text-white/60 leading-relaxed mb-3 max-w-md">
-                {footer.text}
-              </p>
-              <p className="text-xs text-white/60">
-                <span className="uppercase tracking-wider text-white/40">Contact us:</span>{" "}
-                <a
-                  href={`mailto:${footer.email}`}
-                  className="text-blue-400 hover:text-blue-300 transition"
-                >
-                  {footer.email}
-                </a>
-              </p>
+              {footer.text && (
+                <div
+                  className="text-xs text-white/60 leading-relaxed mb-3 max-w-md"
+                  dangerouslySetInnerHTML={{ __html: footer.text }}
+                />
+              )}
+              {footer.email && (
+                <p className="text-xs text-white/60">
+                  <span className="uppercase tracking-wider text-white/40">
+                    Contact us:
+                  </span>{" "}
+                  <a
+                    href={`mailto:${footer.email}`}
+                    className="text-blue-400 hover:text-blue-300 transition"
+                  >
+                    {footer.email}
+                  </a>
+                </p>
+              )}
             </div>
           </div>
-          {footer.social_links.length > 0 && (
+
+          {/* Admin columns 2 & 3 */}
+          {extraColumns.map((col, i) => (
+            <div key={i}>
+              <h5 className="text-sm font-bold uppercase tracking-wider text-white mb-2">
+                {col.title}
+              </h5>
+              {col.content && (
+                <div
+                  className="text-xs text-white/60 leading-relaxed"
+                  dangerouslySetInnerHTML={{ __html: col.content }}
+                />
+              )}
+            </div>
+          ))}
+
+          {footer.social_links.length > 0 && extraColumns.length < 2 && (
             <div>
               <h5 className="text-sm font-bold uppercase tracking-wider text-white mb-3">
                 Follow Us
@@ -175,8 +213,42 @@ export default function Blog2Footer({
           )}
         </div>
 
+        {/* If both extra columns ate the social slot, render socials here */}
+        {footer.social_links.length > 0 && extraColumns.length >= 2 && (
+          <div className="py-6 border-b border-white/10">
+            <h5 className="text-sm font-bold uppercase tracking-wider text-white mb-3">
+              Follow Us
+            </h5>
+            <div className="flex flex-wrap gap-2">
+              {footer.social_links.map((s, i) => (
+                <a
+                  key={i}
+                  href={s.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Social"
+                  className="w-9 h-9 bg-white/5 hover:bg-[var(--primary)] flex items-center justify-center transition group"
+                >
+                  <Image
+                    src={s.platform}
+                    alt="Social"
+                    width={14}
+                    height={14}
+                    className="brightness-0 invert opacity-80 group-hover:brightness-0 group-hover:invert-0 transition"
+                  />
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Bottom bar */}
-        <div className="pt-6 flex flex-col md:flex-row items-center justify-between gap-3 text-xs text-white/50">
+        <div
+          className="pt-6 flex flex-col md:flex-row items-center justify-between gap-3 text-xs"
+          style={{
+            color: footer.textColor || "rgba(255,255,255,0.5)",
+          }}
+        >
           <p>{footer.copyright || `© ${year}. All Rights Reserved.`}</p>
           <a href="#contact" className="hover:text-white transition">
             Contact us

@@ -132,3 +132,58 @@ export const getCachedVisitors = cache(async () => {
     return {};
   }
 });
+
+export const getCachedStaticContent = cache(async () => {
+  try {
+    const sid = getSID();
+    const res = await myAxios.get(`static-content?sid=${sid}&currentpage=1`);
+    return res.data?.data || [];
+  } catch (error) {
+    console.error("❌ getCachedStaticContent failed:", error);
+    return [];
+  }
+});
+
+export const getCachedGallery = cache(async () => {
+  try {
+    const sid = getSID();
+    const res = await myAxios.get(`gallery?sid=${sid}`);
+    return res.data?.data || [];
+  } catch (error) {
+    console.error("❌ getCachedGallery failed:", error);
+    return [];
+  }
+});
+
+export const getCachedGalleryCategory = cache(async () => {
+  try {
+    const sid = getSID();
+    const res = await myAxios.get(`gallery/category?sid=${sid}`);
+    return res.data?.data || [];
+  } catch (error) {
+    console.error("❌ getCachedGalleryCategory failed:", error);
+    return [];
+  }
+});
+
+export const getCachedPlugin = cache(async () => {
+  try {
+    const sid = getSID();
+    const res = await myAxios.get(`plugin?sid=${sid}`);
+    return res.data?.data || [];
+  } catch (error) {
+    console.error("❌ getCachedPlugin failed:", error);
+    return [];
+  }
+});
+
+export const getCachedPluginCategory = cache(async () => {
+  try {
+    const sid = getSID();
+    const res = await myAxios.get(`plugin-category?sid=${sid}`);
+    return res.data?.data || [];
+  } catch (error) {
+    console.error("❌ getCachedPluginCategory failed:", error);
+    return [];
+  }
+});

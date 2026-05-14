@@ -68,13 +68,54 @@ export async function getNavData(): Promise<NavData> {
     const isHomeLabel = (title: string) =>
       HOME_LABELS.has(title.toLowerCase().trim());
 
-    const mapMenuItem = (item: NavMenuItem, parentSlug: string = ""): MenuItem => {
-      let link = item.url;
+    /**
+     * Resolve the destination URL for a menu item.
+     *
+     * Priority:
+     *  1. If admin bound this menu to a static-page (`config.article` /
+     *     `config.staticPage` / `config.staticContent` carries a non-empty
+     *     ID), route to `/static/<id>`. The /static/[slug] page accepts
+     *     numeric IDs and slugs both.
+     *  2. If admin bound this menu to a news article (`config.optionmenu`
+     *     equals "article"/"news"/"listnews" together with `config.article`),
+     *     route to `/news/<id>`.
+     *  3. Else fall back to admin's `url` field, slugified-title fallback,
+     *     or "/" for the Home label.
+     */
+    const resolveLink = (
+      item: NavMenuItem,
+      parentSlug: string,
+      fallbackUrl: string
+    ): string => {
+      const cfg = item.config || {};
+      const optionmenu = String(cfg.optionmenu || "").toLowerCase();
+      const article =
+        (cfg.article as string | number | null | undefined) ||
+        (cfg.staticPage as string | number | null | undefined) ||
+        (cfg.staticContent as string | number | null | undefined) ||
+        (cfg.staticContentId as string | number | null | undefined) ||
+        "";
 
+      const articleId = String(article ?? "").trim();
+      if (articleId) {
+        // Static-page binding wins over `url` because admin's `url` is
+        // often left blank when they bind via the article picker.
+        const isNewsBinding = /(news|article|listnews)/.test(optionmenu);
+        return isNewsBinding
+          ? `/news/${articleId}`
+          : `/static/${articleId}`;
+      }
+
+      let link = fallbackUrl;
       if (!link || link.trim() === "") {
         const slug = generateSlug(item.title);
         link = parentSlug ? `${parentSlug}/${slug}` : `/${slug}`;
       }
+      return link;
+    };
+
+    const mapMenuItem = (item: NavMenuItem, parentSlug: string = ""): MenuItem => {
+      let link = resolveLink(item, parentSlug, item.url);
 
       // Top-level "Home" / "Utama" menu items always go to /
       if (!parentSlug && isHomeLabel(item.title)) {
@@ -88,9 +129,15 @@ export async function getNavData(): Promise<NavData> {
               .map((sub: NavMenuItem) => mapMenuItem(sub, link))
           : undefined;
 
+      const targetWindow =
+        typeof item.config?.targetwindow === "string"
+          ? item.config.targetwindow
+          : undefined;
+
       return {
         label: item.title,
         link,
+        targetWindow,
         submenu,
       };
     };

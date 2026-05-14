@@ -8,36 +8,51 @@ interface FallbackImageProps extends Omit<ImageProps, "src"> {
   fallbackSrc?: string;
 }
 
+/**
+ * The canonical fallback image lives at /icons/default-img.png (plural).
+ * Centralized here so consumers can rely on a working default — and so a
+ * second 404 on the fallback won't blank the slot.
+ */
+const DEFAULT_FALLBACK = "/icons/default-img.png";
+
 export default function FallbackImage({
   src,
-  fallbackSrc = "/icon/default-img.png",
+  fallbackSrc = DEFAULT_FALLBACK,
   alt,
+  unoptimized,
   ...props
 }: FallbackImageProps) {
-  const [imgSrc, setImgSrc] = useState<string | StaticImageData>(
-    src ? src : fallbackSrc
-  );
-  const [error, setError] = useState(false);
+  const initial: string | StaticImageData = src ? src : fallbackSrc;
+  const [imgSrc, setImgSrc] = useState<string | StaticImageData>(initial);
+  // `failed` tracks whether we've already swapped to the fallback. If the
+  // fallback itself errors we stop, so we don't loop.
+  const [failed, setFailed] = useState(!src);
 
   useEffect(() => {
     if (src) {
       setImgSrc(src);
-      setError(false);
+      setFailed(false);
     } else {
       setImgSrc(fallbackSrc);
-      setError(true);
+      setFailed(true);
     }
   }, [src, fallbackSrc]);
+
+  // If the fallback is an SVG, ask Next/Image to skip optimization so it
+  // renders even with strict CSP / dangerouslyAllowSVG off.
+  const isSvgFallback =
+    typeof imgSrc === "string" && /\.svg(\?.*)?$/i.test(imgSrc);
 
   return (
     <Image
       {...props}
       src={imgSrc}
       alt={alt || "Image"}
+      unoptimized={unoptimized ?? isSvgFallback}
       onError={() => {
-        if (!error) {
+        if (!failed) {
           setImgSrc(fallbackSrc);
-          setError(true);
+          setFailed(true);
         }
       }}
     />

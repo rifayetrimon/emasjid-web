@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import Image from "@/components/ui/FallbackImage";
 import { getNewsDetail } from "@/services/newsDetailService";
-import NewsImageGallery from "@/components/news/NewsImageGallery";
+import MediaLayout from "@/components/news/MediaLayout";
 import TemplateLayout from "@/components/TemplateLayout";
 import { getActiveTemplateId } from "@/lib/getActiveTemplate";
 import { getCachedNews } from "@/services/apiCache";
@@ -47,7 +47,10 @@ export default async function NewsDetailPage({
     notFound();
   }
 
-  const galleryMode = news.displayMode === "sidebar" ? "slide" : news.displayMode;
+  // Respect admin's posDisplay per article. Sidebar mode is too small for
+  // a detail page so it falls back to slide.
+  const galleryMode =
+    news.displayMode === "sidebar" ? "slide" : news.displayMode;
 
   const formattedDate = news.date
     ? new Date(news.date).toLocaleDateString("ms-MY", {
@@ -168,15 +171,17 @@ export default async function NewsDetailPage({
                 </div>
               )}
 
-              {/* Featured image / gallery */}
+              {/* Featured image / gallery — respects admin's posDisplay */}
               <div className="mb-8">
-                <NewsImageGallery
+                <MediaLayout
                   images={
                     news.images.length > 0
                       ? news.images
-                      : [{ src: "/icon/default-img.png", alt: news.title }]
+                      : [{ src: "/icons/default-img.png", alt: news.title }]
                   }
-                  defaultMode={galleryMode}
+                  mode={galleryMode}
+                  aspect="aspect-[16/9]"
+                  sizes="(max-width: 768px) 100vw, 800px"
                 />
               </div>
 

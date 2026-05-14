@@ -4,7 +4,7 @@ import {
   getCachedConfig,
   getCachedAddonPlugin,
 } from "./apiCache";
-import { FooterProps } from "@/types/cms";
+import { FooterProps, FooterColumn } from "@/types/cms";
 import { getImageUrl } from "./utils";
 
 // Map API category names to local icon files
@@ -36,6 +36,30 @@ const SOCIAL_CATEGORIES = new Set([
   "whatsapp",
 ]);
 
+function pickColumn(
+  raw: Record<string, unknown> | undefined,
+  prefix: "col1" | "col2" | "col3"
+): FooterColumn | null {
+  if (!raw) return null;
+  const nested = raw[prefix] as
+    | { title?: string; content?: string }
+    | undefined;
+  const title =
+    (nested?.title as string | undefined) ??
+    (raw[`${prefix}Title`] as string | undefined) ??
+    "";
+  const content =
+    (nested?.content as string | undefined) ??
+    (raw[`${prefix}Content`] as string | undefined) ??
+    "";
+  if (!title && !content) return null;
+  return { title, content };
+}
+
+function isOn(v: unknown): boolean {
+  return String(v ?? "").toLowerCase() === "on";
+}
+
 export async function getFooterData(): Promise<FooterProps["footer"] | null> {
   try {
     const [footerData, configData, addonData] = await Promise.all([
@@ -48,7 +72,11 @@ export async function getFooterData(): Promise<FooterProps["footer"] | null> {
     const footerConfig = configData.footerConfig || {};
     const logoUrl = getImageUrl(configData.logoCMS || general.logoCMS);
 
-    const firstFooter = Array.isArray(footerData) ? footerData[0] : footerData;
+    const firstFooter: Record<string, unknown> | undefined = Array.isArray(
+      footerData
+    )
+      ? footerData[0]
+      : footerData;
 
     const address = [
       footerConfig.address1,
@@ -79,19 +107,40 @@ export async function getFooterData(): Promise<FooterProps["footer"] | null> {
       }
     }
 
+    const columns: FooterColumn[] = [
+      pickColumn(firstFooter, "col1"),
+      pickColumn(firstFooter, "col2"),
+      pickColumn(firstFooter, "col3"),
+    ].filter((c): c is FooterColumn => c !== null);
+
+    const footerBackground = getImageUrl(
+      (firstFooter?.file as string | undefined) || ""
+    );
+
     return {
       image: {
         image: logoUrl,
         link: "#",
       },
-      footer_title: firstFooter?.col1?.title || "",
-      text: firstFooter?.col1?.content || "",
+      footer_title: columns[0]?.title || "",
+      text: columns[0]?.content || "",
       address: address,
       phone: footerConfig.phonenum || "",
       email: footerConfig.email || "",
       social_links: socialLinks,
-      copyright: configData.copyright || "",
+      copyright: configData.copyright || footerConfig.copyright || "",
       bgColor: footerConfig.bgColorFooter || "",
+      columns,
+      backgroundImage: footerBackground || "",
+      textColor:
+        footerConfig.colorFooterAreaText ||
+        footerConfig.textColorHeaderFooter ||
+        general.textColorHeaderFooter ||
+        "",
+      areaColor: footerConfig.colorFooterArea || "",
+      showVisitorCounter: isOn(
+        footerConfig.countingVisitorFooter ?? configData.countingVisitorFooter
+      ),
     };
   } catch (error) {
     console.error("❌ Error fetching footer data:", error);
