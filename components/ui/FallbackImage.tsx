@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Image, { ImageProps, StaticImageData } from "next/image";
+import { withBasePath } from "@/lib/withBasePath";
 
 interface FallbackImageProps extends Omit<ImageProps, "src"> {
   src?: string | StaticImageData | null;
@@ -13,7 +14,7 @@ interface FallbackImageProps extends Omit<ImageProps, "src"> {
  * Centralized here so consumers can rely on a working default — and so a
  * second 404 on the fallback won't blank the slot.
  */
-const DEFAULT_FALLBACK = "/icons/default-img.png";
+const DEFAULT_FALLBACK = withBasePath("/icons/default-img.png");
 
 export default function FallbackImage({
   src,

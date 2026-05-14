@@ -3,6 +3,7 @@ import { getCachedNavHeader, getCachedConfig, getCachedAddonPlugin } from "./api
 import { MenuItem, NavConfig, NavSocialLink } from "@/types/cms";
 import { getImageUrl } from "./utils";
 import { isPluginFlagOn } from "@/lib/getShopPlugin";
+import { withBasePath } from "@/lib/withBasePath";
 
 interface NavMenuItem {
   title: string;
@@ -24,15 +25,15 @@ export interface NavData {
 
 // Map API category names to local icon files
 const SOCIAL_ICON_MAP: Record<string, { icon: string; label: string }> = {
-  facebook: { icon: "/icons/fb.svg", label: "Facebook" },
-  intagram: { icon: "/icons/instagram.svg", label: "Instagram" },
-  instagram: { icon: "/icons/instagram.svg", label: "Instagram" },
-  twitter: { icon: "/icons/x.svg", label: "Twitter" },
-  linkedin: { icon: "/icons/linkedin.svg", label: "LinkedIn" },
-  youtube: { icon: "/icons/youtube.svg", label: "YouTube" },
-  channel: { icon: "/icons/youtube.svg", label: "Channel" },
-  tiktok: { icon: "/icons/tiktok.svg", label: "TikTok" },
-  whatsapp: { icon: "/icons/whatsapp.svg", label: "WhatsApp" },
+  facebook: { icon: withBasePath("/icons/fb.svg"), label: "Facebook" },
+  intagram: { icon: withBasePath("/icons/instagram.svg"), label: "Instagram" },
+  instagram: { icon: withBasePath("/icons/instagram.svg"), label: "Instagram" },
+  twitter: { icon: withBasePath("/icons/x.svg"), label: "Twitter" },
+  linkedin: { icon: withBasePath("/icons/linkedin.svg"), label: "LinkedIn" },
+  youtube: { icon: withBasePath("/icons/youtube.svg"), label: "YouTube" },
+  channel: { icon: withBasePath("/icons/youtube.svg"), label: "Channel" },
+  tiktok: { icon: withBasePath("/icons/tiktok.svg"), label: "TikTok" },
+  whatsapp: { icon: withBasePath("/icons/whatsapp.svg"), label: "WhatsApp" },
 };
 
 const SOCIAL_CATEGORIES = new Set(Object.keys(SOCIAL_ICON_MAP));
@@ -72,15 +73,12 @@ export async function getNavData(): Promise<NavData> {
      * Resolve the destination URL for a menu item.
      *
      * Priority:
-     *  1. If admin bound this menu to a static-page (`config.article` /
-     *     `config.staticPage` / `config.staticContent` carries a non-empty
-     *     ID), route to `/static/<id>`. The /static/[slug] page accepts
-     *     numeric IDs and slugs both.
-     *  2. If admin bound this menu to a news article (`config.optionmenu`
-     *     equals "article"/"news"/"listnews" together with `config.article`),
-     *     route to `/news/<id>`.
-     *  3. Else fall back to admin's `url` field, slugified-title fallback,
-     *     or "/" for the Home label.
+     *  1. News bindings → `/news/<id>` (news has its own dedicated route).
+     *  2. Static-page bindings and unbound items → slug-based path derived
+     *     from the menu hierarchy (e.g. `/profil/sejarah-penubuhan`). The
+     *     catch-all [...slug] handler resolves this path back to a static
+     *     binding (via `getStaticPathBindings`) and loads the content.
+     *  3. Admin-supplied `url` wins over slug fallback when present.
      */
     const resolveLink = (
       item: NavMenuItem,
@@ -97,16 +95,20 @@ export async function getNavData(): Promise<NavData> {
         "";
 
       const articleId = String(article ?? "").trim();
-      if (articleId) {
-        // Static-page binding wins over `url` because admin's `url` is
-        // often left blank when they bind via the article picker.
-        const isNewsBinding = /(news|article|listnews)/.test(optionmenu);
-        return isNewsBinding
-          ? `/news/${articleId}`
-          : `/static/${articleId}`;
+      const isNewsBinding = /(news|article|listnews)/.test(optionmenu);
+      // News bindings keep the explicit /news/<id> URL — pretty URLs only
+      // apply to static pages.
+      if (articleId && isNewsBinding) {
+        return `/news/${articleId}`;
       }
 
-      let link = fallbackUrl;
+      // Static-bound menus always use slug-based paths so URLs stay clean.
+      // Admin's `url` field is often a legacy PHP link
+      // (e.g. "page/pagedetail.php?schid=805&..."); we ignore it for
+      // static-bound items because the catch-all resolves the slug to the
+      // bound static-content ID. Unbound items honor admin's `url`.
+      const isStaticBinding = !!articleId && !isNewsBinding;
+      let link = isStaticBinding ? "" : fallbackUrl;
       if (!link || link.trim() === "") {
         const slug = generateSlug(item.title);
         link = parentSlug ? `${parentSlug}/${slug}` : `/${slug}`;
@@ -145,7 +147,7 @@ export async function getNavData(): Promise<NavData> {
 
       return {
         label: item.title,
-        link,
+        link: withBasePath(link),
         targetWindow,
         submenu,
       };
@@ -164,7 +166,7 @@ export async function getNavData(): Promise<NavData> {
       `🛒 [navService] shopPlugin=${JSON.stringify(shopFlag)} (type: ${typeof shopFlag}) → enabled=${shopOn}`
     );
     if (shopOn) {
-      menuItems.push({ label: "E-shop", link: "/shop" });
+      menuItems.push({ label: "E-shop", link: withBasePath("/shop") });
     }
 
     const logo = getImageUrl(configData.logoCMS || general.logoCMS);
@@ -224,5 +226,76 @@ export async function getNavData(): Promise<NavData> {
       },
       socialLinks: [],
     };
+  }
+}
+
+/**
+ * Walk the CMS nav tree and produce a map from slug-based path → static
+ * content ID. Used by the catch-all [...slug] route so a menu URL like
+ * `/profil/sejarah-penubuhan` resolves to the CMS static page bound on
+ * that menu item.
+ *
+ * Only static-page bindings are tracked. News bindings keep using their
+ * own `/news/<id>` route and don't need this map.
+ */
+export async function getStaticPathBindings(): Promise<Record<string, string>> {
+  try {
+    const navData = await getCachedNavHeader();
+    if (!Array.isArray(navData)) return {};
+
+    const generateSlug = (title: string) =>
+      title
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/(^-|-$)/g, "");
+
+    const map: Record<string, string> = {};
+
+    // Walk must mirror the path that `mapMenuItem` produces: admin-supplied
+    // `item.url` wins over slug, and child paths are built off the parent's
+    // RESOLVED link. Otherwise the binding key won't match the rendered href.
+    const walk = (item: NavMenuItem, parentSlug: string = "") => {
+      const cfg = item.config || {};
+      const optionmenu = String(cfg.optionmenu || "").toLowerCase();
+      const article = String(
+        cfg.article ??
+          cfg.staticPage ??
+          cfg.staticContent ??
+          cfg.staticContentId ??
+          ""
+      ).trim();
+      const isNewsBinding = /(news|article|listnews)/.test(optionmenu);
+
+      const isStaticBinding = !!article && !isNewsBinding;
+
+      let link: string;
+      if (article && isNewsBinding) {
+        link = `/news/${article}`;
+      } else {
+        // Match resolveLink: static-bound menus ignore admin's url and use
+        // the slug-based path so the binding key matches the rendered href.
+        const adminUrl = isStaticBinding ? "" : String(item.url || "").trim();
+        if (adminUrl) {
+          link = adminUrl;
+        } else {
+          const slug = generateSlug(item.title || "");
+          link = parentSlug ? `${parentSlug}/${slug}` : `/${slug}`;
+        }
+      }
+
+      if (isStaticBinding) {
+        map[link] = article;
+      }
+
+      if (Array.isArray(item.submenu)) {
+        item.submenu.forEach((sub) => walk(sub, link));
+      }
+    };
+
+    navData.forEach((item: NavMenuItem) => walk(item));
+    return map;
+  } catch (error) {
+    console.error("❌ Error building static path bindings:", error);
+    return {};
   }
 }

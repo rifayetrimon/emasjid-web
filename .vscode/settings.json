@@ -1,3 +1,6 @@
 {
-  "geminicodeassist.localCodebaseAwareness": true
+  "geminicodeassist.localCodebaseAwareness": true,
+  "files.associations": {
+    "public/configuration/config.json": "jsonc"
+  }
 }

@@ -1,4 +1,5 @@
 type ConfigType = {
+  BASE_PATH?: string;
   NEXT_PUBLIC_API_URL: string;
   NEXT_PUBLIC_IMAGE_URL: string;
   NEXT_PUBLIC_SID: string;
@@ -10,6 +11,7 @@ type ConfigType = {
 };
 
 export type ResolvedConfig = {
+  basePath: string;
   baseApiUrl: string;
   imageUrl: string;
   sid: string | null;
@@ -94,7 +96,10 @@ async function loadRaw(): Promise<ConfigType> {
     const raw = await readFile(file, "utf-8");
     return parseConfig(raw);
   }
-  const res = await fetch("/configuration/config.json", { cache: "no-store" });
+  const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
+  const res = await fetch(`${basePath}/configuration/config.json`, {
+    cache: "no-store",
+  });
   if (!res.ok) {
     throw new Error(`Failed to load config.json: HTTP ${res.status}`);
   }
@@ -104,6 +109,7 @@ async function loadRaw(): Promise<ConfigType> {
 export default async function getConfig(): Promise<ResolvedConfig> {
   const data = await loadRaw();
   return {
+    basePath: data.BASE_PATH || "",
     baseApiUrl: data.NEXT_PUBLIC_API_URL || "",
     imageUrl: data.NEXT_PUBLIC_IMAGE_URL || "",
     sid: data.NEXT_PUBLIC_SID || null,

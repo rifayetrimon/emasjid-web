@@ -3,7 +3,10 @@
  * Keeps every template visually complete on a fresh install.
  */
 
-export const DEMO_BANNER_IMAGE = "/demo-banner.svg";
+import { withBasePath } from "./withBasePath";
+
+export const DEMO_BANNER_IMAGE = withBasePath("/demo-banner.svg");
+const DEMO_PRODUCT_IMAGE = withBasePath("/demo-product.svg");
 
 export const DEMO_BANNER = {
   logo: "",
@@ -150,7 +153,7 @@ export const DEMO_SHOP_ITEMS: DemoShopItem[] = [
     name: "Al-Quran Mushaf",
     price: 35.0,
     description: "Mushaf Al-Quran dengan terjemahan, cetakan kualiti tinggi.",
-    image: "/demo-product.svg",
+    image: DEMO_PRODUCT_IMAGE,
     inStock: true,
   },
   {
@@ -158,7 +161,7 @@ export const DEMO_SHOP_ITEMS: DemoShopItem[] = [
     name: "Buku Doa Harian",
     price: 15.0,
     description: "Kompilasi doa-doa harian untuk seluruh keluarga.",
-    image: "/demo-product.svg",
+    image: DEMO_PRODUCT_IMAGE,
     inStock: true,
   },
   {
@@ -166,7 +169,7 @@ export const DEMO_SHOP_ITEMS: DemoShopItem[] = [
     name: "Sejadah Premium",
     price: 45.0,
     description: "Sejadah berkualiti tinggi dengan motif tradisional.",
-    image: "/demo-product.svg",
+    image: DEMO_PRODUCT_IMAGE,
     inStock: true,
   },
   {
@@ -174,7 +177,7 @@ export const DEMO_SHOP_ITEMS: DemoShopItem[] = [
     name: "Tasbih Kayu Gaharu",
     price: 25.0,
     description: "Tasbih dari kayu gaharu asli, tahan lama.",
-    image: "/demo-product.svg",
+    image: DEMO_PRODUCT_IMAGE,
     inStock: true,
   },
   {
@@ -182,7 +185,7 @@ export const DEMO_SHOP_ITEMS: DemoShopItem[] = [
     name: "Pen Bermazu Masjid",
     price: 5.0,
     description: "Pen kualiti dengan logo masjid.",
-    image: "/demo-product.svg",
+    image: DEMO_PRODUCT_IMAGE,
     inStock: true,
   },
   {
@@ -190,7 +193,7 @@ export const DEMO_SHOP_ITEMS: DemoShopItem[] = [
     name: "Buku Latihan Tahfiz",
     price: 12.0,
     description: "Buku latihan untuk pelajar tahfiz peringkat asas.",
-    image: "/demo-product.svg",
+    image: DEMO_PRODUCT_IMAGE,
     inStock: false,
   },
 ];

@@ -9,6 +9,7 @@ import { getCachedNews } from "@/services/apiCache";
 import { categoryFor } from "@/lib/blog2Categories";
 import { notFound } from "next/navigation";
 import ShareButtons from "@/components/news/ShareButtons";
+import { withBasePath } from "@/lib/withBasePath";
 
 export const dynamic = "force-dynamic";
 
@@ -178,7 +179,7 @@ export default async function NewsDetailPage({
                   images={
                     news.images.length > 0
                       ? news.images
-                      : [{ src: "/icons/default-img.png", alt: news.title }]
+                      : [{ src: withBasePath("/icons/default-img.png"), alt: news.title }]
                   }
                   mode={galleryMode}
                   aspect="aspect-[16/9]"

@@ -6,21 +6,22 @@ import {
 } from "./apiCache";
 import { FooterProps, FooterColumn } from "@/types/cms";
 import { getImageUrl } from "./utils";
+import { withBasePath } from "@/lib/withBasePath";
 
 // Map API category names to local icon files
 const SOCIAL_ICON_MAP: Record<string, string> = {
-  facebook: "/icons/fb.svg",
-  intagram: "/icons/instagram.svg", // typo in API preserved
-  instagram: "/icons/instagram.svg",
-  twitter: "/icons/x.svg",
-  linkedin: "/icons/linkedin.svg",
-  youtube: "/icons/youtube.svg",
-  channel: "/icons/youtube.svg",
-  tiktok: "/icons/tiktok.svg",
-  whatsapp: "/icons/whatsapp.svg",
-  sharefb: "/icons/fb.svg",
-  sharetwitter: "/icons/x.svg",
-  sharewa: "/icons/whatsapp.svg",
+  facebook: withBasePath("/icons/fb.svg"),
+  intagram: withBasePath("/icons/instagram.svg"), // typo in API preserved
+  instagram: withBasePath("/icons/instagram.svg"),
+  twitter: withBasePath("/icons/x.svg"),
+  linkedin: withBasePath("/icons/linkedin.svg"),
+  youtube: withBasePath("/icons/youtube.svg"),
+  channel: withBasePath("/icons/youtube.svg"),
+  tiktok: withBasePath("/icons/tiktok.svg"),
+  whatsapp: withBasePath("/icons/whatsapp.svg"),
+  sharefb: withBasePath("/icons/fb.svg"),
+  sharetwitter: withBasePath("/icons/x.svg"),
+  sharewa: withBasePath("/icons/whatsapp.svg"),
 };
 
 // Only these categories are social links for the footer
@@ -100,7 +101,7 @@ export async function getFooterData(): Promise<FooterProps["footer"] | null> {
         if (cate && urllink && SOCIAL_CATEGORIES.has(cate) && !seenCategories.has(cate)) {
           seenCategories.add(cate);
           socialLinks.push({
-            platform: SOCIAL_ICON_MAP[cate] || "/icons/url_icon.svg",
+            platform: SOCIAL_ICON_MAP[cate] || withBasePath("/icons/url_icon.svg"),
             link: urllink,
           });
         }
