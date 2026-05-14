@@ -41,17 +41,27 @@ export default function MediaLayout({
   if (visible.length === 0) return null;
 
   const fitClass = fit === "contain" ? "object-contain" : "object-cover";
-  const aspectClass = aspect || (mode === "sidebar" ? "aspect-[4/3]" : "aspect-[16/9]");
+  const aspectClass = aspect || "aspect-[16/9]";
 
-  // When the caller pins an aspect AND mode is "full" with multiple images,
-  // fall back to slide so every card occupies the same fixed slot rather
-  // than stacking N images vertically. Single-image full is fine as-is.
-  const effectiveMode: NewsPosDisplay =
-    aspect && mode === "full" && visible.length > 1 ? "slide" : mode;
+  // Mode coercion:
+  //  - "sidebar" → "slide" (auto-rotating carousel with circle dots, same
+  //    as the news detail page). Admin uses "sidebar" to mean "compact",
+  //    but in single-image cards a slider with a single image just shows
+  //    that image; with multiple, it gets auto-rotation.
+  //  - "full" + aspect + multiple images → "slide" so cards keep a fixed
+  //    height instead of stacking N images vertically.
+  let effectiveMode: NewsPosDisplay = mode;
+  if (effectiveMode === "sidebar") effectiveMode = "slide";
+  if (
+    aspect &&
+    effectiveMode === "full" &&
+    visible.length > 1
+  ) {
+    effectiveMode = "slide";
+  }
 
   if (effectiveMode === "grid") return <GridLayout images={visible} fit={fitClass} sizes={sizes} aspect={aspectClass} />;
   if (effectiveMode === "slide") return <SlideLayout images={visible} fit={fitClass} sizes={sizes} aspect={aspectClass} interval={interval} />;
-  if (effectiveMode === "sidebar") return <SidebarLayout image={visible[0]} fit={fitClass} sizes={sizes} aspect={aspectClass} />;
   return <FullLayout images={visible} fit={fitClass} sizes={sizes} aspect={aspectClass} />;
 }
 
@@ -220,26 +230,3 @@ function FullLayout({ images, fit, sizes, aspect }: ChildProps) {
   );
 }
 
-function SidebarLayout({
-  image,
-  fit,
-  sizes,
-  aspect,
-}: {
-  image: NewsImage;
-  fit: string;
-  sizes: string;
-  aspect: string;
-}) {
-  return (
-    <div className={`relative w-full overflow-hidden bg-gray-100 rounded-lg ${aspect}`}>
-      <Image
-        src={image.src}
-        alt={image.alt}
-        fill
-        className={fit}
-        sizes={sizes}
-      />
-    </div>
-  );
-}

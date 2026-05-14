@@ -42,8 +42,8 @@ export default async function Template1Website() {
 
   const footerCfg = config.footerConfig || {};
 
-  const allNews: NewsItem[] =
-    newsRaw?.dataset || (Array.isArray(newsRaw) ? newsRaw : []);
+  const allNews: NewsItem[] = (newsRaw?.dataset ||
+    (Array.isArray(newsRaw) ? newsRaw : [])) as unknown as NewsItem[];
 
   const sideBanners = (
     sideBannerRaw?.dataset || (Array.isArray(sideBannerRaw) ? sideBannerRaw : [])

@@ -26,6 +26,7 @@ interface RawCategory {
 
 interface RawGalleryResponse {
   total_data?: number;
+  total_records?: number;
   dataset?: RawGalleryItem[];
 }
 
@@ -65,8 +66,18 @@ function readDataset(raw: unknown): RawGalleryItem[] {
 }
 
 function readTotal(raw: unknown, fallback: number): number {
-  const total = (raw as RawGalleryResponse)?.total_data;
-  return typeof total === "number" && total >= 0 ? total : fallback;
+  const r = raw as RawGalleryResponse;
+  // Backend now ships `total_records` = grand total across all pages.
+  // `total_data` is just the size of the current page, so it must NOT
+  // be used as the pagination total. Prefer total_records → total_data
+  // → fallback to the page size as a last resort.
+  if (typeof r?.total_records === "number" && r.total_records >= 0) {
+    return r.total_records;
+  }
+  if (typeof r?.total_data === "number" && r.total_data >= 0) {
+    return r.total_data;
+  }
+  return fallback;
 }
 
 function normalizeCategory(raw: RawCategory): GalleryCategory | null {
@@ -88,7 +99,7 @@ export async function getGalleryPage(
   perPage: number = 10
 ): Promise<GalleryPage> {
   try {
-    const sid = getConfig().sid || "0";
+    const sid = (await getConfig()).sid || "0";
     const res = await myAxios.get(
       `gallery?sid=${sid}&currentpage=${currentPage}`
     );

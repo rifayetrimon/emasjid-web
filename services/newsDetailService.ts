@@ -25,29 +25,33 @@ function parseDisplayMode(posDisplay: string): DisplayMode {
 export async function getNewsDetail(contentId: string): Promise<NewsDetail | null> {
   try {
     const newsData = await getCachedNews();
-    const dataset = newsData?.dataset || (Array.isArray(newsData) ? newsData : []);
+    const dataset = newsData?.dataset || [];
 
-    const data = dataset.find(
+    const raw = dataset.find(
       (item: Record<string, unknown>) =>
         String(item.contentId) === contentId
     );
 
-    if (!data) return null;
+    if (!raw) return null;
+
+    const str = (v: unknown): string =>
+      v === null || v === undefined ? "" : String(v);
+    const title = str(raw.title);
 
     const images: { src: string; alt: string }[] = [];
-    if (data.file1) images.push({ src: data.file1, alt: data.altImg1 || data.title });
-    if (data.file2) images.push({ src: data.file2, alt: data.altImg2 || data.title });
-    if (data.file3) images.push({ src: data.file3, alt: data.altImg3 || data.title });
+    if (raw.file1) images.push({ src: str(raw.file1), alt: str(raw.altImg1) || title });
+    if (raw.file2) images.push({ src: str(raw.file2), alt: str(raw.altImg2) || title });
+    if (raw.file3) images.push({ src: str(raw.file3), alt: str(raw.altImg3) || title });
 
     return {
-      id: data.contentId,
-      title: data.title || "",
-      message: data.message || "",
+      id: Number(raw.contentId) || 0,
+      title,
+      message: str(raw.message),
       images,
-      urlIframe: data.urlIframe || "",
-      date: data.date || "",
-      time: data.time || "",
-      displayMode: parseDisplayMode(data.posDisplay),
+      urlIframe: str(raw.urlIframe),
+      date: str(raw.date),
+      time: str(raw.time),
+      displayMode: parseDisplayMode(str(raw.posDisplay)),
     };
   } catch (error) {
     console.error("❌ Error fetching news detail:", error);

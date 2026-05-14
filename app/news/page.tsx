@@ -52,7 +52,8 @@ export default async function NewsListingPage({
       getBannerData(),
       getCachedSideBanner(),
     ]);
-    allNews = newsData?.dataset || (Array.isArray(newsData) ? newsData : []);
+    allNews = (newsData?.dataset ||
+      (Array.isArray(newsData) ? newsData : [])) as unknown as typeof allNews;
     banner = bannerData;
     sideBanners = (
       sideBannerRaw?.dataset || (Array.isArray(sideBannerRaw) ? sideBannerRaw : [])

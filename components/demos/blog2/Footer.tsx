@@ -37,8 +37,10 @@ export default function Blog2Footer({
       style={{
         backgroundColor: footer.bgColor || "#1a1a1a",
         color: footer.textColor || undefined,
+        // 80% black overlay on top of the image so footer text stays
+        // legible regardless of what admin uploads.
         backgroundImage: footer.backgroundImage
-          ? `url(${footer.backgroundImage})`
+          ? `linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.8)), url(${footer.backgroundImage})`
           : undefined,
         backgroundSize: "cover",
         backgroundPosition: "center",

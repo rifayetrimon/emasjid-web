@@ -39,7 +39,7 @@ export default async function NewsList() {
 
     const dataset =
       newsData?.dataset || (Array.isArray(newsData) ? newsData : []);
-    allNews = dataset;
+    allNews = dataset as unknown as typeof allNews;
 
     const bannerDataset =
       bannerData?.dataset || (Array.isArray(bannerData) ? bannerData : []);

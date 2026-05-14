@@ -64,11 +64,12 @@ export default async function NewsDetailPage({
   let popular: RelatedNews[] = [];
   try {
     const newsRaw = await getCachedNews();
-    const dataset = newsRaw?.dataset || (Array.isArray(newsRaw) ? newsRaw : []);
+    const dataset = (newsRaw?.dataset ||
+      (Array.isArray(newsRaw) ? newsRaw : [])) as unknown as RelatedNews[];
     popular = dataset
-      .filter((n: RelatedNews) => String(n.contentId) !== id)
+      .filter((n) => String(n.contentId) !== id)
       .slice(0, 4)
-      .map((n: RelatedNews) => ({
+      .map((n) => ({
         contentId: n.contentId,
         title: n.title,
         date: n.date,
@@ -137,7 +138,7 @@ export default async function NewsDetailPage({
                   Oleh Pentadbir
                 </span>
                 {formattedDate && (
-                  <span className="flex items-center gap-1.5">
+                  <span className="flex items-center gap-1.5 text-[var(--primary)] font-semibold">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path
                         strokeLinecap="round"
@@ -150,7 +151,7 @@ export default async function NewsDetailPage({
                   </span>
                 )}
                 {news.time && (
-                  <span className="flex items-center gap-1.5">
+                  <span className="flex items-center gap-1.5 text-[var(--primary)] font-semibold">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path
                         strokeLinecap="round"

@@ -129,6 +129,15 @@ export async function getNavData(): Promise<NavData> {
               .map((sub: NavMenuItem) => mapMenuItem(sub, link))
           : undefined;
 
+      // Parent menus (with a submenu) act purely as a dropdown trigger —
+      // clicking the parent should reveal children, not navigate to a page.
+      // The Home label is excluded because admins expect it to always go to /.
+      const hasChildren = !!submenu && submenu.length > 0;
+      const isHome = !parentSlug && isHomeLabel(item.title);
+      if (hasChildren && !isHome) {
+        link = "#";
+      }
+
       const targetWindow =
         typeof item.config?.targetwindow === "string"
           ? item.config.targetwindow

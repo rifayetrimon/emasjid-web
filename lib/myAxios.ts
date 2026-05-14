@@ -2,34 +2,30 @@
 import axios, { AxiosError } from "axios";
 import getConfig from "./getConfig";
 
-const baseApiUrl = getConfig().baseApiUrl || "";
-const xEncryptedKey = getConfig().x_encrypted_key || "";
-
 const myAxios = axios.create({
-  baseURL: baseApiUrl,
-  timeout: 15000, // 15 seconds
+  timeout: 15000,
   headers: {
     "Content-Type": "application/json",
     Accept: "application/json",
-    // ⭐ Prevent caching in axios
     "Cache-Control": "no-cache, no-store, must-revalidate",
     Pragma: "no-cache",
-    "x-encrypted-key": xEncryptedKey,
   },
 });
 
-// Request interceptor
 myAxios.interceptors.request.use(
-  config => {
+  async config => {
+    const { baseApiUrl, x_encrypted_key } = await getConfig();
+    config.baseURL = baseApiUrl;
+    config.headers.set("x-encrypted-key", x_encrypted_key);
+
+    config.params = {
+      ...config.params,
+      _t: Date.now(),
+    };
+
     console.log(
       `🚀 API Request: ${config.method?.toUpperCase()} ${config.url}`
     );
-
-    // ⭐ Add timestamp to prevent caching
-    config.params = {
-      ...config.params,
-      _t: Date.now(), // Cache buster
-    };
 
     return config;
   },
@@ -39,7 +35,6 @@ myAxios.interceptors.request.use(
   }
 );
 
-// Response interceptor
 myAxios.interceptors.response.use(
   response => {
     console.log(`✅ API Response: ${response.config.url}`, response.status);
@@ -47,20 +42,17 @@ myAxios.interceptors.response.use(
   },
   (error: AxiosError) => {
     if (error.response) {
-      // Server responded with error status
       console.error("❌ API Error Response:", {
         url: error.config?.url,
         status: error.response.status,
         data: error.response.data,
       });
     } else if (error.request) {
-      // Request made but no response
       console.error("❌ API No Response:", {
         url: error.config?.url,
         message: "Server tidak bertindak balas",
       });
     } else {
-      // Error setting up request
       console.error("❌ API Setup Error:", error.message);
     }
     return Promise.reject(error);

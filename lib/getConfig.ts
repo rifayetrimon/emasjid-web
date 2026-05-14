@@ -1,5 +1,3 @@
-import config from "@/public/config.json";
-
 type ConfigType = {
   NEXT_PUBLIC_API_URL: string;
   NEXT_PUBLIC_IMAGE_URL: string;
@@ -11,31 +9,108 @@ type ConfigType = {
   NEXT_PUBLIC_X_ENCRYPTED_KEY: string;
 };
 
-export default function getConfig() {
-  // Dummy implementation for getConfig
-  const configData: ConfigType = JSON.parse(JSON.stringify(config ?? "{}"));
+export type ResolvedConfig = {
+  baseApiUrl: string;
+  imageUrl: string;
+  sid: string | null;
+  sysapp: string | null;
+  environment: string | null;
+  domain: string;
+  token_key: string;
+  x_encrypted_key: string;
+};
 
-  if (!configData) {
-    throw new Error("Config data is not available");
+// Strip JS-style line and block comments so config.json can keep // notes
+// for swapping between tenants. Aware of strings, so // inside a value
+// (e.g., a URL) is preserved.
+function stripJsonComments(input: string): string {
+  let out = "";
+  let inString = false;
+  let inLine = false;
+  let inBlock = false;
+  for (let i = 0; i < input.length; i++) {
+    const ch = input[i];
+    const next = input[i + 1];
+    if (inLine) {
+      if (ch === "\n") {
+        inLine = false;
+        out += ch;
+      }
+      continue;
+    }
+    if (inBlock) {
+      if (ch === "*" && next === "/") {
+        inBlock = false;
+        i++;
+      }
+      continue;
+    }
+    if (inString) {
+      out += ch;
+      if (ch === "\\") {
+        out += next;
+        i++;
+      } else if (ch === '"') {
+        inString = false;
+      }
+      continue;
+    }
+    if (ch === '"') {
+      inString = true;
+      out += ch;
+      continue;
+    }
+    if (ch === "/" && next === "/") {
+      inLine = true;
+      i++;
+      continue;
+    }
+    if (ch === "/" && next === "*") {
+      inBlock = true;
+      i++;
+      continue;
+    }
+    out += ch;
   }
+  // Trailing commas before } or ] are also illegal in strict JSON;
+  // strip them so a dangling comma after uncommenting doesn't break parse.
+  return out.replace(/,(\s*[}\]])/g, "$1");
+}
 
-  const baseApiUrl = configData.NEXT_PUBLIC_API_URL || ""; // use
-  const imageUrl = configData.NEXT_PUBLIC_IMAGE_URL || "";
-  const sid = configData.NEXT_PUBLIC_SID || null; // use
-  const sysapp = configData.NEXT_PUBLIC_SYSAPP || null;
-  const environment = configData.NEXT_PUBLIC_ENVIRONMENT || null;
-  const domain = configData.NEXT_PUBLIC_DOMAIN || "";
-  const token_key = configData.NEXT_PUBLIC_TOKEN_KEY || ""; // use
-  const x_encrypted_key = configData.NEXT_PUBLIC_X_ENCRYPTED_KEY || "";
+function parseConfig(raw: string): ConfigType {
+  return JSON.parse(stripJsonComments(raw)) as ConfigType;
+}
 
+async function loadRaw(): Promise<ConfigType> {
+  if (typeof window === "undefined") {
+    const { readFile } = await import("node:fs/promises");
+    const path = await import("node:path");
+    const file = path.join(
+      process.cwd(),
+      "public",
+      "configuration",
+      "config.json"
+    );
+    const raw = await readFile(file, "utf-8");
+    return parseConfig(raw);
+  }
+  const res = await fetch("/configuration/config.json", { cache: "no-store" });
+  if (!res.ok) {
+    throw new Error(`Failed to load config.json: HTTP ${res.status}`);
+  }
+  return parseConfig(await res.text());
+}
+
+export default async function getConfig(): Promise<ResolvedConfig> {
+  const data = await loadRaw();
   return {
-    baseApiUrl,
-    imageUrl,
-    sid,
-    environment,
-    domain,
-    token_key,
-    sysapp,
-    x_encrypted_key,
+    baseApiUrl: data.NEXT_PUBLIC_API_URL || "",
+    imageUrl: data.NEXT_PUBLIC_IMAGE_URL || "",
+    sid: data.NEXT_PUBLIC_SID || null,
+    sysapp: data.NEXT_PUBLIC_SYSAPP || null,
+    environment: data.NEXT_PUBLIC_ENVIRONMENT || null,
+    domain: data.NEXT_PUBLIC_DOMAIN || "",
+    token_key: data.NEXT_PUBLIC_TOKEN_KEY || "",
+    x_encrypted_key: data.NEXT_PUBLIC_X_ENCRYPTED_KEY || "",
   };
 }

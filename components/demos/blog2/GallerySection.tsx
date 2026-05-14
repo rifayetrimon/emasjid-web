@@ -28,10 +28,23 @@ export default function Blog2GallerySection({
   const [loading, setLoading] = useState(false);
   const [lightbox, setLightbox] = useState<GalleryItem | null>(null);
 
-  const pages = useMemo(
-    () => Array.from({ length: data.totalPages }, (_, i) => i + 1),
-    [data.totalPages]
-  );
+  // Windowed page strip — show 1, last, current ±1, ellipsis between gaps.
+  // Keeps the strip readable even when the gallery grows to many pages.
+  const pages = useMemo<(number | "...")[]>(() => {
+    const total = data.totalPages;
+    const current = data.currentPage;
+    if (total <= 7) {
+      return Array.from({ length: total }, (_, i) => i + 1);
+    }
+    const result: (number | "...")[] = [1];
+    if (current > 3) result.push("...");
+    const start = Math.max(2, current - 1);
+    const end = Math.min(total - 1, current + 1);
+    for (let p = start; p <= end; p++) result.push(p);
+    if (current < total - 2) result.push("...");
+    if (total > 1) result.push(total);
+    return result;
+  }, [data.totalPages, data.currentPage]);
 
   // Pad to fill 2 rows × 5 cols so the grid keeps a consistent footprint
   // even when fewer than 10 image items came back on a page.
@@ -130,7 +143,18 @@ export default function Blog2GallerySection({
             <ChevronLeft className="w-4 h-4" />
           </button>
 
-          {pages.map((p) => {
+          {pages.map((p, i) => {
+            if (p === "...") {
+              return (
+                <span
+                  key={`ellipsis-${i}`}
+                  className="w-6 h-9 flex items-center justify-center text-xs text-gray-400 select-none"
+                  aria-hidden="true"
+                >
+                  …
+                </span>
+              );
+            }
             const isActive = p === data.currentPage;
             return (
               <button

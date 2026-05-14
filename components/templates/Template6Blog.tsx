@@ -214,9 +214,6 @@ export default async function Template6Blog() {
   const maxDisplay = theme.maxDisplay;
   const newsList = allNews;
 
-  const frontPageNews = newsList.filter((n) => n.isFrontPage);
-  const featuredPool = frontPageNews.length > 0 ? frontPageNews : newsList;
-
   // Sort by date + time descending so "most recent" works on real data.
   const recencyKey = (n: NewsItem) =>
     new Date(`${n.date}T${n.time || "00:00:00"}`).getTime();
@@ -224,47 +221,46 @@ export default async function Template6Blog() {
     (a, b) => recencyKey(b) - recencyKey(a)
   );
 
-  // Hero featured: prefer highlight, else the first front-page-flagged article.
-  const heroFeatured: NewsItem | undefined =
-    newsList.find((n) => n.isHighlight) ||
-    featuredPool[0] ||
-    newsList[0];
+  // Explicit recency-driven slots. newsByRecency is sorted most-recent-first.
+  //
+  // When the admin uploads a banner image:
+  //   - Banner LEFT: admin banner (with title overlay)
+  //   - Banner RIGHT: items 1 & 2 (recency 0–1)
+  //   - Jangan Lepaskan: item 3 featured + items 4–7 list (recency 2–6)
+  //   - Berita Sekolah: items 8 & 9 grid + items 10–13 list (recency 7–12)
+  //
+  // When the admin has no banner image, the left hero falls back to the
+  // most recent news so the slots shift one position later.
+  const hasAdminBanner = !!banner?.background_images?.length;
 
-  // Beside the banner: the 2 most recent news items by date+time
-  // (excluding whatever is showing in the hero featured slot).
-  const heroSideItems = newsByRecency
-    .filter((n) => n.contentId !== heroFeatured?.contentId)
-    .slice(0, 2);
+  // The left hero slot only renders this when no admin banner is uploaded.
+  const heroFeatured: NewsItem | undefined = newsByRecency[0];
 
-  const heroExcludeIds = [
-    heroFeatured?.contentId,
-    ...heroSideItems.map((i) => i.contentId),
-  ].filter((id): id is number => typeof id === "number");
+  // Banner right-column news cards (always the 2 most recent, unless the
+  // most recent is filling the left hero fallback — then take the next 2).
+  const heroSideItems = hasAdminBanner
+    ? newsByRecency.slice(0, 2)
+    : newsByRecency.slice(1, 3);
 
-  // Layout per news item — split by posDisplay
-  const gridNews = newsList.filter((n) => n.posDisplay === "grid");
+  // How many recency slots are consumed before the body sections start.
+  const heroOffset = hasAdminBanner ? 2 : 3;
+
+  // Jangan Lepaskan — items 3..7 (5 items). DontMissSection internally
+  // renders items[0] as featured and items[1..4] as the right list.
+  const dontMissItems = newsByRecency.slice(heroOffset, heroOffset + 5);
+
+  // Berita Sekolah — items 8..9 grid (2) + items 10..13 list (4).
+  const lifestyleGrid = newsByRecency.slice(heroOffset + 5, heroOffset + 7);
+  const lifestyleList = newsByRecency.slice(heroOffset + 7, heroOffset + 11);
+
+  // Sidebar news (posDisplay === "sidebar") still drives the small
+  // "Pilihan Editor" widget on the right column.
   const sidebarNews = newsList.filter((n) => n.posDisplay === "sidebar");
-  const fullNews = newsList.filter(
-    (n) => n.posDisplay === "full" || n.posDisplay === "slide"
-  );
 
-  // Lifestyle / Berita Sekolah (driven by news, not static content)
-  const lifestyleGrid = applyMaxDisplay(
-    (gridNews.length > 0 ? gridNews : fullNews).filter(
-      (n) => !heroExcludeIds.includes(n.contentId)
-    ),
-    maxDisplay > 0 ? Math.min(maxDisplay, 2) : 2
-  );
-  const lifestyleList = applyMaxDisplay(
-    newsList.filter((n) => !heroExcludeIds.includes(n.contentId)),
-    maxDisplay > 0 ? Math.min(maxDisplay, 4) : 4
-  );
-
-  // Latest Articles
-  const latestArticles = applyMaxDisplay(
-    newsList,
-    maxDisplay > 0 ? Math.min(maxDisplay, 8) : 8
-  );
+  // Berita Terkini — fixed at 6 news then "Lihat Semua" button below.
+  // We intentionally ignore admin's maxDisplay here so the section's
+  // layout (3 rows × 2 cols) stays consistent regardless of config.
+  const latestArticles = newsList.slice(0, 6);
 
   // Most Popular
   const mostPopular = applyMaxDisplay(
@@ -433,7 +429,7 @@ export default async function Template6Blog() {
           <div>
             <BlockTitle label="Jangan Lepaskan" />
             <DontMissSection
-              items={newsList.map((n) => ({
+              items={dontMissItems.map((n) => ({
                 contentId: n.contentId,
                 title: n.title,
                 message: n.message,
@@ -442,34 +438,38 @@ export default async function Template6Blog() {
                 altImg1: n.altImg1,
                 category: n.category,
               }))}
-              excludeIds={heroExcludeIds}
+              excludeIds={[]}
               tabs={["Semua"]}
             />
           </div>
 
           <div>
             <BlockTitle label="Berita Sekolah" accent="green" />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6 items-stretch">
               {lifestyleGrid.map((item) => (
                 <Link
                   key={item.contentId}
                   href={`/news/${item.contentId}`}
-                  className="group block"
+                  className="group flex flex-col h-full"
                 >
-                  <div className="relative aspect-[16/10] overflow-hidden bg-gray-100 mb-3">
+                  <div className="relative aspect-[16/10] overflow-hidden bg-gray-100 mb-3 shrink-0">
                     <NewsCardImage item={item} />
                     <span className="absolute top-3 left-3">
                       <CategoryBadge item={item} />
                     </span>
                   </div>
-                  <h3 className="text-base font-bold text-gray-900 leading-snug line-clamp-2 group-hover:text-[var(--primary)] transition">
+                  {/* Title locked to 2 lines (`min-h` reserves space when the
+                      title is a single line) so both grid cards align. */}
+                  <h3 className="text-base font-bold text-gray-900 leading-snug line-clamp-2 min-h-[2.75rem] group-hover:text-[var(--primary)] transition">
                     {item.title}
                   </h3>
                   <Meta date={item.date} />
+                  {/* Body row reserves space for ~2 lines even when admin's
+                      mobileDes / message body is empty. */}
                   <div
-                    className="text-xs text-gray-600 leading-relaxed line-clamp-2 mt-2"
+                    className="text-xs text-gray-600 leading-relaxed line-clamp-2 min-h-[2.5rem] mt-2"
                     dangerouslySetInnerHTML={{
-                      __html: item.mobileDes || item.message,
+                      __html: item.mobileDes || item.message || "",
                     }}
                   />
                 </Link>

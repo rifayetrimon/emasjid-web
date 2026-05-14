@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "@/components/ui/FallbackImage";
 import { MenuItem, NavSocialLink } from "@/types/cms";
-import { Menu, X, ChevronDown, Search } from "lucide-react";
+import { Menu, X, ChevronDown, ChevronRight, Search } from "lucide-react";
 
 interface Props {
   menuItems: MenuItem[];
@@ -14,13 +14,102 @@ interface Props {
   trendingTitle?: string;
 }
 
+/**
+ * Recursive submenu item for the desktop nav. Top-level dropdown drops
+ * down from the parent; deeper levels fly out to the right.
+ */
+function DesktopSubmenuItem({ item }: { item: MenuItem }) {
+  const hasChildren = !!item.submenu && item.submenu.length > 0;
+  const isExternal = item.targetWindow === "_blank";
+
+  if (hasChildren) {
+    return (
+      <div className="relative group/sub">
+        <span className="flex items-center justify-between gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-[var(--primary)] transition cursor-default select-none">
+          {item.label}
+          <ChevronRight className="w-3 h-3" />
+        </span>
+        <div className="absolute top-0 left-full opacity-0 invisible group-hover/sub:opacity-100 group-hover/sub:visible transition-all z-50">
+          <div className="bg-white border border-gray-200 shadow-xl py-2 min-w-[220px]">
+            {item.submenu!.map((sub, si) => (
+              <DesktopSubmenuItem key={si} item={sub} />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <a
+      href={item.link || "#"}
+      target={isExternal ? "_blank" : undefined}
+      rel={isExternal ? "noopener noreferrer" : undefined}
+      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-[var(--primary)] transition"
+    >
+      {item.label}
+    </a>
+  );
+}
+
+/**
+ * Recursive mobile menu item — accordion that nests indefinitely.
+ */
+function MobileMenuItem({
+  item,
+  depth = 0,
+}: {
+  item: MenuItem;
+  depth?: number;
+}) {
+  const [open, setOpen] = useState(false);
+  const hasSub = !!item.submenu && item.submenu.length > 0;
+  const isExternal = item.targetWindow === "_blank";
+  const indent = depth === 0 ? "" : depth === 1 ? "pl-4" : "pl-8";
+
+  if (hasSub) {
+    return (
+      <div className="border-b border-gray-100 last:border-0">
+        <button
+          onClick={() => setOpen((o) => !o)}
+          className={`w-full flex items-center justify-between py-2.5 text-sm font-bold uppercase tracking-wider text-gray-700 ${indent}`}
+        >
+          {item.label}
+          <ChevronDown
+            className={`w-4 h-4 transition-transform ${
+              open ? "rotate-180" : ""
+            }`}
+          />
+        </button>
+        {open && (
+          <div className="pb-2 space-y-1">
+            {item.submenu!.map((sub, si) => (
+              <MobileMenuItem key={si} item={sub} depth={depth + 1} />
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <a
+      href={item.link || "#"}
+      target={isExternal ? "_blank" : undefined}
+      rel={isExternal ? "noopener noreferrer" : undefined}
+      className={`block py-2.5 text-sm font-bold uppercase tracking-wider text-gray-700 ${indent} border-b border-gray-100 last:border-0`}
+    >
+      {item.label}
+    </a>
+  );
+}
+
 export default function Blog2Nav({
   menuItems,
   logo,
   socialLinks,
 }: Props) {
   const [open, setOpen] = useState(false);
-  const [openSub, setOpenSub] = useState<number | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -111,36 +200,33 @@ export default function Blog2Nav({
           <nav className="hidden lg:flex items-center gap-6 flex-1 justify-center">
             {menuItems.map((item, i) => {
               const isExternal = item.targetWindow === "_blank";
+              const hasSub = !!item.submenu && item.submenu.length > 0;
               return (
                 <div key={i} className="relative group">
-                  <a
-                    href={item.link || "#"}
-                    target={isExternal ? "_blank" : undefined}
-                    rel={isExternal ? "noopener noreferrer" : undefined}
-                    className="text-[12px] font-bold uppercase tracking-[0.15em] text-gray-700 hover:text-[var(--primary)] transition flex items-center gap-1"
-                  >
-                    {item.label}
-                    {item.submenu && item.submenu.length > 0 && (
+                  {hasSub ? (
+                    // Parent with submenu: pure dropdown trigger, no nav.
+                    <span
+                      className="text-[12px] font-bold uppercase tracking-[0.15em] text-gray-700 hover:text-[var(--primary)] transition flex items-center gap-1 cursor-default select-none"
+                    >
+                      {item.label}
                       <ChevronDown className="w-3 h-3" />
-                    )}
-                  </a>
-                  {item.submenu && item.submenu.length > 0 && (
+                    </span>
+                  ) : (
+                    <a
+                      href={item.link || "#"}
+                      target={isExternal ? "_blank" : undefined}
+                      rel={isExternal ? "noopener noreferrer" : undefined}
+                      className="text-[12px] font-bold uppercase tracking-[0.15em] text-gray-700 hover:text-[var(--primary)] transition flex items-center gap-1"
+                    >
+                      {item.label}
+                    </a>
+                  )}
+                  {hasSub && (
                     <div className="absolute top-full left-0 pt-3 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
                       <div className="bg-white border border-gray-200 shadow-xl py-2 min-w-[220px]">
-                        {item.submenu.map((sub, si) => {
-                          const subExternal = sub.targetWindow === "_blank";
-                          return (
-                            <a
-                              key={si}
-                              href={sub.link}
-                              target={subExternal ? "_blank" : undefined}
-                              rel={subExternal ? "noopener noreferrer" : undefined}
-                              className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-[var(--primary)] transition"
-                            >
-                              {sub.label}
-                            </a>
-                          );
-                        })}
+                        {item.submenu!.map((sub, si) => (
+                          <DesktopSubmenuItem key={si} item={sub} />
+                        ))}
                       </div>
                     </div>
                   )}
@@ -213,56 +299,9 @@ export default function Blog2Nav({
       {open && (
         <div className="lg:hidden border-t border-gray-200 bg-white">
           <nav className="px-5 py-3">
-            {menuItems.map((item, i) => {
-              const hasSub = item.submenu && item.submenu.length > 0;
-              const isExternal = item.targetWindow === "_blank";
-              return (
-                <div key={i} className="border-b border-gray-100 last:border-0">
-                  {hasSub ? (
-                    <>
-                      <button
-                        onClick={() => setOpenSub(openSub === i ? null : i)}
-                        className="w-full flex items-center justify-between py-3 text-sm font-bold uppercase tracking-wider text-gray-700"
-                      >
-                        {item.label}
-                        <ChevronDown
-                          className={`w-4 h-4 transition-transform ${
-                            openSub === i ? "rotate-180" : ""
-                          }`}
-                        />
-                      </button>
-                      {openSub === i && (
-                        <div className="pb-2 pl-4 space-y-2">
-                          {item.submenu!.map((sub, si) => {
-                            const subExternal = sub.targetWindow === "_blank";
-                            return (
-                              <a
-                                key={si}
-                                href={sub.link}
-                                target={subExternal ? "_blank" : undefined}
-                                rel={subExternal ? "noopener noreferrer" : undefined}
-                                className="block text-sm text-gray-600 hover:text-[var(--primary)]"
-                              >
-                                {sub.label}
-                              </a>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </>
-                  ) : (
-                    <a
-                      href={item.link || "#"}
-                      target={isExternal ? "_blank" : undefined}
-                      rel={isExternal ? "noopener noreferrer" : undefined}
-                      className="block py-3 text-sm font-bold uppercase tracking-wider text-gray-700"
-                    >
-                      {item.label}
-                    </a>
-                  )}
-                </div>
-              );
-            })}
+            {menuItems.map((item, i) => (
+              <MobileMenuItem key={i} item={item} />
+            ))}
           </nav>
         </div>
       )}
