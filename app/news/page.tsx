@@ -7,7 +7,6 @@ import {
   getCachedNews,
   getCachedSideBanner,
 } from "@/services/apiCache";
-import { getBannerData } from "@/services/bannerService";
 import { categoryFor } from "@/lib/blog2Categories";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -44,17 +43,14 @@ export default async function NewsListingPage({
   const currentPage = Math.max(1, parseInt(page || "1", 10) || 1);
 
   let allNews: NewsItem[] = [];
-  let banner = null;
   let sideBanners: { src: string; url: string }[] = [];
   try {
-    const [newsData, bannerData, sideBannerRaw] = await Promise.all([
+    const [newsData, sideBannerRaw] = await Promise.all([
       getCachedNews(),
-      getBannerData(),
       getCachedSideBanner(),
     ]);
     allNews = (newsData?.dataset ||
       (Array.isArray(newsData) ? newsData : [])) as unknown as typeof allNews;
-    banner = bannerData;
     sideBanners = (
       sideBannerRaw?.dataset || (Array.isArray(sideBannerRaw) ? sideBannerRaw : [])
     )
@@ -82,12 +78,10 @@ export default async function NewsListingPage({
 
   const mustRead = filteredNews.slice(0, 5);
 
-  const heroImage =
-    banner?.background_images?.[0] || pageItems[0]?.file1 || "";
   const heroTitle = query ? "HASIL CARIAN" : "BERITA";
   const heroSubtitle = query
     ? `${filteredNews.length} hasil untuk "${q}"`
-    : banner?.supporting_text || "Semua berita terkini dari kami.";
+    : "Semua berita terkini dari kami.";
 
   const pageHref = (p: number) => {
     const params = new URLSearchParams();
@@ -101,35 +95,22 @@ export default async function NewsListingPage({
     <TemplateLayout templateId={templateId} padForFixedNav>
       <Suspense fallback={<SectionLoader />}>
         <main className="min-h-screen text-[var(--text)]">
-          {/* HERO BANNER */}
-          <section className="relative h-[280px] md:h-[360px] overflow-hidden bg-gray-900">
-            {heroImage && (
-              <Image
-                src={heroImage}
-                alt={heroTitle}
-                fill
-                className="object-cover opacity-80"
-                sizes="100vw"
-                priority
-              />
-            )}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-            <div className="absolute inset-0 flex items-end">
-              <div className="max-w-7xl w-full mx-auto px-6 pb-10 text-white">
-                <nav className="flex items-center gap-2 text-xs mb-4 text-white/80">
-                  <Link href="/" className="hover:text-[var(--primary)] transition">
-                    Utama
-                  </Link>
-                  <span>›</span>
-                  <span className="text-white">Berita</span>
-                </nav>
-                <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-3">
-                  {heroTitle}
-                </h1>
-                <p className="text-sm md:text-base text-white/80 max-w-2xl">
-                  {heroSubtitle}
-                </p>
-              </div>
+          {/* PAGE HEADER */}
+          <section className="border-b border-gray-200 bg-white">
+            <div className="max-w-7xl mx-auto px-6 py-10">
+              <nav className="flex items-center gap-2 text-xs mb-4 text-gray-500">
+                <Link href="/" className="hover:text-[var(--primary)] transition">
+                  Utama
+                </Link>
+                <span>›</span>
+                <span className="text-gray-800">Berita</span>
+              </nav>
+              <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight text-gray-900 mb-3">
+                {heroTitle}
+              </h1>
+              <p className="text-sm md:text-base text-gray-600 max-w-2xl">
+                {heroSubtitle}
+              </p>
             </div>
           </section>
 

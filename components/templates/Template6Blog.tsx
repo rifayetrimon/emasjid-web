@@ -221,29 +221,22 @@ export default async function Template6Blog() {
     (a, b) => recencyKey(b) - recencyKey(a)
   );
 
-  // Explicit recency-driven slots. newsByRecency is sorted most-recent-first.
-  //
-  // When the admin uploads a banner image:
-  //   - Banner LEFT: admin banner (with title overlay)
-  //   - Banner RIGHT: items 1 & 2 (recency 0–1)
-  //   - Jangan Lepaskan: item 3 featured + items 4–7 list (recency 2–6)
-  //   - Berita Sekolah: items 8 & 9 grid + items 10–13 list (recency 7–12)
-  //
-  // When the admin has no banner image, the left hero falls back to the
-  // most recent news so the slots shift one position later.
+  // Recency-driven slots. newsByRecency is sorted most-recent-first.
+  // The admin banner (if any) renders as a separate full-width strip above
+  // the hero grid, so it no longer consumes a news slot. Layout:
+  //   - Hero LEFT: most recent news (recency 0)
+  //   - Hero RIGHT: items 1 & 2 (recency 1–2)
+  //   - Jangan Lepaskan: item 3 featured + items 4–7 list (recency 3–7)
+  //   - Berita Sekolah: items 8 & 9 grid + items 10–13 list (recency 8–13)
   const hasAdminBanner = !!banner?.background_images?.length;
 
-  // The left hero slot only renders this when no admin banner is uploaded.
   const heroFeatured: NewsItem | undefined = newsByRecency[0];
 
-  // Banner right-column news cards (always the 2 most recent, unless the
-  // most recent is filling the left hero fallback — then take the next 2).
-  const heroSideItems = hasAdminBanner
-    ? newsByRecency.slice(0, 2)
-    : newsByRecency.slice(1, 3);
+  // 2 cards on the right of the hero grid, immediately after the featured one.
+  const heroSideItems = newsByRecency.slice(1, 3);
 
   // How many recency slots are consumed before the body sections start.
-  const heroOffset = hasAdminBanner ? 2 : 3;
+  const heroOffset = 3;
 
   // Jangan Lepaskan — items 3..7 (5 items). DontMissSection internally
   // renders items[0] as featured and items[1..4] as the right list.
@@ -313,80 +306,83 @@ export default async function Template6Blog() {
         </div>
       )}
 
+      {/* ━━━━━━ TOP BANNER (admin-driven, matches content width) ━━━━━━ */}
+      {hasAdminBanner && banner && (
+        <section className="max-w-7xl mx-auto px-6 pt-6">
+          <div className="relative w-full aspect-[21/9] md:aspect-[24/9] overflow-hidden bg-gray-900">
+            <BannerSlideshow
+              media={banner.background_images}
+              interval={6500}
+              fit="cover"
+            />
+            {banner.overlayColor && (
+              <div
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  backgroundColor: banner.overlayColor,
+                  opacity: (banner.overlayOpacity || 0) / 100,
+                }}
+              />
+            )}
+            {(banner.title?.general ||
+              banner.title?.focus?.text ||
+              banner.supporting_text) && (
+              <div className="absolute inset-0 flex flex-col justify-end pointer-events-none">
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+                <div className="relative w-full px-6 md:px-10 pb-8 md:pb-12 text-white pointer-events-auto">
+                  {(banner.title?.general || banner.title?.focus?.text) && (
+                    <h1 className="text-2xl md:text-4xl font-extrabold leading-tight drop-shadow-lg">
+                      {banner.title?.general}
+                      {banner.title?.focus?.text && (
+                        <>
+                          {banner.title?.general ? " " : ""}
+                          <span className="text-[var(--primary)]">
+                            {banner.title.focus.text}
+                          </span>
+                        </>
+                      )}
+                    </h1>
+                  )}
+                  {banner.supporting_text && (
+                    <p className="mt-3 max-w-2xl text-sm md:text-base text-white/85 leading-relaxed drop-shadow">
+                      {banner.supporting_text}
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
       {/* ━━━━━━ HERO GRID ━━━━━━ */}
       {heroFeatured && (
         <section className="max-w-7xl mx-auto px-6 py-6">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            {/* Featured Big — spans 2 columns on desktop */}
-            {banner?.background_images?.length ? (
-              <div className="lg:col-span-2 relative block aspect-[16/9] overflow-hidden bg-gray-900">
-                <BannerSlideshow
-                  media={banner.background_images}
-                  interval={6500}
-                  fit="contain"
-                />
-                {banner?.overlayColor && (
-                  <div
-                    className="absolute inset-0 pointer-events-none"
-                    style={{
-                      backgroundColor: banner.overlayColor,
-                      opacity: (banner.overlayOpacity || 0) / 100,
-                    }}
-                  />
-                )}
-                {(banner?.title?.general ||
-                  banner?.title?.focus?.text ||
-                  banner?.supporting_text) && (
-                  <div className="absolute inset-0 flex flex-col justify-end pointer-events-none">
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent" />
-                    <div className="relative p-6 md:p-8 text-white pointer-events-auto">
-                      {(banner.title?.general || banner.title?.focus?.text) && (
-                        <h1 className="text-2xl md:text-4xl font-extrabold leading-tight drop-shadow-lg">
-                          {banner.title?.general}
-                          {banner.title?.focus?.text && (
-                            <>
-                              {banner.title?.general ? " " : ""}
-                              <span className="text-[var(--primary)]">
-                                {banner.title.focus.text}
-                              </span>
-                            </>
-                          )}
-                        </h1>
-                      )}
-                      {banner.supporting_text && (
-                        <p className="mt-3 max-w-2xl text-sm md:text-base text-white/85 leading-relaxed drop-shadow">
-                          {banner.supporting_text}
-                        </p>
-                      )}
-                    </div>
-                  </div>
+            {/* Featured Big — most recent news, spans 2 columns on desktop */}
+            <Link
+              href={`/news/${heroFeatured.contentId}`}
+              className="lg:col-span-2 group relative block aspect-[16/9] overflow-hidden bg-gray-900"
+            >
+              <NewsCardImage item={heroFeatured} />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent pointer-events-none" />
+              <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+                <CategoryBadge item={heroFeatured} />
+                <h1 className="mt-3 text-2xl md:text-3xl font-bold leading-tight line-clamp-3 group-hover:text-[var(--primary)] transition">
+                  {heroFeatured.title}
+                </h1>
+                <div className="flex items-center gap-2 text-xs text-white/80 mt-2">
+                  <span>{AUTHOR}</span>
+                  <span>·</span>
+                  <span>{formatDate(heroFeatured.date)}</span>
+                </div>
+                {heroFeatured.mobileDes && (
+                  <p className="md:hidden text-xs text-white/80 mt-2 line-clamp-2">
+                    {heroFeatured.mobileDes}
+                  </p>
                 )}
               </div>
-            ) : (
-              <Link
-                href={`/news/${heroFeatured.contentId}`}
-                className="lg:col-span-2 group relative block aspect-[16/9] overflow-hidden bg-gray-900"
-              >
-                <NewsCardImage item={heroFeatured} />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent pointer-events-none" />
-                <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-                  <CategoryBadge item={heroFeatured} />
-                  <h1 className="mt-3 text-2xl md:text-3xl font-bold leading-tight line-clamp-3 group-hover:text-[var(--primary)] transition">
-                    {heroFeatured.title}
-                  </h1>
-                  <div className="flex items-center gap-2 text-xs text-white/80 mt-2">
-                    <span>{AUTHOR}</span>
-                    <span>·</span>
-                    <span>{formatDate(heroFeatured.date)}</span>
-                  </div>
-                  {heroFeatured.mobileDes && (
-                    <p className="md:hidden text-xs text-white/80 mt-2 line-clamp-2">
-                      {heroFeatured.mobileDes}
-                    </p>
-                  )}
-                </div>
-              </Link>
-            )}
+            </Link>
 
             {/* Right column — pinned/front-page news */}
             <div className="grid grid-cols-1 gap-4">

@@ -57,8 +57,22 @@ function pickColumn(
   return { title, content };
 }
 
-function isOn(v: unknown): boolean {
-  return String(v ?? "").toLowerCase() === "on";
+/**
+ * "On by default" toggle: returns true unless the admin explicitly set the
+ * value to "off" / "false" / "no" / "disable" / "0". Used for visibility
+ * toggles where the API often returns null and we'd rather show the feature
+ * than silently hide it.
+ */
+function isNotOff(v: unknown): boolean {
+  const s = String(v ?? "").trim().toLowerCase();
+  return !(
+    s === "off" ||
+    s === "false" ||
+    s === "no" ||
+    s === "disable" ||
+    s === "disabled" ||
+    s === "0"
+  );
 }
 
 export async function getFooterData(): Promise<FooterProps["footer"] | null> {
@@ -139,7 +153,10 @@ export async function getFooterData(): Promise<FooterProps["footer"] | null> {
         general.textColorHeaderFooter ||
         "",
       areaColor: footerConfig.colorFooterArea || "",
-      showVisitorCounter: isOn(
+      // Show visitor counter unless the admin explicitly disabled it.
+      // The CMS often returns null for this field; defaulting to "on"
+      // keeps the section visible in that common case.
+      showVisitorCounter: isNotOff(
         footerConfig.countingVisitorFooter ?? configData.countingVisitorFooter
       ),
     };

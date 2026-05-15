@@ -7,6 +7,23 @@ function isOn(v: unknown): boolean {
   return String(v ?? "").toLowerCase() === "on";
 }
 
+/**
+ * Mirror of footerService's helper: a toggle is considered ON unless the
+ * admin explicitly set it to off. Used for the visitor counter so the
+ * section stays visible when the CMS leaves the field empty.
+ */
+function isNotOff(v: unknown): boolean {
+  const s = String(v ?? "").trim().toLowerCase();
+  return !(
+    s === "off" ||
+    s === "false" ||
+    s === "no" ||
+    s === "disable" ||
+    s === "disabled" ||
+    s === "0"
+  );
+}
+
 function isEnabled(v: unknown): boolean {
   const s = String(v ?? "").toLowerCase();
   return s === "enable" || s === "enabled" || s === "yes" || s === "on" || s === "true";
@@ -61,7 +78,7 @@ export async function getSiteTheme(): Promise<SiteTheme> {
     currYearDownTo: Number.isFinite(currYearDownTo) ? currYearDownTo : 0,
     maxDisplay: Number.isFinite(maxDisplay) && maxDisplay > 0 ? maxDisplay : 0,
     complaintEnabled: isOn(read("complaint")),
-    showVisitorCounter: isOn(read("countingVisitorFooter")),
+    showVisitorCounter: isNotOff(read("countingVisitorFooter")),
     privacyTncPage: read("privacyTncPage"),
   };
 }
