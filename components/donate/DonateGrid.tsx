@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useMemo, useState, type FormEvent } from "react";
 import {
-  ShoppingBag,
+  HandHeart,
+  Heart,
   Plus,
   Minus,
   Trash2,
@@ -14,157 +15,187 @@ import {
   CheckCircle2,
   Sparkles,
 } from "lucide-react";
-import type { ShopItem } from "@/services/shopService";
-import { useCart, formatPrice, type CartItem } from "@/lib/cartContext";
+import type { Institution } from "@/services/donateService";
+
+const PRESET_AMOUNTS = [5, 10, 20] as const;
+const CURRENCY = "RM";
+
+function formatAmount(n: number): string {
+  return `${CURRENCY} ${n.toFixed(2)}`;
+}
 
 interface AddressForm {
   fullName: string;
   email: string;
   phone: string;
-  address1: string;
-  address2: string;
-  city: string;
-  state: string;
-  postcode: string;
   notes: string;
+  anonymous: boolean;
 }
 
 const EMPTY_FORM: AddressForm = {
   fullName: "",
   email: "",
   phone: "",
-  address1: "",
-  address2: "",
-  city: "",
-  state: "",
-  postcode: "",
   notes: "",
+  anonymous: false,
 };
 
-const MY_STATES = [
-  "Johor",
-  "Kedah",
-  "Kelantan",
-  "Melaka",
-  "Negeri Sembilan",
-  "Pahang",
-  "Perak",
-  "Perlis",
-  "Pulau Pinang",
-  "Sabah",
-  "Sarawak",
-  "Selangor",
-  "Terengganu",
-  "W.P. Kuala Lumpur",
-  "W.P. Labuan",
-  "W.P. Putrajaya",
-];
-
-type Step = "cart" | "address" | "done";
-
-interface Props {
-  items: ShopItem[];
-  ownerEmail: string;
+interface Selection {
+  institutionId: number;
+  institutionName: string;
+  amount: number;
 }
 
-export default function ShopGrid({ items }: Props) {
-  const {
-    items: cart,
-    totalItems,
-    totalPrice,
-    addItem,
-    increment,
-    decrement,
-    removeItem,
-    clearCart,
-    hydrated,
-  } = useCart();
+type Step = "select" | "details" | "done";
 
-  const [step, setStep] = useState<Step>("cart");
+interface Props {
+  institutions: Institution[];
+}
+
+export default function DonateGrid({ institutions }: Props) {
+  /**
+   * selections keyed by institutionId for fast lookups by the cards
+   * (each card needs to know its own selected amount + custom-mode state).
+   */
+  const [selections, setSelections] = useState<Map<number, number>>(new Map());
+  const [customMode, setCustomMode] = useState<Set<number>>(new Set());
+  const [customInputs, setCustomInputs] = useState<Map<number, string>>(
+    new Map()
+  );
+
+  const [step, setStep] = useState<Step>("select");
   const [form, setForm] = useState<AddressForm>(EMPTY_FORM);
   const [submitting, setSubmitting] = useState(false);
-  const [confirmedOrder, setConfirmedOrder] = useState<{
+  const [confirmed, setConfirmed] = useState<{
     orderId: string;
+    selections: Selection[];
+    total: number;
     address: AddressForm;
-    items: CartItem[];
-    totalPrice: number;
   } | null>(null);
 
-  const qtyById = new Map(cart.map((c) => [c.id, c.quantity]));
+  const selectionList: Selection[] = useMemo(() => {
+    return institutions
+      .filter((i) => (selections.get(i.id) ?? 0) > 0)
+      .map((i) => ({
+        institutionId: i.id,
+        institutionName: i.name,
+        amount: selections.get(i.id) || 0,
+      }));
+  }, [institutions, selections]);
 
-  const handleAdd = (item: ShopItem) =>
-    addItem(
-      { id: item.id, name: item.name, price: item.price, image: item.image },
-      1
-    );
+  const total = selectionList.reduce((s, x) => s + x.amount, 0);
 
-  const proceedToAddress = () => setStep("address");
-  const backToCart = () => setStep("cart");
+  const setAmount = (id: number, amount: number) => {
+    setSelections((prev) => {
+      const next = new Map(prev);
+      if (amount <= 0) next.delete(id);
+      else next.set(id, amount);
+      return next;
+    });
+  };
+
+  const removeSelection = (id: number) => setAmount(id, 0);
+
+  const toggleCustom = (id: number) => {
+    setCustomMode((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const setCustomInput = (id: number, value: string) => {
+    setCustomInputs((prev) => {
+      const next = new Map(prev);
+      next.set(id, value);
+      return next;
+    });
+    const parsed = parseFloat(value);
+    if (Number.isFinite(parsed) && parsed > 0) {
+      setAmount(id, parsed);
+    } else {
+      setAmount(id, 0);
+    }
+  };
+
+  const proceedToDetails = () => setStep("details");
+  const backToSelect = () => setStep("details" === "details" ? "select" : "select");
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (cart.length === 0) return;
+    if (selectionList.length === 0) return;
     setSubmitting(true);
-    // Capture a snapshot for the success card so it survives clearing cart.
-    setConfirmedOrder({
-      orderId: `ORD-${Date.now().toString(36).toUpperCase()}`,
+    setConfirmed({
+      orderId: `DON-${Date.now().toString(36).toUpperCase()}`,
+      selections: selectionList,
+      total,
       address: form,
-      items: [...cart],
-      totalPrice,
     });
     setTimeout(() => {
-      // Tiny artificial delay so the "processing" feedback is perceivable.
-      clearCart();
+      setSelections(new Map());
+      setCustomMode(new Set());
+      setCustomInputs(new Map());
       setForm(EMPTY_FORM);
       setSubmitting(false);
       setStep("done");
     }, 400);
   };
 
-  const startNewOrder = () => {
-    setConfirmedOrder(null);
-    setStep("cart");
+  const startNew = () => {
+    setConfirmed(null);
+    setStep("select");
   };
 
-  if (items.length === 0) {
+  if (institutions.length === 0) {
     return <EmptyCatalog />;
   }
 
   return (
     <div className="grid lg:grid-cols-[1fr_400px] gap-6 lg:gap-10 items-start">
-      {/* Product list */}
+      {/* Institution list */}
       <ul className="grid sm:grid-cols-2 gap-5">
-        {items.map((item) => (
-          <ProductCard
-            key={item.id}
-            item={item}
-            quantity={qtyById.get(item.id) || 0}
-            onAdd={() => handleAdd(item)}
-            onIncrement={() => increment(item.id)}
-            onDecrement={() => decrement(item.id)}
-          />
-        ))}
+        {institutions.map((inst) => {
+          const amount = selections.get(inst.id) || 0;
+          const isCustom = customMode.has(inst.id);
+          return (
+            <InstitutionCard
+              key={inst.id}
+              institution={inst}
+              amount={amount}
+              isCustom={isCustom}
+              customValue={customInputs.get(inst.id) || ""}
+              onPreset={(v) => {
+                if (isCustom) toggleCustom(inst.id);
+                // Tapping the same chip again clears the selection.
+                setAmount(inst.id, amount === v ? 0 : v);
+              }}
+              onClear={() => {
+                if (isCustom) toggleCustom(inst.id);
+                setAmount(inst.id, 0);
+              }}
+              onToggleCustom={() => toggleCustom(inst.id)}
+              onCustomInput={(v) => setCustomInput(inst.id, v)}
+            />
+          );
+        })}
       </ul>
 
-      {/* Right side: stateful panel */}
+      {/* Stateful side panel */}
       <aside className="lg:sticky lg:top-24">
         <SidePanel
           step={step}
-          hydrated={hydrated}
-          cart={cart}
-          totalItems={totalItems}
-          totalPrice={totalPrice}
+          selectionList={selectionList}
+          total={total}
           form={form}
           setForm={setForm}
           submitting={submitting}
-          confirmedOrder={confirmedOrder}
-          onIncrement={increment}
-          onDecrement={decrement}
-          onRemove={removeItem}
-          onProceed={proceedToAddress}
-          onBack={backToCart}
+          confirmed={confirmed}
+          onRemove={removeSelection}
+          onProceed={proceedToDetails}
+          onBack={backToSelect}
           onSubmit={handleSubmit}
-          onStartNewOrder={startNewOrder}
+          onStartNew={startNew}
         />
       </aside>
     </div>
@@ -172,103 +203,128 @@ export default function ShopGrid({ items }: Props) {
 }
 
 /* ═══════════════════════════════════════════════════════════ */
-/* Product card                                                 */
+/* Institution card                                              */
 /* ═══════════════════════════════════════════════════════════ */
 
-function ProductCard({
-  item,
-  quantity,
-  onAdd,
-  onIncrement,
-  onDecrement,
+function InstitutionCard({
+  institution,
+  amount,
+  isCustom,
+  customValue,
+  onPreset,
+  onClear,
+  onToggleCustom,
+  onCustomInput,
 }: {
-  item: ShopItem;
-  quantity: number;
-  onAdd: () => void;
-  onIncrement: () => void;
-  onDecrement: () => void;
+  institution: Institution;
+  amount: number;
+  isCustom: boolean;
+  customValue: string;
+  onPreset: (v: number) => void;
+  onClear: () => void;
+  onToggleCustom: () => void;
+  onCustomInput: (v: string) => void;
 }) {
-  const inCart = quantity > 0;
+  const isSelected = amount > 0;
 
   return (
     <li
       className={`group relative flex flex-col rounded-2xl bg-white p-5 md:p-6 border transition-all ${
-        inCart
+        isSelected
           ? "border-[var(--primary)]/40 shadow-lg shadow-[var(--primary)]/10"
           : "border-gray-100 hover:border-gray-200 hover:shadow-md hover:-translate-y-0.5"
-      } ${!item.inStock ? "opacity-70" : ""}`}
+      }`}
     >
-      {/* Status chips */}
-      {(inCart || !item.inStock) && (
-        <div className="flex flex-wrap gap-2 mb-3">
-          {inCart && (
-            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[var(--primary)]/10 text-[var(--primary)] text-[10px] font-bold uppercase tracking-wider">
-              <Check className="w-3 h-3" />
-              {quantity} dalam bakul
-            </span>
-          )}
-          {!item.inStock && (
-            <span className="px-2.5 py-1 rounded-full bg-gray-100 text-gray-600 text-[10px] font-bold uppercase tracking-wider">
-              Habis stok
-            </span>
-          )}
-        </div>
-      )}
+      <div className="flex items-start justify-between gap-3 mb-1">
+        <span className="inline-block px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-bold uppercase tracking-wider">
+          {institution.category}
+        </span>
+        {isSelected && (
+          <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-[var(--primary)]">
+            <Check className="w-3 h-3" />
+            Dipilih
+          </span>
+        )}
+      </div>
 
       <h3 className="text-base md:text-lg font-bold text-gray-900 leading-snug mb-1">
-        {item.name}
+        {institution.name}
       </h3>
-      {item.description && (
+      {institution.description && (
         <p className="text-sm text-gray-500 leading-relaxed line-clamp-2 mb-4">
-          {item.description}
+          {institution.description}
         </p>
       )}
 
-      <div className="mt-auto flex items-center justify-between gap-3 pt-4 border-t border-gray-100">
-        <p className="text-xl font-bold text-gray-900 tabular-nums leading-none">
-          <span className="text-xs font-semibold text-gray-400 mr-1">RM</span>
-          {item.price.toFixed(2)}
+      {/* Amount picker */}
+      <div className="mt-auto pt-4 border-t border-gray-100">
+        <p className="text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-2">
+          Jumlah Sumbangan
         </p>
+        <div className="flex flex-wrap gap-2">
+          {PRESET_AMOUNTS.map((v) => {
+            const active = !isCustom && amount === v;
+            return (
+              <button
+                key={v}
+                type="button"
+                onClick={() => onPreset(v)}
+                className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition border ${
+                  active
+                    ? "bg-[var(--primary)] text-white border-[var(--primary)]"
+                    : "bg-white text-gray-700 border-gray-200 hover:border-gray-400"
+                }`}
+              >
+                {CURRENCY} {v}
+              </button>
+            );
+          })}
+          <button
+            type="button"
+            onClick={onToggleCustom}
+            className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition border ${
+              isCustom
+                ? "bg-gray-900 text-white border-gray-900"
+                : "bg-white text-gray-700 border-gray-200 hover:border-gray-400"
+            }`}
+          >
+            Lain
+          </button>
+          {isSelected && (
+            <button
+              type="button"
+              onClick={onClear}
+              aria-label="Buang pilihan"
+              className="ml-auto p-1.5 rounded-full text-gray-400 hover:text-red-500 hover:bg-red-50 transition"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
 
-        {!item.inStock ? (
-          <button
-            type="button"
-            disabled
-            className="px-4 py-2 rounded-full text-xs font-bold bg-gray-100 text-gray-400 cursor-not-allowed"
-          >
-            Habis
-          </button>
-        ) : inCart ? (
-          <div className="flex items-center gap-1 rounded-full bg-[var(--primary)]/10 p-1 border border-[var(--primary)]/30">
-            <button
-              type="button"
-              onClick={onDecrement}
-              aria-label="Kurang"
-              className="w-8 h-8 rounded-full bg-white border border-[var(--primary)]/30 text-[var(--primary)] flex items-center justify-center hover:bg-[var(--primary)] hover:text-white transition"
-            >
-              <Minus className="w-3.5 h-3.5" />
-            </button>
-            <span className="min-w-[28px] text-center font-bold text-sm text-[var(--primary)] tabular-nums">
-              {quantity}
+        {isCustom && (
+          <div className="mt-3 relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-gray-400">
+              {CURRENCY}
             </span>
-            <button
-              type="button"
-              onClick={onIncrement}
-              aria-label="Tambah"
-              className="w-8 h-8 rounded-full bg-[var(--primary)] text-white flex items-center justify-center hover:opacity-90 transition"
-            >
-              <Plus className="w-3.5 h-3.5" />
-            </button>
+            <input
+              type="number"
+              min="1"
+              step="0.5"
+              inputMode="decimal"
+              value={customValue}
+              onChange={(e) => onCustomInput(e.target.value)}
+              placeholder="Masukkan jumlah"
+              className="w-full pl-10 pr-3 py-2 rounded-xl border border-gray-200 bg-white text-sm text-gray-900 placeholder:text-gray-400 focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary)]/20 outline-none transition"
+              autoFocus
+            />
           </div>
-        ) : (
-          <button
-            type="button"
-            onClick={onAdd}
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-gray-900 text-white text-xs font-bold hover:bg-[var(--primary)] transition"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            Tambah ke Bakul
-          </button>
+        )}
+
+        {isSelected && (
+          <p className="mt-3 text-sm font-bold text-[var(--primary)] tabular-nums">
+            {formatAmount(amount)}
+          </p>
         )}
       </div>
     </li>
@@ -276,81 +332,69 @@ function ProductCard({
 }
 
 /* ═══════════════════════════════════════════════════════════ */
-/* Stateful side panel: cart → address → done                   */
+/* Side panel: select → details → done                          */
 /* ═══════════════════════════════════════════════════════════ */
 
 function SidePanel({
   step,
-  hydrated,
-  cart,
-  totalItems,
-  totalPrice,
+  selectionList,
+  total,
   form,
   setForm,
   submitting,
-  confirmedOrder,
-  onIncrement,
-  onDecrement,
+  confirmed,
   onRemove,
   onProceed,
   onBack,
   onSubmit,
-  onStartNewOrder,
+  onStartNew,
 }: {
   step: Step;
-  hydrated: boolean;
-  cart: CartItem[];
-  totalItems: number;
-  totalPrice: number;
+  selectionList: Selection[];
+  total: number;
   form: AddressForm;
   setForm: (f: AddressForm) => void;
   submitting: boolean;
-  confirmedOrder: {
+  confirmed: {
     orderId: string;
+    selections: Selection[];
+    total: number;
     address: AddressForm;
-    items: CartItem[];
-    totalPrice: number;
   } | null;
-  onIncrement: (id: number) => void;
-  onDecrement: (id: number) => void;
   onRemove: (id: number) => void;
   onProceed: () => void;
   onBack: () => void;
   onSubmit: (e: FormEvent<HTMLFormElement>) => void;
-  onStartNewOrder: () => void;
+  onStartNew: () => void;
 }) {
   return (
     <div className="rounded-3xl bg-white border border-gray-100 shadow-xl shadow-gray-200/50 overflow-hidden">
       <Stepper step={step} />
 
-      {step === "cart" && (
-        <CartStep
-          hydrated={hydrated}
-          cart={cart}
-          totalItems={totalItems}
-          totalPrice={totalPrice}
-          onIncrement={onIncrement}
-          onDecrement={onDecrement}
+      {step === "select" && (
+        <SelectStep
+          selectionList={selectionList}
+          total={total}
           onRemove={onRemove}
           onProceed={onProceed}
         />
       )}
 
-      {step === "address" && (
-        <AddressStep
+      {step === "details" && (
+        <DetailsStep
           form={form}
           setForm={setForm}
-          totalPrice={totalPrice}
-          totalItems={totalItems}
+          total={total}
+          itemCount={selectionList.length}
           submitting={submitting}
-          cartLen={cart.length}
+          canSubmit={selectionList.length > 0}
           onBack={onBack}
           onSubmit={onSubmit}
         />
       )}
 
-      {step === "done" && confirmedOrder && (
-        <DoneStep order={confirmedOrder} onStartNewOrder={onStartNewOrder} />
+      {step === "done" && confirmed && (
+        <DoneStep order={confirmed} onStartNew={onStartNew} />
       )}
     </div>
   );
@@ -358,8 +402,8 @@ function SidePanel({
 
 function Stepper({ step }: { step: Step }) {
   const stages: { key: Step; label: string }[] = [
-    { key: "cart", label: "Bakul" },
-    { key: "address", label: "Maklumat" },
+    { key: "select", label: "Pilihan" },
+    { key: "details", label: "Maklumat" },
     { key: "done", label: "Selesai" },
   ];
   const activeIdx = stages.findIndex((s) => s.key === step);
@@ -411,24 +455,16 @@ function Stepper({ step }: { step: Step }) {
   );
 }
 
-/* ───── Step 1: Cart ───── */
+/* ───── Step 1: Selection summary ───── */
 
-function CartStep({
-  hydrated,
-  cart,
-  totalItems,
-  totalPrice,
-  onIncrement,
-  onDecrement,
+function SelectStep({
+  selectionList,
+  total,
   onRemove,
   onProceed,
 }: {
-  hydrated: boolean;
-  cart: CartItem[];
-  totalItems: number;
-  totalPrice: number;
-  onIncrement: (id: number) => void;
-  onDecrement: (id: number) => void;
+  selectionList: Selection[];
+  total: number;
   onRemove: (id: number) => void;
   onProceed: () => void;
 }) {
@@ -436,80 +472,51 @@ function CartStep({
     <>
       <div className="px-5 pb-3 border-b border-gray-100 flex items-center justify-between">
         <h2 className="font-bold text-gray-900 flex items-center gap-2">
-          <ShoppingBag className="w-4 h-4 text-[var(--primary)]" />
-          Bakul Anda
+          <HandHeart className="w-4 h-4 text-[var(--primary)]" />
+          Sumbangan Anda
         </h2>
         <span className="text-xs font-bold text-gray-500 tabular-nums">
-          {hydrated ? totalItems : 0} {totalItems === 1 ? "item" : "items"}
+          {selectionList.length}{" "}
+          {selectionList.length === 1 ? "institusi" : "institusi"}
         </span>
       </div>
 
-      {!hydrated ? (
-        <div className="px-5 py-12 text-center">
-          <div className="w-7 h-7 mx-auto border-4 border-gray-200 border-t-gray-600 rounded-full animate-spin mb-3" />
-          <p className="text-sm text-gray-500">Memuat bakul...</p>
-        </div>
-      ) : cart.length === 0 ? (
+      {selectionList.length === 0 ? (
         <div className="px-5 py-14 text-center">
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-gray-50 mb-4">
-            <ShoppingBag className="w-6 h-6 text-gray-300" />
+            <Heart className="w-6 h-6 text-gray-300" />
           </div>
           <p className="text-sm font-semibold text-gray-700 mb-1">
-            Bakul kosong
+            Belum ada pilihan
           </p>
           <p className="text-xs text-gray-500 max-w-xs mx-auto">
-            Tambah item dari senarai untuk mula membuat pesanan.
+            Pilih institusi dan jumlah sumbangan dari senarai untuk meneruskan.
           </p>
         </div>
       ) : (
         <>
           <ul className="max-h-[360px] overflow-y-auto divide-y divide-gray-100">
-            {cart.map((line) => (
-              <li key={line.id} className="px-5 py-4">
-                <div className="flex items-start justify-between gap-3 mb-3">
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold text-gray-900 leading-snug truncate">
-                      {line.name}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-0.5 tabular-nums">
-                      {formatPrice(line.price)} setiap satu
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => onRemove(line.id)}
-                    aria-label="Buang"
-                    className="p-1 rounded-md text-gray-400 hover:text-red-500 hover:bg-red-50 transition flex-shrink-0"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
+            {selectionList.map((s) => (
+              <li
+                key={s.institutionId}
+                className="px-5 py-4 flex items-center justify-between gap-3"
+              >
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-gray-900 leading-snug truncate">
+                    {s.institutionName}
+                  </p>
+                  <p className="text-xs text-[var(--primary)] mt-0.5 tabular-nums font-bold">
+                    {formatAmount(s.amount)}
+                  </p>
                 </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1 rounded-full bg-gray-50 p-0.5 border border-gray-200">
-                    <button
-                      type="button"
-                      onClick={() => onDecrement(line.id)}
-                      aria-label="Kurang"
-                      className="w-7 h-7 rounded-full bg-white border border-gray-200 text-gray-700 flex items-center justify-center hover:border-[var(--primary)] hover:text-[var(--primary)] transition"
-                    >
-                      <Minus className="w-3 h-3" />
-                    </button>
-                    <span className="min-w-[24px] text-center font-bold text-sm text-gray-900 tabular-nums">
-                      {line.quantity}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => onIncrement(line.id)}
-                      aria-label="Tambah"
-                      className="w-7 h-7 rounded-full bg-white border border-gray-200 text-gray-700 flex items-center justify-center hover:border-[var(--primary)] hover:text-[var(--primary)] transition"
-                    >
-                      <Plus className="w-3 h-3" />
-                    </button>
-                  </div>
-                  <span className="text-sm font-bold text-gray-900 tabular-nums">
-                    {formatPrice(line.price * line.quantity)}
-                  </span>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => onRemove(s.institutionId)}
+                  aria-label="Buang"
+                  className="p-1 rounded-md text-gray-400 hover:text-red-500 hover:bg-red-50 transition flex-shrink-0"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
               </li>
             ))}
           </ul>
@@ -520,7 +527,7 @@ function CartStep({
                 Jumlah
               </span>
               <span className="text-2xl font-bold text-[var(--primary)] tabular-nums">
-                {formatPrice(totalPrice)}
+                {formatAmount(total)}
               </span>
             </div>
             <button
@@ -542,28 +549,28 @@ function CartStep({
   );
 }
 
-/* ───── Step 2: Address ───── */
+/* ───── Step 2: Donor details ───── */
 
-function AddressStep({
+function DetailsStep({
   form,
   setForm,
-  totalPrice,
-  totalItems,
+  total,
+  itemCount,
   submitting,
-  cartLen,
+  canSubmit,
   onBack,
   onSubmit,
 }: {
   form: AddressForm;
   setForm: (f: AddressForm) => void;
-  totalPrice: number;
-  totalItems: number;
+  total: number;
+  itemCount: number;
   submitting: boolean;
-  cartLen: number;
+  canSubmit: boolean;
   onBack: () => void;
   onSubmit: (e: FormEvent<HTMLFormElement>) => void;
 }) {
-  const update = (key: keyof AddressForm, value: string) =>
+  const update = <K extends keyof AddressForm>(key: K, value: AddressForm[K]) =>
     setForm({ ...form, [key]: value });
 
   return (
@@ -584,104 +591,58 @@ function AddressStep({
       </div>
 
       <div className="px-5 py-4 space-y-3 max-h-[460px] overflow-y-auto">
-        <Field label="Nama penuh" required>
+        <label className="flex items-center gap-2 px-3 py-2 rounded-xl bg-gray-50 border border-gray-200 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={form.anonymous}
+            onChange={(e) => update("anonymous", e.target.checked)}
+            className="w-4 h-4 rounded border-gray-300 text-[var(--primary)] focus:ring-[var(--primary)]"
+          />
+          <span className="text-xs font-semibold text-gray-700">
+            Sumbang sebagai tanpa nama
+          </span>
+        </label>
+
+        <Field label="Nama penuh" required={!form.anonymous}>
           <input
             type="text"
-            required
+            required={!form.anonymous}
+            disabled={form.anonymous}
             value={form.fullName}
             onChange={(e) => update("fullName", e.target.value)}
+            placeholder={form.anonymous ? "Tanpa nama" : ""}
             className={inputClass}
           />
         </Field>
 
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="E-mel" required>
-            <input
-              type="email"
-              required
-              value={form.email}
-              onChange={(e) => update("email", e.target.value)}
-              className={inputClass}
-            />
-          </Field>
-          <Field label="Telefon" required>
-            <input
-              type="tel"
-              required
-              value={form.phone}
-              onChange={(e) => update("phone", e.target.value)}
-              placeholder="01x-xxx xxxx"
-              className={inputClass}
-            />
-          </Field>
-        </div>
-
-        <Field label="Alamat" required>
+        <Field label="E-mel" required>
           <input
-            type="text"
+            type="email"
             required
-            value={form.address1}
-            onChange={(e) => update("address1", e.target.value)}
-            placeholder="No. rumah, jalan"
+            value={form.email}
+            onChange={(e) => update("email", e.target.value)}
+            placeholder="Untuk resit"
             className={inputClass}
           />
         </Field>
 
-        <Field label="Alamat baris 2">
+        <Field label="Telefon" required>
           <input
-            type="text"
-            value={form.address2}
-            onChange={(e) => update("address2", e.target.value)}
-            placeholder="Taman, kawasan (pilihan)"
+            type="tel"
+            required
+            value={form.phone}
+            onChange={(e) => update("phone", e.target.value)}
+            placeholder="01x-xxx xxxx"
             className={inputClass}
           />
         </Field>
 
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="Bandar" required>
-            <input
-              type="text"
-              required
-              value={form.city}
-              onChange={(e) => update("city", e.target.value)}
-              className={inputClass}
-            />
-          </Field>
-          <Field label="Poskod" required>
-            <input
-              type="text"
-              required
-              pattern="[0-9]{5}"
-              title="5 digit poskod"
-              value={form.postcode}
-              onChange={(e) => update("postcode", e.target.value)}
-              className={inputClass}
-            />
-          </Field>
-        </div>
-
-        <Field label="Negeri" required>
-          <select
-            required
-            value={form.state}
-            onChange={(e) => update("state", e.target.value)}
-            className={inputClass}
-          >
-            <option value="">Pilih</option>
-            {MY_STATES.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </select>
-        </Field>
-
-        <Field label="Nota">
+        <Field label="Nota / Doa">
           <textarea
             value={form.notes}
             onChange={(e) => update("notes", e.target.value)}
-            rows={2}
-            placeholder="Arahan tambahan (pilihan)"
+            rows={3}
+            placeholder="Tinggalkan doa atau ucapan (pilihan)"
             className={`${inputClass} resize-none`}
           />
         </Field>
@@ -689,24 +650,26 @@ function AddressStep({
 
       <div className="px-5 py-4 border-t border-gray-100 bg-gradient-to-b from-gray-50/50 to-white">
         <div className="flex items-center justify-between mb-2 text-xs text-gray-500">
-          <span>{totalItems} item</span>
-          <span className="tabular-nums">{formatPrice(totalPrice)}</span>
+          <span>
+            {itemCount} institusi
+          </span>
+          <span className="tabular-nums">{formatAmount(total)}</span>
         </div>
         <div className="flex items-center justify-between mb-4">
           <span className="text-sm font-semibold text-gray-700">
-            Jumlah Bayaran
+            Jumlah Sumbangan
           </span>
           <span className="text-2xl font-bold text-[var(--primary)] tabular-nums">
-            {formatPrice(totalPrice)}
+            {formatAmount(total)}
           </span>
         </div>
         <button
           type="submit"
-          disabled={submitting || cartLen === 0}
+          disabled={submitting || !canSubmit}
           className="w-full inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-2xl bg-[var(--primary)] text-white text-sm font-bold hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Lock className="w-4 h-4" />
-          {submitting ? "Memproses..." : "Sahkan Pesanan"}
+          {submitting ? "Memproses..." : "Sahkan Sumbangan"}
         </button>
         <p className="text-[10px] text-gray-500 text-center mt-2.5">
           Pasukan kami akan menghubungi anda untuk mengesahkan bayaran.
@@ -720,16 +683,20 @@ function AddressStep({
 
 function DoneStep({
   order,
-  onStartNewOrder,
+  onStartNew,
 }: {
   order: {
     orderId: string;
+    selections: Selection[];
+    total: number;
     address: AddressForm;
-    items: CartItem[];
-    totalPrice: number;
   };
-  onStartNewOrder: () => void;
+  onStartNew: () => void;
 }) {
+  const donorName = order.address.anonymous
+    ? "Penyumbang tanpa nama"
+    : order.address.fullName || "Penyumbang";
+
   return (
     <div className="px-5 py-6 text-center">
       <div className="relative inline-flex items-center justify-center mb-4">
@@ -739,16 +706,16 @@ function DoneStep({
         </div>
       </div>
       <h2 className="text-lg font-bold text-gray-900 mb-1">
-        Pesanan Diterima!
+        Terima Kasih!
       </h2>
       <p className="text-sm text-gray-500 mb-4">
-        Terima kasih,{" "}
-        <strong className="text-gray-700">{order.address.fullName}</strong>.
+        Sumbangan daripada{" "}
+        <strong className="text-gray-700">{donorName}</strong> telah diterima.
       </p>
 
       <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gray-50 border border-gray-200 text-xs mb-5">
         <Sparkles className="w-3 h-3 text-[var(--primary)]" />
-        <span className="text-gray-500">No. pesanan:</span>
+        <span className="text-gray-500">No. rujukan:</span>
         <span className="font-mono font-bold text-gray-900 tabular-nums">
           {order.orderId}
         </span>
@@ -759,16 +726,14 @@ function DoneStep({
           Ringkasan
         </p>
         <ul className="space-y-1.5 mb-3 pb-3 border-b border-gray-200">
-          {order.items.map((line) => (
+          {order.selections.map((s) => (
             <li
-              key={line.id}
+              key={s.institutionId}
               className="flex justify-between text-xs text-gray-700"
             >
-              <span className="truncate pr-3">
-                {line.name} × {line.quantity}
-              </span>
+              <span className="truncate pr-3">{s.institutionName}</span>
               <span className="tabular-nums font-semibold whitespace-nowrap">
-                {formatPrice(line.price * line.quantity)}
+                {formatAmount(s.amount)}
               </span>
             </li>
           ))}
@@ -776,7 +741,7 @@ function DoneStep({
         <div className="flex justify-between items-center">
           <span className="text-xs font-bold text-gray-700">Jumlah</span>
           <span className="text-lg font-bold text-[var(--primary)] tabular-nums">
-            {formatPrice(order.totalPrice)}
+            {formatAmount(order.total)}
           </span>
         </div>
       </div>
@@ -785,16 +750,17 @@ function DoneStep({
         <p className="font-bold mb-0.5">Langkah seterusnya</p>
         <p className="text-amber-800 leading-relaxed">
           Pasukan kami akan menghubungi anda di{" "}
-          <strong>{order.address.phone}</strong> untuk pengesahan pembayaran.
+          <strong>{order.address.phone}</strong> untuk mengesahkan bayaran dan
+          menghantar resit.
         </p>
       </div>
 
       <button
         type="button"
-        onClick={onStartNewOrder}
+        onClick={onStartNew}
         className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-gray-900 text-white text-sm font-bold hover:bg-[var(--primary)] transition"
       >
-        Buat Pesanan Baharu
+        Sumbang Lagi
       </button>
     </div>
   );
@@ -808,13 +774,13 @@ function EmptyCatalog() {
   return (
     <div className="rounded-3xl border border-dashed border-gray-300 bg-gradient-to-br from-gray-50 to-white p-16 text-center">
       <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
-        <ShoppingBag className="w-7 h-7 text-gray-300" />
+        <HandHeart className="w-7 h-7 text-gray-300" />
       </div>
       <h2 className="text-lg font-semibold text-gray-700 mb-1">
-        Tiada barangan buat masa ini
+        Tiada institusi buat masa ini
       </h2>
       <p className="text-sm text-gray-500">
-        Pentadbir akan menambah barangan tidak lama lagi.
+        Pentadbir akan menambah institusi tidak lama lagi.
       </p>
     </div>
   );
@@ -825,7 +791,7 @@ function EmptyCatalog() {
 /* ═══════════════════════════════════════════════════════════ */
 
 const inputClass =
-  "w-full px-3.5 py-2 rounded-xl border border-gray-200 bg-white text-sm text-gray-900 placeholder:text-gray-400 focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary)]/20 outline-none transition";
+  "w-full px-3.5 py-2 rounded-xl border border-gray-200 bg-white text-sm text-gray-900 placeholder:text-gray-400 focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary)]/20 outline-none transition disabled:bg-gray-50 disabled:text-gray-400";
 
 function Field({
   label,

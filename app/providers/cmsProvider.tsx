@@ -1,7 +1,8 @@
 "use client";
 
 import { ReactNode } from "react";
+import { CartProvider } from "@/lib/cartContext";
 
 export function CMSProvider({ children }: { children: ReactNode }) {
-  return <>{children}</>;
+  return <CartProvider>{children}</CartProvider>;
 }

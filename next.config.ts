@@ -60,12 +60,9 @@ function stripJsonComments(input: string): string {
 function readBasePath(): string {
   if (process.env.BASE_PATH !== undefined) return process.env.BASE_PATH;
   try {
-    const file = path.join(
-      __dirname,
-      "public",
-      "configuration",
-      "config.json"
-    );
+    // Config lives at <root>/configuration/config.json (outside public/),
+    // so it is never served to browsers.
+    const file = path.join(__dirname, "configuration", "config.json");
     const raw = fs.readFileSync(file, "utf-8");
     const parsed = JSON.parse(stripJsonComments(raw));
     return parsed.BASE_PATH || "";

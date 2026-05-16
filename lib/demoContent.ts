@@ -147,6 +147,53 @@ export interface DemoShopItem {
   inStock: boolean;
 }
 
+/* ───── Donation institutions (mock) ───── */
+export interface DemoInstitution {
+  id: number;
+  name: string;
+  category: string;
+  description?: string;
+}
+
+export const DEMO_INSTITUTIONS: DemoInstitution[] = [
+  {
+    id: 1,
+    name: "Masjid Al-Hidayah",
+    category: "Masjid",
+    description: "Sumbangan untuk pembinaan dan penyelenggaraan masjid.",
+  },
+  {
+    id: 2,
+    name: "Tabung Anak Yatim",
+    category: "Kebajikan",
+    description: "Sokongan kewangan bulanan kepada anak yatim.",
+  },
+  {
+    id: 3,
+    name: "Pengajian Tahfiz",
+    category: "Pendidikan",
+    description: "Yuran dan keperluan pelajar program tahfiz.",
+  },
+  {
+    id: 4,
+    name: "Sumbangan Mualaf",
+    category: "Kebajikan",
+    description: "Sokongan dan bimbingan untuk saudara baharu.",
+  },
+  {
+    id: 5,
+    name: "Penyelenggaraan Surau",
+    category: "Surau",
+    description: "Kos elektrik, air dan kebersihan harian surau.",
+  },
+  {
+    id: 6,
+    name: "Tabung Iftar Ramadhan",
+    category: "Program",
+    description: "Program iftar bersama jemaah sepanjang Ramadhan.",
+  },
+];
+
 export const DEMO_SHOP_ITEMS: DemoShopItem[] = [
   {
     id: 1,
