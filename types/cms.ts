@@ -221,8 +221,20 @@ export interface FooterData {
   columns: FooterColumn[];
   /** Footer background image (from admin "file" field) */
   backgroundImage: string;
+  /** Hex color for the overlay applied on top of `backgroundImage`. From
+   *  Config.footerConfig.bgColorFooter — admins set one colour that's used
+   *  both as the solid bg (no image) and as the image overlay tint. */
+  overlayColor: string;
+  /** Overlay opacity expressed as a percentage 0–100. From
+   *  Config.footerConfig.opacity. Defaults to 80 when unset. */
+  overlayOpacity: number;
   /** Footer area text color (from Config.colorFooterAreaText / textColorHeaderFooter) */
   textColor: string;
+  /** Color applied to footer COLUMN HEADERS / TITLES only — not body text.
+   *  From Config.footerConfig.textColorHeaderFooter (falls back to the
+   *  top-level Config.textColorHeaderFooter). Empty string means "use the
+   *  component's default heading color". */
+  headerColor: string;
   /** Footer area accent color (from Config.colorFooterArea) */
   areaColor: string;
   /** Whether to show the visitor counter (from Config.countingVisitorFooter) */

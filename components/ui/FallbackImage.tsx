@@ -39,17 +39,22 @@ export default function FallbackImage({
     }
   }, [src, fallbackSrc]);
 
-  // If the fallback is an SVG, ask Next/Image to skip optimization so it
-  // renders even with strict CSP / dangerouslyAllowSVG off.
-  const isSvgFallback =
-    typeof imgSrc === "string" && /\.svg(\?.*)?$/i.test(imgSrc);
+  // Skip Next/Image optimization for:
+  //  - SVG sources (strict CSP / dangerouslyAllowSVG off).
+  //  - Remote http(s) URLs — image hosts are tenant-driven (`dev01`,
+  //    `eboss`, third-party CDNs like `careta.my`, etc.) and adding every
+  //    one to `images.remotePatterns` isn't realistic. Local public/
+  //    assets still go through the optimizer.
+  const isStringSrc = typeof imgSrc === "string";
+  const isSvg = isStringSrc && /\.svg(\?.*)?$/i.test(imgSrc as string);
+  const isRemote = isStringSrc && /^https?:\/\//i.test(imgSrc as string);
 
   return (
     <Image
       {...props}
       src={imgSrc}
       alt={alt || "Image"}
-      unoptimized={unoptimized ?? isSvgFallback}
+      unoptimized={unoptimized ?? (isSvg || isRemote)}
       onError={() => {
         if (!failed) {
           setImgSrc(fallbackSrc);

@@ -112,6 +112,22 @@ export default function Blog2Nav({
   const [open, setOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
+
+  // Cap the visible navbar to 6 top-level items. The 7th+ collapse into a
+  // synthetic "More" dropdown so the navbar stays compact.
+  const MAX_VISIBLE = 6;
+  const safeMenuItems = Array.isArray(menuItems) ? menuItems : [];
+  const displayMenuItems: MenuItem[] =
+    safeMenuItems.length > MAX_VISIBLE
+      ? [
+          ...safeMenuItems.slice(0, MAX_VISIBLE),
+          {
+            label: "More",
+            link: "#",
+            submenu: safeMenuItems.slice(MAX_VISIBLE),
+          },
+        ]
+      : safeMenuItems;
   const searchInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
@@ -198,7 +214,7 @@ export default function Blog2Nav({
           </Link>
 
           <nav className="hidden lg:flex items-center gap-6 flex-1 justify-center">
-            {menuItems.map((item, i) => {
+            {displayMenuItems.map((item, i) => {
               const isExternal = item.targetWindow === "_blank";
               const hasSub = !!item.submenu && item.submenu.length > 0;
               return (
@@ -299,7 +315,7 @@ export default function Blog2Nav({
       {open && (
         <div className="lg:hidden border-t border-gray-200 bg-white">
           <nav className="px-5 py-3">
-            {menuItems.map((item, i) => (
+            {displayMenuItems.map((item, i) => (
               <MobileMenuItem key={i} item={item} />
             ))}
           </nav>

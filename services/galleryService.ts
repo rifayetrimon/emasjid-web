@@ -101,7 +101,7 @@ export async function getGalleryPage(
   try {
     const sid = (await getConfig()).sid || "0";
     const res = await myAxios.get(
-      `gallery?sid=${sid}&currentpage=${currentPage}`
+      `api/v2/utilities/eboss/cms/gallery?sid=${sid}&currentpage=${currentPage}`
     );
     const data = res.data?.data ?? res.data ?? {};
 

@@ -132,6 +132,15 @@ export async function getFooterData(): Promise<FooterProps["footer"] | null> {
       (firstFooter?.file as string | undefined) || ""
     );
 
+    // Overlay color + opacity come from the same admin field used for the
+    // solid bg. Opacity ships as a number (0–100); we default to 80 when
+    // missing so legacy tenants keep their previous look.
+    const overlayColorRaw = (footerConfig.bgColorFooter as string) || "";
+    const opacityRaw = footerConfig.opacity;
+    const overlayOpacity = Number.isFinite(Number(opacityRaw))
+      ? Number(opacityRaw)
+      : 80;
+
     return {
       image: {
         image: logoUrl,
@@ -144,13 +153,20 @@ export async function getFooterData(): Promise<FooterProps["footer"] | null> {
       email: footerConfig.email || "",
       social_links: socialLinks,
       copyright: configData.copyright || footerConfig.copyright || "",
-      bgColor: footerConfig.bgColorFooter || "",
+      bgColor: overlayColorRaw,
       columns,
       backgroundImage: footerBackground || "",
-      textColor:
-        footerConfig.colorFooterAreaText ||
-        footerConfig.textColorHeaderFooter ||
-        general.textColorHeaderFooter ||
+      overlayColor: overlayColorRaw,
+      overlayOpacity,
+      // Body-text colour applied to the whole footer (everything except
+      // column headers). Headers have their own colour in `headerColor`.
+      textColor: (footerConfig.colorFooterAreaText as string) || "",
+      // Column-header / title color. Lives in the same admin field used
+      // for the broader footer text color, but pulled out so components
+      // can style headings differently from body text when desired.
+      headerColor:
+        (footerConfig.textColorHeaderFooter as string) ||
+        (general.textColorHeaderFooter as string) ||
         "",
       areaColor: footerConfig.colorFooterArea || "",
       // Show visitor counter unless the admin explicitly disabled it.

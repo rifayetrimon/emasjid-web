@@ -123,19 +123,7 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "devsec.awfatech.com",
-        port: "",
-        pathname: "/**",
-      },
-      {
-        protocol: "https",
-        hostname: "devaws04.awfatech.com",
-        port: "",
-        pathname: "/**",
-      },
-      {
-        protocol: "https",
-        hostname: "devapi02.awfatech.com",
+        hostname: "**.awfatech.com",
         port: "",
         pathname: "/**",
       },

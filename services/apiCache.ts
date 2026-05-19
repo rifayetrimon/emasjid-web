@@ -15,7 +15,7 @@ async function getSID(): Promise<string> {
 export const getCachedConfig = cache(async () => {
   try {
     const sid = await getSID();
-    const res = await myAxios.get(`config?sid=${sid}`);
+    const res = await myAxios.get(`api/v2/utilities/eboss/cms/config?sid=${sid}`);
     return res.data?.data || {};
   } catch (error) {
     console.error("❌ getCachedConfig failed:", error);
@@ -26,7 +26,7 @@ export const getCachedConfig = cache(async () => {
 export const getCachedNavHeader = cache(async () => {
   try {
     const sid = await getSID();
-    const res = await myAxios.get(`nav-header?sid=${sid}`);
+    const res = await myAxios.get(`api/v2/utilities/eboss/cms/nav-header?sid=${sid}`);
     return res.data?.data || null;
   } catch (error) {
     console.error("❌ getCachedNavHeader failed:", error);
@@ -37,7 +37,7 @@ export const getCachedNavHeader = cache(async () => {
 export const getCachedBanner = cache(async () => {
   try {
     const sid = await getSID();
-    const res = await myAxios.get(`banner?sid=${sid}&type=Banner`);
+    const res = await myAxios.get(`api/v2/utilities/eboss/cms/banner?sid=${sid}&type=Banner`);
     return res.data?.data || [];
   } catch (error) {
     console.error("❌ getCachedBanner failed:", error);
@@ -60,7 +60,7 @@ export const getCachedNews = cache(async () => {
     const merged: Record<string, unknown>[] = [];
 
     for (let page = 1; page <= MAX_PAGES; page++) {
-      const res = await myAxios.get(`news?sid=${sid}&currentpage=${page}`);
+      const res = await myAxios.get(`api/v2/utilities/eboss/cms/news?sid=${sid}&currentpage=${page}`);
       const data = res.data?.data ?? {};
       const dataset: Record<string, unknown>[] = Array.isArray(data)
         ? (data as Record<string, unknown>[])
@@ -99,7 +99,7 @@ export const getCachedNews = cache(async () => {
 export const getCachedFooter = cache(async () => {
   try {
     const sid = await getSID();
-    const res = await myAxios.get(`footer?sid=${sid}`);
+    const res = await myAxios.get(`api/v2/utilities/eboss/cms/footer?sid=${sid}`);
     return res.data?.data || [];
   } catch (error) {
     console.error("❌ getCachedFooter failed:", error);
@@ -110,7 +110,7 @@ export const getCachedFooter = cache(async () => {
 export const getCachedFaq = cache(async () => {
   try {
     const sid = await getSID();
-    const res = await myAxios.get(`faq?sid=${sid}`);
+    const res = await myAxios.get(`api/v2/utilities/eboss/cms/faq?sid=${sid}`);
     return res.data?.data || [];
   } catch (error) {
     console.error("❌ getCachedFaq failed:", error);
@@ -121,7 +121,7 @@ export const getCachedFaq = cache(async () => {
 export const getCachedSideBanner = cache(async () => {
   try {
     const sid = await getSID();
-    const res = await myAxios.get(`banner?sid=${sid}&type=Sider`);
+    const res = await myAxios.get(`api/v2/utilities/eboss/cms/banner?sid=${sid}&type=Sider`);
     return res.data?.data || [];
   } catch (error) {
     console.error("❌ getCachedSideBanner failed:", error);
@@ -132,7 +132,7 @@ export const getCachedSideBanner = cache(async () => {
 export const getCachedPromotagBanner = cache(async () => {
   try {
     const sid = await getSID();
-    const res = await myAxios.get(`banner?sid=${sid}&type=Promotag`);
+    const res = await myAxios.get(`api/v2/utilities/eboss/cms/banner?sid=${sid}&type=Promotag`);
     return res.data?.data || [];
   } catch (error) {
     console.error("❌ getCachedPromotagBanner failed:", error);
@@ -143,7 +143,7 @@ export const getCachedPromotagBanner = cache(async () => {
 export const getCachedNewsDetail = cache(async (contentId: string) => {
   try {
     const sid = await getSID();
-    const res = await myAxios.get(`news/${contentId}?sid=${sid}`);
+    const res = await myAxios.get(`api/v2/utilities/eboss/cms/news/${contentId}?sid=${sid}`);
     return res.data?.data || null;
   } catch (error) {
     console.error("❌ getCachedNewsDetail failed:", error);
@@ -154,7 +154,7 @@ export const getCachedNewsDetail = cache(async (contentId: string) => {
 export const getCachedAddonPlugin = cache(async () => {
   try {
     const sid = await getSID();
-    const res = await myAxios.get(`addon-plugin?sid=${sid}`);
+    const res = await myAxios.get(`api/v2/utilities/eboss/cms/addon-plugin?sid=${sid}`);
     return res.data?.data || [];
   } catch (error) {
     console.error("❌ getCachedAddonPlugin failed:", error);
@@ -165,7 +165,7 @@ export const getCachedAddonPlugin = cache(async () => {
 export const getCachedVisitors = cache(async () => {
   try {
     const sid = await getSID();
-    const res = await myAxios.get(`visitors?sid=${sid}`);
+    const res = await myAxios.get(`api/v2/utilities/eboss/cms/visitors?sid=${sid}`);
     return res.data?.data || {};
   } catch (error) {
     console.error("❌ getCachedVisitors failed:", error);
@@ -176,7 +176,7 @@ export const getCachedVisitors = cache(async () => {
 export const getCachedStaticContent = cache(async () => {
   try {
     const sid = await getSID();
-    const res = await myAxios.get(`static-content?sid=${sid}&currentpage=1`);
+    const res = await myAxios.get(`api/v2/utilities/eboss/cms/static-content?sid=${sid}&currentpage=1`);
     return res.data?.data || [];
   } catch (error) {
     console.error("❌ getCachedStaticContent failed:", error);
@@ -187,7 +187,7 @@ export const getCachedStaticContent = cache(async () => {
 export const getCachedGallery = cache(async () => {
   try {
     const sid = await getSID();
-    const res = await myAxios.get(`gallery?sid=${sid}`);
+    const res = await myAxios.get(`api/v2/utilities/eboss/cms/gallery?sid=${sid}`);
     return res.data?.data || [];
   } catch (error) {
     console.error("❌ getCachedGallery failed:", error);
@@ -198,7 +198,7 @@ export const getCachedGallery = cache(async () => {
 export const getCachedGalleryCategory = cache(async () => {
   try {
     const sid = await getSID();
-    const res = await myAxios.get(`gallery/category?sid=${sid}`);
+    const res = await myAxios.get(`api/v2/utilities/eboss/cms/gallery/category?sid=${sid}`);
     return res.data?.data || [];
   } catch (error) {
     console.error("❌ getCachedGalleryCategory failed:", error);
@@ -209,7 +209,7 @@ export const getCachedGalleryCategory = cache(async () => {
 export const getCachedPlugin = cache(async () => {
   try {
     const sid = await getSID();
-    const res = await myAxios.get(`plugin?sid=${sid}`);
+    const res = await myAxios.get(`api/v2/utilities/eboss/cms/plugin?sid=${sid}`);
     return res.data?.data || [];
   } catch (error) {
     console.error("❌ getCachedPlugin failed:", error);
@@ -220,7 +220,7 @@ export const getCachedPlugin = cache(async () => {
 export const getCachedPluginCategory = cache(async () => {
   try {
     const sid = await getSID();
-    const res = await myAxios.get(`plugin-category?sid=${sid}`);
+    const res = await myAxios.get(`api/v2/utilities/eboss/cms/plugin-category?sid=${sid}`);
     return res.data?.data || [];
   } catch (error) {
     console.error("❌ getCachedPluginCategory failed:", error);

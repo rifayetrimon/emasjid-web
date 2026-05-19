@@ -27,6 +27,24 @@ export default function NavbarClient({
 
   const safeMenuItems = Array.isArray(menuItems) ? menuItems : [];
 
+  // Cap the visible navbar to 6 top-level items. Any 7th+ items collapse
+  // into a synthetic "More" dropdown so the navbar stays compact. Children
+  // of overflow items are flattened — they appear as direct entries in the
+  // "More" menu, which is intentional: a multi-level dropdown inside
+  // "More" would crowd the UI for tenants with deep nav trees.
+  const MAX_VISIBLE = 6;
+  const displayMenuItems: MenuItem[] =
+    safeMenuItems.length > MAX_VISIBLE
+      ? [
+          ...safeMenuItems.slice(0, MAX_VISIBLE),
+          {
+            label: "More",
+            link: "#",
+            submenu: safeMenuItems.slice(MAX_VISIBLE),
+          },
+        ]
+      : safeMenuItems;
+
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (socialRef.current && !socialRef.current.contains(event.target as Node)) {
@@ -90,7 +108,7 @@ export default function NavbarClient({
         {/* Desktop Nav */}
         <div className="hidden md:flex items-center gap-8">
           <ul className="flex items-center gap-8">
-            {safeMenuItems.map((item, index) => (
+            {displayMenuItems.map((item, index) => (
               <li key={index} className="group/nav relative">
                 <a
                   href={item.link || "#"}
@@ -198,7 +216,7 @@ export default function NavbarClient({
       {menuOpen && (
         <div className="md:hidden mt-4 bg-white rounded-lg p-4 shadow-xl border border-gray-200 absolute top-16 left-4 right-4 z-[100]">
           <ul className="flex flex-col gap-1">
-            {safeMenuItems.map((item, index) => (
+            {displayMenuItems.map((item, index) => (
               <li key={index}>
                 {hasSubmenu(item) ? (
                   <>

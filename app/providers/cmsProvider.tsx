@@ -2,7 +2,12 @@
 
 import { ReactNode } from "react";
 import { CartProvider } from "@/lib/cartContext";
+import { DonationCartProvider } from "@/lib/donationCartContext";
 
 export function CMSProvider({ children }: { children: ReactNode }) {
-  return <CartProvider>{children}</CartProvider>;
+  return (
+    <CartProvider>
+      <DonationCartProvider>{children}</DonationCartProvider>
+    </CartProvider>
+  );
 }
