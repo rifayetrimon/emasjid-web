@@ -277,48 +277,22 @@ export default function DonateGrid({
         </div>
       </div>
 
-      {/* ━━━━━━ Sections ━━━━━━ */}
+      {/* ━━━━━━ Group cards ━━━━━━ */}
       {visibleGroups.length === 0 ? (
         <EmptyCatalog />
       ) : (
-        <div className="space-y-12">
+        <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
           {visibleGroups.map((group) => (
-            <section key={group.id}>
-              <div className="mb-4 flex items-baseline justify-between gap-3">
-                <h2 className="text-base md:text-lg font-semibold tracking-tight">
-                  <span className="text-gray-400">
-                    {deriveCategory(group.name)}
-                  </span>
-                  <span className="text-gray-700 mx-2">·</span>
-                  <span>
-                    {group.name
-                      .replace(
-                        new RegExp(`^${deriveCategory(group.name)}`, "i"),
-                        ""
-                      )
-                      .replace(/^[\s\-:·/]+/, "")
-                      .trim() || group.name}
-                  </span>
-                </h2>
-                <span className="text-[11px] text-gray-500 tabular-nums whitespace-nowrap">
-                  {group.items.length} variants
-                </span>
-              </div>
-              <ul className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
-                {group.items.map((item) => (
-                  <ProductCard
-                    key={item.id}
-                    item={item}
-                    quantity={qtyById.get(item.id) || 0}
-                    onAdd={() => openPicker(item)}
-                    onIncrement={() => increment(item.id)}
-                    onDecrement={() => decrement(item.id)}
-                  />
-                ))}
-              </ul>
-            </section>
+            <GroupCard
+              key={group.id}
+              group={group}
+              qtyById={qtyById}
+              onAdd={openPicker}
+              onIncrement={increment}
+              onDecrement={decrement}
+            />
           ))}
-        </div>
+        </ul>
       )}
 
       {/* ━━━━━━ Cart drawer ━━━━━━ */}
@@ -441,80 +415,103 @@ function CategoryPill({
 }
 
 /* ═══════════════════════════════════════════════════════════ */
-/* Product card                                                */
-/* ═══════════════════════════════════════════════════════════ */
+/* Group card — one card per donation group, listing item names      */
+/* ═══════════════════════════════════════════════════════════════════ */
 
-function ProductCard({
-  item,
-  quantity,
+function GroupCard({
+  group,
+  qtyById,
   onAdd,
   onIncrement,
   onDecrement,
 }: {
-  item: DonationItem;
-  quantity: number;
-  onAdd: () => void;
-  onIncrement: () => void;
-  onDecrement: () => void;
+  group: DonationGroup;
+  qtyById: Map<number, number>;
+  onAdd: (item: DonationItem) => void;
+  onIncrement: (id: number) => void;
+  onDecrement: (id: number) => void;
 }) {
-  const inCart = quantity > 0;
-  const tint = tintFor(item.code || item.name);
+  const tint = tintFor(group.code || group.name);
+  const anyInCart = group.items.some((it) => (qtyById.get(it.id) || 0) > 0);
 
   return (
     <li
-      className={`group relative flex flex-col rounded-2xl bg-gray-900/70 border overflow-hidden transition-all duration-200 ${
-        inCart
+      className={`flex flex-col rounded-2xl bg-gray-900/70 border overflow-hidden transition-all duration-200 ${
+        anyInCart
           ? "border-[var(--primary)]/50 shadow-lg shadow-[var(--primary)]/10"
-          : "border-gray-800 hover:border-gray-700 hover:bg-gray-900"
-      } ${!item.active ? "opacity-60" : ""}`}
+          : "border-gray-800 hover:border-gray-700"
+      }`}
     >
-      <button
-        type="button"
-        onClick={!item.active ? undefined : inCart ? onIncrement : onAdd}
-        disabled={!item.active}
-        className="flex-1 text-left disabled:cursor-not-allowed"
-        aria-label={inCart ? "Sumbang lagi" : "Sumbang"}
+      {/* Group name header */}
+      <div
+        className={`relative px-5 py-6 bg-gradient-to-br ${tint}`}
       >
-        <div
-          className={`relative aspect-[5/4] overflow-hidden bg-gradient-to-br ${tint}`}
-        >
-          <div className="absolute inset-0 flex items-center justify-center px-4 text-center">
-            <p className="text-lg md:text-xl font-bold tracking-tight leading-tight line-clamp-3">
-              {item.name}
-            </p>
-          </div>
-          {inCart && (
-            <span className="absolute bottom-2 right-2 z-10 inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[var(--primary)] text-white text-[10px] font-semibold shadow-md">
-              <Check className="w-3 h-3" />
-              {quantity}
-            </span>
-          )}
-        </div>
-      </button>
+        <h3 className="text-base md:text-lg font-bold tracking-tight leading-tight">
+          {group.name}
+        </h3>
+      </div>
 
-      {inCart && (
-        <div className="flex items-center justify-between gap-2 px-3 py-2 border-t border-gray-800 bg-gray-900/60">
-          <button
-            type="button"
-            onClick={onDecrement}
-            aria-label="Kurang"
-            className="w-7 h-7 rounded-md text-gray-300 hover:bg-gray-800 flex items-center justify-center"
-          >
-            <Minus className="w-3.5 h-3.5" />
-          </button>
-          <span className="text-xs font-semibold text-gray-100 tabular-nums">
-            {quantity} dalam bakul
-          </span>
-          <button
-            type="button"
-            onClick={onIncrement}
-            aria-label="Tambah"
-            className="w-7 h-7 rounded-md bg-[var(--primary)] text-white flex items-center justify-center hover:opacity-90"
-          >
-            <Plus className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      )}
+      {/* Items inside the group */}
+      <ul className="divide-y divide-gray-800">
+        {group.items.map((item) => {
+          const qty = qtyById.get(item.id) || 0;
+          const inCart = qty > 0;
+          return (
+            <li
+              key={item.id}
+              className={`flex items-center justify-between gap-3 px-4 py-3 ${
+                !item.active ? "opacity-60" : ""
+              }`}
+            >
+              <p className="text-sm font-medium text-gray-100 leading-snug flex-1 min-w-0">
+                {item.name}
+              </p>
+
+              {!item.active ? (
+                <button
+                  type="button"
+                  disabled
+                  aria-label="Tidak aktif"
+                  className="w-7 h-7 rounded-md bg-gray-800 text-gray-600 cursor-not-allowed flex items-center justify-center flex-shrink-0"
+                >
+                  ×
+                </button>
+              ) : inCart ? (
+                <div className="flex items-center gap-0.5 rounded-md bg-gray-800 p-0.5 flex-shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => onDecrement(item.id)}
+                    aria-label="Kurang"
+                    className="w-6 h-6 rounded-sm text-gray-300 hover:bg-gray-700 flex items-center justify-center"
+                  >
+                    <Minus className="w-3 h-3" />
+                  </button>
+                  <span className="min-w-[20px] text-center font-semibold text-[11px] text-gray-100 tabular-nums">
+                    {qty}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => onIncrement(item.id)}
+                    aria-label="Tambah"
+                    className="w-6 h-6 rounded-sm bg-[var(--primary)] text-white flex items-center justify-center hover:opacity-90"
+                  >
+                    <Plus className="w-3 h-3" />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => onAdd(item)}
+                  aria-label="Sumbang"
+                  className="w-8 h-8 rounded-md border border-gray-700 text-gray-300 hover:bg-[var(--primary)] hover:border-[var(--primary)] hover:text-white transition flex items-center justify-center flex-shrink-0"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </li>
+          );
+        })}
+      </ul>
     </li>
   );
 }

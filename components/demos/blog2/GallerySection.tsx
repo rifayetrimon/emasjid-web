@@ -46,12 +46,9 @@ export default function Blog2GallerySection({
     return result;
   }, [data.totalPages, data.currentPage]);
 
-  // Pad to fill 2 rows × 5 cols so the grid keeps a consistent footprint
-  // even when fewer than 10 image items came back on a page.
-  const slots = useMemo(() => {
-    const n = Math.max(PER_PAGE, data.items.length);
-    return Array.from({ length: n }, (_, i) => data.items[i] || null);
-  }, [data.items]);
+  // Render exactly the items the API returned — no placeholder padding.
+  // CSS grid handles incomplete trailing rows by leaving empty space.
+  const slots = data.items;
 
   async function load(page: number) {
     if (page === data.currentPage || loading) return;
@@ -81,7 +78,8 @@ export default function Blog2GallerySection({
     }
   }, [lightbox]);
 
-  if (data.total === 0 && data.items.length === 0) return null;
+  // Hide entire gallery section when the API returns no images at all.
+  if (data.items.length === 0) return null;
 
   return (
     <section className="max-w-7xl mx-auto px-6 pb-12">
@@ -96,38 +94,30 @@ export default function Blog2GallerySection({
           loading ? "opacity-60" : "opacity-100"
         }`}
       >
-        {slots.map((item, i) =>
-          item ? (
-            <button
-              type="button"
-              key={item.galleryId}
-              onClick={() => setLightbox(item)}
-              className="group relative block aspect-square overflow-hidden bg-gray-100 border border-gray-200"
-            >
-              {/* `object-contain` so banner-shaped images (e.g. wide headers)
-                  display fully instead of being cropped to a tiny center crop.
-                  Gray surround acts as a neutral matte. */}
-              <Image
-                src={item.file}
-                alt={item.title || "Galeri"}
-                fill
-                className="object-contain p-1.5 group-hover:scale-105 transition-transform duration-500"
-                sizes="(max-width:640px) 50vw, (max-width:1024px) 33vw, 20vw"
-              />
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors duration-300 flex items-end p-3 pointer-events-none">
-                <span className="text-white text-xs font-bold opacity-0 group-hover:opacity-100 transition line-clamp-2 text-left">
-                  {item.title}
-                </span>
-              </div>
-            </button>
-          ) : (
-            <div
-              key={`empty-${i}`}
-              className="relative aspect-square bg-gray-50 border border-dashed border-gray-200"
-              aria-hidden="true"
+        {slots.map((item) => (
+          <button
+            type="button"
+            key={item.galleryId}
+            onClick={() => setLightbox(item)}
+            className="group relative block aspect-square overflow-hidden bg-gray-100 border border-gray-200"
+          >
+            {/* `object-contain` so banner-shaped images (e.g. wide headers)
+                display fully instead of being cropped to a tiny center crop.
+                Gray surround acts as a neutral matte. */}
+            <Image
+              src={item.file}
+              alt={item.title || "Galeri"}
+              fill
+              className="object-contain p-1.5 group-hover:scale-105 transition-transform duration-500"
+              sizes="(max-width:640px) 50vw, (max-width:1024px) 33vw, 20vw"
             />
-          )
-        )}
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors duration-300 flex items-end p-3 pointer-events-none">
+              <span className="text-white text-xs font-bold opacity-0 group-hover:opacity-100 transition line-clamp-2 text-left">
+                {item.title}
+              </span>
+            </div>
+          </button>
+        ))}
       </div>
 
       {/* Pagination */}
