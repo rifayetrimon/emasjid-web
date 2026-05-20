@@ -154,6 +154,7 @@ export default async function TemplateLayout({
           menuItems={menuItems}
           logo={nav.logo}
           socialLinks={nav.socialLinks}
+          navConfig={nav.navConfig}
         />
       );
       footerElement = footer && <Demo7Footer footer={footer} visitors={visitors} />;
@@ -164,6 +165,7 @@ export default async function TemplateLayout({
           menuItems={menuItems}
           logo={nav.logo}
           socialLinks={nav.socialLinks}
+          navConfig={nav.navConfig}
         />
       );
       footerElement = footer && <Demo4Footer footer={footer} visitors={visitors} />;
@@ -174,6 +176,7 @@ export default async function TemplateLayout({
           menuItems={menuItems}
           logo={nav.logo}
           socialLinks={nav.socialLinks}
+          navConfig={nav.navConfig}
         />
       );
       footerElement = footer && <Demo8Footer footer={footer} visitors={visitors} />;
@@ -187,6 +190,7 @@ export default async function TemplateLayout({
           socialLinks={nav.socialLinks}
           email={footerCfg.email || ""}
           phone={footerCfg.phonenum || ""}
+          navConfig={nav.navConfig}
         />
       );
       footerElement = footer && <Demo2Footer footer={footer} visitors={visitors} />;
@@ -197,6 +201,7 @@ export default async function TemplateLayout({
           menuItems={menuItems}
           logo={nav.logo}
           socialLinks={nav.socialLinks}
+          navConfig={nav.navConfig}
         />
       );
       footerElement = footer && <Demo5Footer footer={footer} visitors={visitors} />;
@@ -208,6 +213,7 @@ export default async function TemplateLayout({
           logo={nav.logo}
           socialLinks={nav.socialLinks}
           trendingTitle={trendingTitle}
+          navConfig={nav.navConfig}
         />
       );
       footerElement = footer && (

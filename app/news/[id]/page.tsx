@@ -6,6 +6,7 @@ import MediaLayout from "@/components/news/MediaLayout";
 import TemplateLayout from "@/components/TemplateLayout";
 import { getActiveTemplateId } from "@/lib/getActiveTemplate";
 import { getCachedNews } from "@/services/apiCache";
+import { getNavData } from "@/services/navService";
 import { categoryFor } from "@/lib/blog2Categories";
 import { notFound } from "next/navigation";
 import ShareButtons from "@/components/news/ShareButtons";
@@ -86,6 +87,17 @@ export default async function NewsDetailPage({
 
   // Build a relative share URL (no need for env var; browser resolves to full origin)
   const shareUrl = `/news/${id}`;
+
+  // Admin's CMS-configured social platforms (addon-plugin). The share bar
+  // shows only the platforms admin enabled (plus the always-on copy-link
+  // button); empty list = just the copy-link button.
+  let sharePlatforms: string[] = [];
+  try {
+    const nav = await getNavData();
+    sharePlatforms = nav.socialLinks.map((s) => s.platform);
+  } catch {
+    sharePlatforms = [];
+  }
 
   return (
     <TemplateLayout templateId={templateId} padForFixedNav>
@@ -169,7 +181,11 @@ export default async function NewsDetailPage({
               {/* Share buttons */}
               {isBlog && (
                 <div className="mb-6">
-                  <ShareButtons title={news.title} url={shareUrl} />
+                  <ShareButtons
+                    title={news.title}
+                    url={shareUrl}
+                    platforms={sharePlatforms}
+                  />
                 </div>
               )}
 

@@ -210,8 +210,8 @@ export default async function Template6Blog() {
 
   // `theme.maxDisplay` is admin's pagination cap. Don't apply it to the
   // master list — that starves smaller sections like "Jangan Lepaskan"
-  // when the hero consumes the only few items. Apply per-section instead.
-  const maxDisplay = theme.maxDisplay;
+  // when the hero consumes the only few items. Sections below apply it
+  // per-section instead (or ignore it, e.g. fixed 6-item "Berita Terkini").
   const newsList = allNews;
 
   // Sort by date + time descending so "most recent" works on real data.

@@ -471,6 +471,10 @@ function ProductCard({
         }`}
       >
         {showImage ? (
+          // Plain <img> on purpose — shop images come from tenant-supplied
+          // hosts that aren't in next.config remotePatterns, and we need
+          // onError to swap to the name-tile fallback below.
+          // eslint-disable-next-line @next/next/no-img-element
           <img
             src={item.image}
             alt={item.name}

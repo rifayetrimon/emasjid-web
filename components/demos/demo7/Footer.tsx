@@ -9,6 +9,7 @@ interface Props extends FooterProps {
 
 export default function Demo7Footer({ footer, visitors }: Props) {
   if (!footer) return null;
+  const year = new Date().getFullYear();
   return (
     <footer className="relative pt-16 pb-8 px-6 overflow-hidden bg-gradient-to-br from-rose-50 to-amber-50">
       <div className="max-w-6xl mx-auto">
@@ -82,9 +83,11 @@ export default function Demo7Footer({ footer, visitors }: Props) {
             </div>
           )}
         </div>
-        <p className="text-xs text-gray-500 text-center pt-6">
-          {footer.copyright}
-        </p>
+        <div className="mt-10 pt-6 border-t border-rose-100 text-center">
+          <p className="text-xs text-gray-500">
+            {footer.copyright || `© ${year}. All Rights Reserved.`}
+          </p>
+        </div>
       </div>
     </footer>
   );

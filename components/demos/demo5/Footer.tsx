@@ -36,6 +36,7 @@ function Divider({ className = "" }: { className?: string }) {
 
 export default function Demo5Footer({ footer, visitors }: Props) {
   if (!footer) return null;
+  const year = new Date().getFullYear();
   return (
     <footer className="bg-[#082a29] text-[#e8d5a8] py-16 px-6 relative overflow-hidden">
       <div
@@ -137,9 +138,11 @@ export default function Demo5Footer({ footer, visitors }: Props) {
             </div>
           )}
         </div>
-        <p className="text-xs text-[#e8d5a8]/50 text-center pt-8 uppercase tracking-[0.2em]">
-          {footer.copyright}
-        </p>
+        <div className="mt-10 pt-6 border-t border-[#e8d5a8]/15 text-center">
+          <p className="text-xs text-[#e8d5a8]/60 uppercase tracking-[0.2em]">
+            {footer.copyright || `© ${year}. All Rights Reserved.`}
+          </p>
+        </div>
       </div>
     </footer>
   );

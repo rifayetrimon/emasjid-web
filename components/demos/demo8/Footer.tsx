@@ -9,6 +9,7 @@ interface Props extends FooterProps {
 
 export default function Demo8Footer({ footer, visitors }: Props) {
   if (!footer) return null;
+  const year = new Date().getFullYear();
   return (
     <footer className="bg-black border-t border-white/5 py-14 px-6">
       <div className="max-w-[1400px] mx-auto">
@@ -82,9 +83,11 @@ export default function Demo8Footer({ footer, visitors }: Props) {
             </div>
           )}
         </div>
-        <p className="text-xs text-white/40 text-center pt-8">
-          {footer.copyright}
-        </p>
+        <div className="mt-10 pt-6 border-t border-white/10 text-center">
+          <p className="text-xs text-white/40">
+            {footer.copyright || `© ${year}. All Rights Reserved.`}
+          </p>
+        </div>
       </div>
     </footer>
   );

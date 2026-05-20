@@ -4,14 +4,16 @@ import { useState, useRef, useEffect, FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "@/components/ui/FallbackImage";
-import { MenuItem, NavSocialLink } from "@/types/cms";
+import { MenuItem, NavConfig, NavSocialLink } from "@/types/cms";
 import { Menu, X, ChevronDown, ChevronRight, Search } from "lucide-react";
+import { resolveNavStyles } from "@/lib/navStyles";
 
 interface Props {
   menuItems: MenuItem[];
   logo: string;
   socialLinks: NavSocialLink[];
   trendingTitle?: string;
+  navConfig: NavConfig;
 }
 
 /**
@@ -108,10 +110,17 @@ export default function Blog2Nav({
   menuItems,
   logo,
   socialLinks,
+  navConfig,
 }: Props) {
   const [open, setOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const ns = resolveNavStyles(navConfig);
+  // Resolved colors with sane fallbacks for the blog template's defaults.
+  const itemColor = ns.itemColor || "#374151";
+  const hoverColor = ns.hoverColor || "var(--primary)";
+  const underlineColor = ns.underlineColor || hoverColor;
+  const navItemFontSize = ns.fontSizePx ? `${ns.fontSizePx}px` : undefined;
 
   // Cap the visible navbar to 6 top-level items. The 7th+ collapse into a
   // synthetic "More" dropdown so the navbar stays compact.
@@ -183,9 +192,27 @@ export default function Blog2Nav({
         </div>
       </div>
 
-      {/* Main nav */}
-      <div className="border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between gap-6">
+      {/* Main nav — backdrop respects admin navbarBg + navbarOpacity */}
+      <div
+        className="relative border-b border-gray-200"
+        style={
+          ns.bgColor
+            ? {
+                backgroundColor: ns.bgColor,
+                opacity: undefined,
+              }
+            : undefined
+        }
+      >
+        {/* Opacity overlay so text stays opaque while only the bg fades. */}
+        {ns.bgColor && ns.bgOpacity !== null && ns.bgOpacity < 1 && (
+          <div
+            aria-hidden
+            className="absolute inset-0 pointer-events-none"
+            style={{ backgroundColor: "white", opacity: 1 - ns.bgOpacity }}
+          />
+        )}
+        <div className="relative max-w-7xl mx-auto px-6 py-4 flex items-center justify-between gap-6">
           <Link href="/" className="flex items-center gap-1 flex-shrink-0">
             {logo ? (
               <Image
@@ -222,19 +249,47 @@ export default function Blog2Nav({
                   {hasSub ? (
                     // Parent with submenu: pure dropdown trigger, no nav.
                     <span
-                      className="text-[12px] font-bold uppercase tracking-[0.15em] text-gray-700 hover:text-[var(--primary)] transition flex items-center gap-1 cursor-default select-none"
+                      className="relative text-[12px] font-bold uppercase tracking-[0.15em] transition flex items-center gap-1 cursor-default select-none"
+                      style={{ color: itemColor, fontSize: navItemFontSize }}
+                      onMouseEnter={(e) =>
+                        (e.currentTarget.style.color = hoverColor)
+                      }
+                      onMouseLeave={(e) =>
+                        (e.currentTarget.style.color = itemColor)
+                      }
                     >
                       {item.label}
                       <ChevronDown className="w-3 h-3" />
+                      {ns.showUnderline && (
+                        <span
+                          aria-hidden
+                          className="absolute left-0 -bottom-1 h-[2px] w-0 group-hover:w-full transition-all duration-300"
+                          style={{ backgroundColor: underlineColor }}
+                        />
+                      )}
                     </span>
                   ) : (
                     <a
                       href={item.link || "#"}
                       target={isExternal ? "_blank" : undefined}
                       rel={isExternal ? "noopener noreferrer" : undefined}
-                      className="text-[12px] font-bold uppercase tracking-[0.15em] text-gray-700 hover:text-[var(--primary)] transition flex items-center gap-1"
+                      className="relative text-[12px] font-bold uppercase tracking-[0.15em] transition flex items-center gap-1"
+                      style={{ color: itemColor, fontSize: navItemFontSize }}
+                      onMouseEnter={(e) =>
+                        (e.currentTarget.style.color = hoverColor)
+                      }
+                      onMouseLeave={(e) =>
+                        (e.currentTarget.style.color = itemColor)
+                      }
                     >
                       {item.label}
+                      {ns.showUnderline && (
+                        <span
+                          aria-hidden
+                          className="absolute left-0 -bottom-1 h-[2px] w-0 group-hover:w-full transition-all duration-300"
+                          style={{ backgroundColor: underlineColor }}
+                        />
+                      )}
                     </a>
                   )}
                   {hasSub && (

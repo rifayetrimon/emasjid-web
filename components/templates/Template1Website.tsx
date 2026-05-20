@@ -4,9 +4,22 @@ import BannerSlideshow from "@/components/main/BannerSlideshow";
 import TemplateLayout from "@/components/TemplateLayout";
 import Demo7Faq from "@/components/demos/demo7/Faq";
 import Demo7Contact from "@/components/demos/demo7/Contact";
-import { getBannerData } from "@/services/bannerService";
+import Demo7TrendingStrip from "@/components/demos/demo7/TrendingStrip";
+import Demo7Subheader from "@/components/demos/demo7/Subheader";
+import Demo7PromotagBanner from "@/components/demos/demo7/PromotagBanner";
+import Demo7GallerySection from "@/components/demos/demo7/GallerySection";
+import Demo7DonationBlock from "@/components/demos/demo7/DonationBlock";
+import Demo7ComplaintBanner from "@/components/demos/demo7/ComplaintBanner";
+import Demo7SidebarPlugins from "@/components/demos/demo7/SidebarPlugins";
+import {
+  getBannerData,
+  getPromotagBanners,
+} from "@/services/bannerService";
 import { getNewsData } from "@/services/newsService";
 import { getFaqData } from "@/services/faqService";
+import { getGalleryPage } from "@/services/galleryService";
+import { getPluginsByCate } from "@/services/pluginService";
+import { getSiteTheme, getDonationConfig } from "@/services/themeService";
 import {
   getCachedConfig,
   getCachedNews,
@@ -31,6 +44,11 @@ export default async function Template1Website() {
     sideBannerRaw,
     faq,
     config,
+    promotagBanners,
+    galleryPage,
+    sidebarPlugins,
+    theme,
+    donation,
   ] = await Promise.all([
     getBannerData(),
     getNewsData(),
@@ -38,6 +56,11 @@ export default async function Template1Website() {
     getCachedSideBanner(),
     getFaqData(),
     getCachedConfig(),
+    getPromotagBanners(),
+    getGalleryPage(1, 10),
+    getPluginsByCate("sidebar"),
+    getSiteTheme(),
+    getDonationConfig(),
   ]);
 
   const footerCfg = config.footerConfig || {};
@@ -64,8 +87,32 @@ export default async function Template1Website() {
     .filter(Boolean)
     .join(", ");
 
+  // Admin pagination cap. `theme.maxDisplay` of 0 means unlimited; apply
+  // a sane fallback for the per-section grids so the layout stays tidy.
+  const cap = theme.maxDisplay > 0 ? theme.maxDisplay : 6;
+  const highlightedCapped = highlighted.slice(0, cap);
+  const allNewsCapped = allNews.slice(0, cap);
+
+  // Trending strip picks the most recent highlighted item (or first
+  // available news if highlighted is empty).
+  const trendingItem =
+    highlighted[0] ||
+    (allNews[0] as unknown as { contentId: number; title: string } | undefined);
+
   return (
     <TemplateLayout templateId="1">
+      {/* ━━━━━━ TRENDING STRIP (admin-driven bg color) ━━━━━━ */}
+      {trendingItem && (
+        <Demo7TrendingStrip
+          title={trendingItem.title}
+          href={`/news/${trendingItem.contentId}`}
+          backgroundColor={theme.backgroundColorTrending}
+        />
+      )}
+
+      {/* ━━━━━━ SUBHEADER (admin-driven) ━━━━━━ */}
+      {theme.subheader && <Demo7Subheader text={theme.subheader} />}
+
       {/* Soft Hero with floating blobs */}
       {banner && banner.background_images?.length > 0 && (
         <section className="relative pt-8 pb-20 px-6 overflow-hidden">
@@ -151,7 +198,7 @@ export default async function Template1Website() {
             </div>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {highlighted.slice(0, 6).map((item, i) => {
+              {highlightedCapped.map((item, i) => {
                 const tones = [
                   "from-rose-100 to-pink-200",
                   "from-amber-100 to-orange-200",
@@ -227,7 +274,7 @@ export default async function Template1Website() {
             </div>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {allNews.slice(0, 6).map((item) => (
+              {allNewsCapped.map((item) => (
                 <Link
                   key={item.contentId}
                   href={`/news/${item.contentId}`}
@@ -280,6 +327,26 @@ export default async function Template1Website() {
             )}
           </div>
         </section>
+      )}
+
+      {/* ━━━━━━ PROMOTAG BANNERS (admin-driven) ━━━━━━ */}
+      <Demo7PromotagBanner banners={promotagBanners} />
+
+      {/* ━━━━━━ DONATION (Config-driven, admin toggle) ━━━━━━ */}
+      <Demo7DonationBlock donation={donation} />
+
+      {/* ━━━━━━ GALLERY (admin-driven, hides when empty) ━━━━━━ */}
+      <Demo7GallerySection initial={galleryPage} />
+
+      {/* ━━━━━━ SIDEBAR PLUGINS (admin widgets, cate=sidebar) ━━━━━━ */}
+      <Demo7SidebarPlugins plugins={sidebarPlugins} />
+
+      {/* ━━━━━━ COMPLAINT (toggle via Config.complaint) ━━━━━━ */}
+      {theme.complaintEnabled && (
+        <Demo7ComplaintBanner
+          email={footerCfg.email}
+          phone={footerCfg.phonenum}
+        />
       )}
 
       <div id="faq">

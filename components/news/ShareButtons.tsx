@@ -7,6 +7,14 @@ interface Props {
   title: string;
   /** Path or absolute URL. Resolved to full URL at click-time using window.location. */
   url: string;
+  /**
+   * Social platforms admin has configured via the CMS addon-plugin
+   * settings — e.g. ["Facebook", "Instagram", "Twitter", "WhatsApp"].
+   * Names match `NavSocialLink.platform`. Order is preserved. The
+   * copy-link button is always rendered after these and is never
+   * filtered out.
+   */
+  platforms?: string[];
 }
 
 /* ----------- Brand SVG marks (match the mobile app icons) ----------- */
@@ -50,7 +58,102 @@ function LinkedinMark({ className = "w-4 h-4" }: { className?: string }) {
   );
 }
 
-export default function ShareButtons({ title, url }: Props) {
+/** X (formerly Twitter) — current logo, not the bird. */
+function XMark({ className = "w-4 h-4" }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-hidden="true"
+      className={className}
+    >
+      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+    </svg>
+  );
+}
+
+function TikTokMark({ className = "w-4 h-4" }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-hidden="true"
+      className={className}
+    >
+      <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5.8 20.1a6.34 6.34 0 0 0 10.86-4.43V8.55a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1.84-.4z" />
+    </svg>
+  );
+}
+
+function WhatsAppMark({ className = "w-4 h-4" }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-hidden="true"
+      className={className}
+    >
+      <path d="M.057 24l1.687-6.163a11.867 11.867 0 0 1-1.587-5.945C.16 5.335 5.495 0 12.05 0a11.817 11.817 0 0 1 8.413 3.488 11.824 11.824 0 0 1 3.48 8.414c-.003 6.557-5.338 11.892-11.893 11.892a11.9 11.9 0 0 1-5.688-1.448L.057 24zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z" />
+    </svg>
+  );
+}
+
+/* ----------- Share registry ----------- */
+
+interface ShareDef {
+  /** Lowercase key matching `NavSocialLink.platform.toLowerCase()`. */
+  key: string;
+  ariaLabel: string;
+  bgClass: string;
+  /** Optional inline background style (for gradient brands like Instagram). */
+  bgStyle?: React.CSSProperties;
+  Icon: (p: { className?: string }) => React.JSX.Element;
+}
+
+const SHARE_REGISTRY: ShareDef[] = [
+  {
+    key: "facebook",
+    ariaLabel: "Share on Facebook",
+    bgClass: "bg-[#1877F2] text-white",
+    Icon: FacebookMark,
+  },
+  {
+    key: "instagram",
+    ariaLabel: "Share on Instagram",
+    bgClass: "text-white",
+    bgStyle: {
+      background:
+        "linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)",
+    },
+    Icon: InstagramMark,
+  },
+  {
+    key: "twitter",
+    ariaLabel: "Share on X",
+    bgClass: "bg-black text-white",
+    Icon: XMark,
+  },
+  {
+    key: "tiktok",
+    ariaLabel: "Share on TikTok",
+    bgClass: "bg-black text-white",
+    Icon: TikTokMark,
+  },
+  {
+    key: "whatsapp",
+    ariaLabel: "Share on WhatsApp",
+    bgClass: "bg-[#25D366] text-white",
+    Icon: WhatsAppMark,
+  },
+  {
+    key: "linkedin",
+    ariaLabel: "Share on LinkedIn",
+    bgClass: "bg-[#0A66C2] text-white",
+    Icon: LinkedinMark,
+  },
+];
+
+export default function ShareButtons({ title, url, platforms = [] }: Props) {
   const [copied, setCopied] = useState(false);
 
   const resolveUrl = () => {
@@ -67,27 +170,47 @@ export default function ShareButtons({ title, url }: Props) {
     window.open(href, "_blank", "noopener,noreferrer,width=600,height=500");
   };
 
-  const onFacebook = () => {
-    const full = encodeURIComponent(resolveUrl());
-    openWindow(`https://www.facebook.com/sharer/sharer.php?u=${full}`);
-  };
-
-  const onInstagram = async () => {
-    // Instagram has no public share URL — copy the link so users can paste
-    // it into their Instagram bio / story / DM.
-    if (typeof navigator !== "undefined") {
-      try {
-        await navigator.clipboard.writeText(resolveUrl());
-      } catch {
-        // ignore
-      }
+  const onShare = async (key: string) => {
+    const fullUrl = resolveUrl();
+    const encUrl = encodeURIComponent(fullUrl);
+    const encTitle = encodeURIComponent(title);
+    switch (key) {
+      case "facebook":
+        openWindow(`https://www.facebook.com/sharer/sharer.php?u=${encUrl}`);
+        return;
+      case "twitter":
+        openWindow(
+          `https://twitter.com/intent/tweet?url=${encUrl}&text=${encTitle}`
+        );
+        return;
+      case "whatsapp":
+        openWindow(
+          `https://wa.me/?text=${encTitle}%20${encUrl}`
+        );
+        return;
+      case "linkedin":
+        openWindow(
+          `https://www.linkedin.com/sharing/share-offsite/?url=${encUrl}`
+        );
+        return;
+      case "instagram":
+      case "tiktok":
+        // IG and TikTok have no public web-share intent — copy the link and
+        // open the platform so the user can paste it into a post/DM.
+        try {
+          if (typeof navigator !== "undefined") {
+            await navigator.clipboard.writeText(fullUrl);
+          }
+        } catch {
+          /* ignore */
+        }
+        openWindow(
+          key === "instagram"
+            ? "https://www.instagram.com/"
+            : "https://www.tiktok.com/"
+        );
+        return;
     }
-    openWindow("https://www.instagram.com/");
-  };
-
-  const onLinkedin = () => {
-    const full = encodeURIComponent(resolveUrl());
-    openWindow(`https://www.linkedin.com/sharing/share-offsite/?url=${full}`);
   };
 
   const onCopy = async () => {
@@ -97,47 +220,37 @@ export default function ShareButtons({ title, url }: Props) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      // ignore
+      /* ignore */
     }
   };
 
-  // Title isn't used in share URLs (FB/IG/LinkedIn build their own preview),
-  // but kept on the API in case we want WhatsApp/Twitter back later.
-  void title;
+  // Lowercase, de-duplicated set of admin-enabled platform keys.
+  const enabled = new Set(platforms.map((p) => p.toLowerCase()));
+
+  // Visible buttons in registry order (so Facebook always sits before X,
+  // etc.) — keeps the bar consistent regardless of how the CMS returns
+  // them.
+  const visible = SHARE_REGISTRY.filter((def) => enabled.has(def.key));
 
   return (
-    <div className="flex items-center gap-2.5">
+    <div className="flex items-center gap-2.5 flex-wrap">
       <span className="text-[10px] uppercase tracking-wider text-[var(--text)]/50 font-bold mr-1">
         Kongsi
       </span>
-      <button
-        type="button"
-        onClick={onFacebook}
-        aria-label="Share on Facebook"
-        className="w-10 h-10 rounded-lg flex items-center justify-center bg-[#1877F2] text-white shadow-sm hover:-translate-y-0.5 hover:shadow-md transition"
-      >
-        <FacebookMark className="w-6 h-6" />
-      </button>
-      <button
-        type="button"
-        onClick={onInstagram}
-        aria-label="Share on Instagram"
-        className="w-10 h-10 rounded-lg flex items-center justify-center text-white shadow-sm hover:-translate-y-0.5 hover:shadow-md transition"
-        style={{
-          background:
-            "linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)",
-        }}
-      >
-        <InstagramMark className="w-5 h-5" />
-      </button>
-      <button
-        type="button"
-        onClick={onLinkedin}
-        aria-label="Share on LinkedIn"
-        className="w-10 h-10 rounded-lg flex items-center justify-center bg-[#0A66C2] text-white shadow-sm hover:-translate-y-0.5 hover:shadow-md transition"
-      >
-        <LinkedinMark className="w-5 h-5" />
-      </button>
+
+      {visible.map((def) => (
+        <button
+          key={def.key}
+          type="button"
+          onClick={() => onShare(def.key)}
+          aria-label={def.ariaLabel}
+          className={`w-10 h-10 rounded-lg flex items-center justify-center shadow-sm hover:-translate-y-0.5 hover:shadow-md transition ${def.bgClass}`}
+          style={def.bgStyle}
+        >
+          <def.Icon className="w-5 h-5" />
+        </button>
+      ))}
+
       <button
         type="button"
         onClick={onCopy}

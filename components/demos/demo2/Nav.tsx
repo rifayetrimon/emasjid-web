@@ -3,8 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "@/components/ui/FallbackImage";
-import { MenuItem, NavSocialLink } from "@/types/cms";
+import { MenuItem, NavConfig, NavSocialLink } from "@/types/cms";
 import { Menu, X, ChevronDown } from "lucide-react";
+import { resolveNavStyles } from "@/lib/navStyles";
 
 interface Props {
   menuItems: MenuItem[];
@@ -12,6 +13,7 @@ interface Props {
   socialLinks: NavSocialLink[];
   email: string;
   phone: string;
+  navConfig: NavConfig;
 }
 
 export default function Demo2Nav({
@@ -20,12 +22,24 @@ export default function Demo2Nav({
   socialLinks,
   email,
   phone,
+  navConfig,
 }: Props) {
   const [open, setOpen] = useState(false);
   const [openSub, setOpenSub] = useState<number | null>(null);
+  const ns = resolveNavStyles(navConfig);
+  const itemColor = ns.itemColor || "#1f2937";
+  const hoverColor = ns.hoverColor || "var(--secondary)";
+  const underlineColor = ns.underlineColor || hoverColor;
+  const navItemFontSize = ns.fontSizePx ? `${ns.fontSizePx}px` : undefined;
 
   return (
-    <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
+    <header
+      className="border-b border-gray-200 sticky top-0 z-50"
+      style={{
+        backgroundColor: ns.bgColor || "#ffffff",
+        opacity: ns.bgOpacity !== null ? ns.bgOpacity : undefined,
+      }}
+    >
       <div className="bg-gray-900 text-white text-xs">
         <div className="max-w-7xl mx-auto px-6 py-2.5 flex items-center justify-between">
           <span className="hidden md:inline tracking-wider">
@@ -94,9 +108,23 @@ export default function Demo2Nav({
             <div key={i} className="relative group">
               <a
                 href={item.link || "#"}
-                className="text-[13px] font-bold tracking-[0.15em] uppercase text-gray-800 hover:text-[var(--secondary)] transition-colors flex items-center gap-1"
+                className="relative text-[13px] font-bold tracking-[0.15em] uppercase transition-colors flex items-center gap-1"
+                style={{ color: itemColor, fontSize: navItemFontSize }}
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.color = hoverColor)
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.color = itemColor)
+                }
               >
                 {item.label}
+                {ns.showUnderline && (
+                  <span
+                    aria-hidden
+                    className="absolute left-0 -bottom-1 h-[2px] w-0 group-hover:w-full transition-all duration-300"
+                    style={{ backgroundColor: underlineColor }}
+                  />
+                )}
                 {item.submenu && item.submenu.length > 0 && (
                   <ChevronDown className="w-3 h-3" />
                 )}
