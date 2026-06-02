@@ -1,8 +1,11 @@
+"use client";
+
 import Image from "@/components/ui/FallbackImage";
 import Link from "next/link";
 import { FooterProps } from "@/types/cms";
 import VisitorList from "@/components/visitor/VisitorList";
 import type { VisitorStats } from "@/services/visitorService";
+import { useOverlaidFooter } from "@/lib/previewOverlay";
 
 /**
  * Convert a hex string (#rgb, #rrggbb, or rrggbb) + alpha (0–1) to an
@@ -42,11 +45,16 @@ interface Props extends FooterProps {
 }
 
 export default function Blog2Footer({
-  footer,
+  footer: rawFooter,
   visitors,
   popular = [],
   trending = [],
 }: Props) {
+  // Layer the live preview overrides (colours, copyright, email) on top of
+  // the server-fetched footer when the page was opened in ?preview=1 mode.
+  // Outside preview mode this is a pass-through, so the production render
+  // path is unchanged.
+  const footer = useOverlaidFooter(rawFooter);
   if (!footer) return null;
   const year = new Date().getFullYear();
 

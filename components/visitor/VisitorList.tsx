@@ -11,12 +11,14 @@ interface Props {
   align?: "left" | "right";
 }
 
+// Mirrors the four time windows the visitors API returns today. When the
+// backend adds a per-day "today" field we'll slot a "Hari Ini" row back in
+// after the Jumlah row.
 const ITEMS = (s: VisitorStats) => [
   { label: "Jumlah", value: s.total },
-  { label: "Hari Ini", value: s.today },
-  { label: "Kelmarin", value: s.yesterday },
-  { label: "Bulan Ini", value: s.thisMonth },
-  { label: "Bulan Lepas", value: s.lastMonth },
+  { label: "7 Hari", value: s.lastWeek },
+  { label: "30 Hari", value: s.lastMonth },
+  { label: "365 Hari", value: s.lastYear },
 ];
 
 export default function VisitorList({

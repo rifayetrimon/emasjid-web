@@ -2,13 +2,16 @@
 import axios, { AxiosError } from "axios";
 import getConfig from "./getConfig";
 
+// NOTE: We send the minimum headers AWS API Gateway expects. Sending
+// extra ones like Cache-Control / Pragma / Content-Type-on-GET, or
+// appending unknown query params (like a `_t` cache-buster) has caused
+// some gateway authorizers to reject the request with HTTP 403
+// "Missing Authentication Token" — that error means the gateway's
+// path-matcher rejected the request before our key was even checked.
 const myAxios = axios.create({
   timeout: 15000,
   headers: {
-    "Content-Type": "application/json",
     Accept: "application/json",
-    "Cache-Control": "no-cache, no-store, must-revalidate",
-    Pragma: "no-cache",
   },
 });
 
@@ -18,10 +21,12 @@ myAxios.interceptors.request.use(
     config.baseURL = baseApiUrl;
     config.headers.set("x-encrypted-key", x_encrypted_key);
 
-    config.params = {
-      ...config.params,
-      _t: Date.now(),
-    };
+    // Only set Content-Type when we actually have a body. AWS authorizers
+    // can choke on Content-Type on a GET.
+    const method = (config.method || "get").toLowerCase();
+    if (method !== "get" && method !== "head" && method !== "delete") {
+      config.headers.set("Content-Type", "application/json");
+    }
 
     console.log(
       `🚀 API Request: ${config.method?.toUpperCase()} ${config.url}`

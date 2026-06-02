@@ -18,6 +18,8 @@ interface Props {
   eyebrow?: string;
 }
 
+// Mirrors the four windows the visitors API actually returns. When the
+// backend ships a daily "today" field, slot it back in after `total`.
 const FIELDS = (s: Stats) => [
   {
     key: "total",
@@ -28,34 +30,26 @@ const FIELDS = (s: Stats) => [
     chipText: "text-blue-600",
   },
   {
-    key: "today",
+    key: "lastWeek",
     icon: CalendarCheck,
-    label: "Hari Ini",
-    value: s.today,
+    label: "7 Hari",
+    value: s.lastWeek,
     chipBg: "bg-emerald-50",
     chipText: "text-emerald-600",
   },
   {
-    key: "yesterday",
-    icon: Calendar,
-    label: "Semalam",
-    value: s.yesterday,
-    chipBg: "bg-amber-50",
-    chipText: "text-amber-600",
-  },
-  {
-    key: "thisMonth",
+    key: "lastMonth",
     icon: TrendingUp,
-    label: "Bulan Ini",
-    value: s.thisMonth,
+    label: "30 Hari",
+    value: s.lastMonth,
     chipBg: "bg-purple-50",
     chipText: "text-purple-600",
   },
   {
-    key: "lastMonth",
+    key: "lastYear",
     icon: CalendarRange,
-    label: "Bulan Lalu",
-    value: s.lastMonth,
+    label: "365 Hari",
+    value: s.lastYear,
     chipBg: "bg-rose-50",
     chipText: "text-rose-600",
   },

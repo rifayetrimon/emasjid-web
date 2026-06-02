@@ -19,6 +19,7 @@ import Demo5Footer from "@/components/demos/demo5/Footer";
 import Blog2Nav from "@/components/demos/blog2/Nav";
 import Blog2Footer from "@/components/demos/blog2/Footer";
 import ScrollToTop from "@/components/ui/ScrollToTop";
+import ThemedShell from "@/components/ThemedShell";
 import type { HighlightNewsItem } from "@/services/newsService";
 
 export type TemplateId = "1" | "2" | "3" | "4" | "5" | "6";
@@ -229,10 +230,7 @@ export default async function TemplateLayout({
   }
 
   return (
-    <div
-      style={cssVars}
-      className={`${defaults.bg} min-h-screen flex flex-col`}
-    >
+    <ThemedShell cssVars={cssVars} bgClass={defaults.bg}>
       {navElement}
       <main
         className={`flex-1 ${padForFixedNav && usesFixedNav ? "pt-20" : ""}`}
@@ -241,6 +239,6 @@ export default async function TemplateLayout({
       </main>
       {footerElement}
       <ScrollToTop />
-    </div>
+    </ThemedShell>
   );
 }
