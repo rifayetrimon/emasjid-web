@@ -21,9 +21,7 @@ function isModeOn(value: unknown): boolean {
 // Pull the first non-empty string from a set of possible field names.
 // Used to read either the new field name (e.g. `maintenanceTemplate`) or
 // the legacy one (`maintenanceDesign`) without caring which the API echoes.
-function firstNonEmpty(
-  ...values: unknown[]
-): string | undefined {
+function firstNonEmpty(...values: unknown[]): string | undefined {
   for (const v of values) {
     if (v == null) continue;
     const s = String(v).trim();
@@ -31,6 +29,16 @@ function firstNonEmpty(
   }
   return undefined;
 }
+
+// Inline globe SVG used as the favicon whenever the CMS has no logo.
+// Kept as a data URL so the site has no separate file to ship — and so
+// browsers immediately drop the previous tenant's icon on cache miss
+// instead of falling through to Next.js's built-in placeholder.
+const DEFAULT_FAVICON =
+  "data:image/svg+xml," +
+  encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#4a5568"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>`,
+  );
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -47,24 +55,24 @@ export async function generateMetadata(): Promise<Metadata> {
     const configData = await getCachedConfig();
     const general = configData.generalSettings || {};
     const logoUrl = getImageUrl(configData.logoCMS || general.logoCMS);
-    const title = general.title || "eMasjid";
-    const description =
-      general.description ||
-      "Platform pengurusan masjid moden — akses berita, pengumuman, jadual aktiviti, dan perkhidmatan dengan mudah.";
+    // Brand text comes entirely from the CMS — no template-side defaults
+    // for title or description. Empty strings are intentional: the tab
+    // shows nothing tenant-flavoured until the admin fills the fields in.
+    const title = general.title || "";
+    const description = general.description || "";
 
     return {
       title: { default: title, template: `%s — ${title}` },
       description,
-      keywords: [
-        title,
-        "eMasjid",
-        "masjid",
-        "pengurusan masjid",
-        "jadual solat",
-        "berita masjid",
-      ],
+      // Keywords come from the tenant's configured title only. No
+      // hardcoded brand or domain terms — anything else should be
+      // configurable through the CMS, not baked into the template.
+      keywords: title ? [title] : undefined,
       robots: { index: true, follow: true },
-      ...(logoUrl ? { icons: { icon: logoUrl } } : {}),
+      // Favicon: real logo when the CMS has one, generic globe otherwise.
+      // OG/Twitter cards skip the fallback — those slots need real photos,
+      // and a tiny SVG would look broken in social previews.
+      icons: { icon: logoUrl || DEFAULT_FAVICON },
       openGraph: {
         type: "website",
         title,
@@ -81,10 +89,11 @@ export async function generateMetadata(): Promise<Metadata> {
       },
     };
   } catch {
+    // Hard-failure fallback. Still brand-neutral — no copy, just a
+    // working favicon so the tab doesn't render a Next.js placeholder.
     return {
-      title: "eMasjid",
-      description: "Platform pengurusan masjid moden.",
       robots: { index: true, follow: true },
+      icons: { icon: DEFAULT_FAVICON },
     };
   }
 }

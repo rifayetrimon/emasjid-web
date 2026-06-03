@@ -154,6 +154,7 @@ export default async function TemplateLayout({
         <Demo7Nav
           menuItems={menuItems}
           logo={nav.logo}
+          siteTitle={general.title || ""}
           socialLinks={nav.socialLinks}
           navConfig={nav.navConfig}
         />
@@ -165,6 +166,7 @@ export default async function TemplateLayout({
         <Demo4Nav
           menuItems={menuItems}
           logo={nav.logo}
+          siteTitle={general.title || ""}
           socialLinks={nav.socialLinks}
           navConfig={nav.navConfig}
         />
@@ -176,6 +178,7 @@ export default async function TemplateLayout({
         <Demo8Nav
           menuItems={menuItems}
           logo={nav.logo}
+          siteTitle={general.title || ""}
           socialLinks={nav.socialLinks}
           navConfig={nav.navConfig}
         />
@@ -188,6 +191,7 @@ export default async function TemplateLayout({
         <Demo2Nav
           menuItems={menuItems}
           logo={nav.logo}
+          siteTitle={general.title || ""}
           socialLinks={nav.socialLinks}
           email={footerCfg.email || ""}
           phone={footerCfg.phonenum || ""}
@@ -201,6 +205,7 @@ export default async function TemplateLayout({
         <Demo5Nav
           menuItems={menuItems}
           logo={nav.logo}
+          siteTitle={general.title || ""}
           socialLinks={nav.socialLinks}
           navConfig={nav.navConfig}
         />
@@ -212,6 +217,7 @@ export default async function TemplateLayout({
         <Blog2Nav
           menuItems={menuItems}
           logo={nav.logo}
+          siteTitle={general.title || ""}
           socialLinks={nav.socialLinks}
           trendingTitle={trendingTitle}
           navConfig={nav.navConfig}

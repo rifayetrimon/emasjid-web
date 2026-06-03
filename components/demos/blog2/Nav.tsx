@@ -11,6 +11,7 @@ import { resolveNavStyles } from "@/lib/navStyles";
 interface Props {
   menuItems: MenuItem[];
   logo: string;
+  siteTitle: string;
   socialLinks: NavSocialLink[];
   trendingTitle?: string;
   navConfig: NavConfig;
@@ -109,6 +110,7 @@ function MobileMenuItem({
 export default function Blog2Nav({
   menuItems,
   logo,
+  siteTitle,
   socialLinks,
   navConfig,
 }: Props) {
@@ -222,22 +224,11 @@ export default function Blog2Nav({
                 height={40}
                 className="h-10 w-auto object-contain"
               />
-            ) : (
-              <div className="flex items-baseline gap-0.5">
-                <span className="text-3xl font-extrabold text-gray-900 tracking-tight">
-                  news
-                </span>
-                <span
-                  className="text-3xl font-extrabold text-white tracking-tight px-1.5 rounded"
-                  style={{ background: "var(--primary)" }}
-                >
-                  12
-                </span>
-                <span className="text-3xl font-extrabold text-gray-900 tracking-tight">
-                  paper
-                </span>
-              </div>
-            )}
+            ) : siteTitle ? (
+              <span className="text-3xl font-extrabold text-gray-900 tracking-tight">
+                {siteTitle}
+              </span>
+            ) : null}
           </Link>
 
           <nav className="hidden lg:flex items-center gap-6 flex-1 justify-center">

@@ -10,6 +10,7 @@ import { resolveNavStyles } from "@/lib/navStyles";
 interface Props {
   menuItems: MenuItem[];
   logo: string;
+  siteTitle: string;
   socialLinks: NavSocialLink[];
   email: string;
   phone: string;
@@ -19,6 +20,7 @@ interface Props {
 export default function Demo2Nav({
   menuItems,
   logo,
+  siteTitle,
   socialLinks,
   email,
   phone,
@@ -93,14 +95,14 @@ export default function Demo2Nav({
               height={56}
               className="h-14 w-auto object-contain"
             />
-          ) : (
+          ) : siteTitle ? (
             <span
               className="text-3xl font-bold tracking-tight"
               style={{ fontFamily: "Georgia, serif" }}
             >
-              eMasjid
+              {siteTitle}
             </span>
-          )}
+          ) : null}
         </Link>
 
         <nav className="hidden lg:flex items-center gap-8">

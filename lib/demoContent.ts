@@ -8,17 +8,19 @@ import { withBasePath } from "./withBasePath";
 export const DEMO_BANNER_IMAGE = withBasePath("/demo-banner.svg");
 const DEMO_PRODUCT_IMAGE = withBasePath("/demo-product.svg");
 
+// Brand-neutral placeholder content shown only when the tenant has not
+// touched the banner config at all. Any user input in the CMS overrides
+// these values completely (see services/bannerService.ts).
 export const DEMO_BANNER = {
   logo: "",
   background_image: DEMO_BANNER_IMAGE,
   background_images: [DEMO_BANNER_IMAGE],
   menu_items: [],
   title: {
-    general: "Selamat Datang ke",
-    focus: { text: "eMasjid", link: "" },
+    general: "",
+    focus: { text: "", link: "" },
   },
-  supporting_text:
-    "Platform pengurusan masjid moden. Akses maklumat dan perkhidmatan dengan mudah.",
+  supporting_text: "",
   buttons: [],
   textColor: "",
   overlayColor: "",

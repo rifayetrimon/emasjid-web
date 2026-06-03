@@ -10,6 +10,7 @@ import { resolveNavStyles } from "@/lib/navStyles";
 interface Props {
   menuItems: MenuItem[];
   logo: string;
+  siteTitle: string;
   socialLinks: NavSocialLink[];
   navConfig: NavConfig;
 }
@@ -17,6 +18,7 @@ interface Props {
 export default function Demo8Nav({
   menuItems,
   logo,
+  siteTitle,
   socialLinks,
   navConfig,
 }: Props) {
@@ -64,11 +66,12 @@ export default function Demo8Nav({
               height={40}
               className="h-10 w-auto object-contain brightness-0 invert"
             />
-          ) : (
+          ) : siteTitle ? (
             <span className="font-bold text-lg text-white tracking-tight">
-              eMasjid<span className="text-[var(--primary)]">.</span>
+              {siteTitle}
+              <span className="text-[var(--primary)]">.</span>
             </span>
-          )}
+          ) : null}
         </Link>
 
         <nav className="hidden lg:flex items-center gap-1 flex-1">

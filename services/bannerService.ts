@@ -114,19 +114,40 @@ export async function getBannerData(): Promise<BannerProps["banner"] | null> {
     const bannerConfig = configData.bannerConfig || {};
     const logoUrl = getImageUrl(configData.logoCMS || general.logoCMS);
 
+    // If the tenant has filled ANY banner field, treat their config as
+    // authoritative — unset fields stay empty rather than getting padded
+    // with demo copy. Only a completely empty bannerConfig falls back to
+    // the demo banner (used on fresh installs to keep the template visually
+    // intact).
+    const userProvidedBanner = !!(
+      bannerConfig.banneTitle ||
+      bannerConfig.bannerFocusText ||
+      bannerConfig.bannerSubText
+    );
+
     return {
       logo: logoUrl,
       background_image: bannerBgImage,
       background_images: finalImages,
       menu_items: [],
-      title: {
-        general: bannerConfig.banneTitle || DEMO_BANNER.title.general,
-        focus: {
-          text: bannerConfig.bannerFocusText || DEMO_BANNER.title.focus.text,
-          link: bannerFocusLink,
-        },
-      },
-      supporting_text: bannerConfig.bannerSubText || DEMO_BANNER.supporting_text,
+      title: userProvidedBanner
+        ? {
+            general: bannerConfig.banneTitle || "",
+            focus: {
+              text: bannerConfig.bannerFocusText || "",
+              link: bannerFocusLink,
+            },
+          }
+        : {
+            general: DEMO_BANNER.title.general,
+            focus: {
+              text: DEMO_BANNER.title.focus.text,
+              link: bannerFocusLink,
+            },
+          },
+      supporting_text: userProvidedBanner
+        ? bannerConfig.bannerSubText || ""
+        : DEMO_BANNER.supporting_text,
       buttons: [],
       textColor: general.textColor || "",
       overlayColor: bannerConfig.bannerOverlayColor || "",

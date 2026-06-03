@@ -10,6 +10,7 @@ import { resolveNavStyles } from "@/lib/navStyles";
 interface Props {
   menuItems: MenuItem[];
   logo: string;
+  siteTitle: string;
   socialLinks: NavSocialLink[];
   navConfig: NavConfig;
 }
@@ -41,6 +42,7 @@ function Ornament({ className = "" }: { className?: string }) {
 export default function Demo5Nav({
   menuItems,
   logo,
+  siteTitle,
   socialLinks,
   navConfig,
 }: Props) {
@@ -80,14 +82,14 @@ export default function Demo5Nav({
               height={56}
               className="h-14 w-auto object-contain"
             />
-          ) : (
+          ) : siteTitle ? (
             <span
               className="text-2xl font-bold text-[var(--secondary)]"
               style={{ fontFamily: "'Times New Roman', serif" }}
             >
-              eMasjid
+              {siteTitle}
             </span>
-          )}
+          ) : null}
         </Link>
 
         <nav className="hidden lg:flex items-center gap-1">
