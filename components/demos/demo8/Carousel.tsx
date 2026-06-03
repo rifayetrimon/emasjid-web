@@ -6,7 +6,7 @@ import Image from "@/components/ui/FallbackImage";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface CarouselItem {
-  contentId: number;
+  contentId: string;
   title: string;
   message?: string;
   date: string;

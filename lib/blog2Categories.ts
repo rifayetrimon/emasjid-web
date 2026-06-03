@@ -14,8 +14,22 @@ export const BLOG2_CATEGORIES = [
  * regardless of where the article is rendered on the page. Used as a last-
  * resort fallback when admin sends no `category` value.
  */
-export function categoryFor(contentId: number) {
-  const safe = Math.abs(Number(contentId) || 0);
+export function categoryFor(contentId: string | number) {
+  // Hash the id to a stable non-negative integer. Numeric IDs keep their
+  // historical mapping; hex IDs (e.g. "6a1eb214a5cb...") get char-summed
+  // so each one still maps deterministically to a single category.
+  const raw = String(contentId ?? "");
+  const numeric = Number(raw);
+  let safe: number;
+  if (Number.isFinite(numeric) && numeric !== 0) {
+    safe = Math.abs(numeric);
+  } else {
+    let sum = 0;
+    for (let i = 0; i < raw.length; i++) {
+      sum = (sum * 31 + raw.charCodeAt(i)) >>> 0;
+    }
+    safe = sum;
+  }
   return BLOG2_CATEGORIES[safe % BLOG2_CATEGORIES.length];
 }
 

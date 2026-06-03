@@ -6,7 +6,7 @@ import Image from "@/components/ui/FallbackImage";
 import { categoryFor, colorForCategoryName } from "@/lib/blog2Categories";
 
 interface NewsItem {
-  contentId: number;
+  contentId: string;
   title: string;
   message: string;
   date: string;
@@ -18,7 +18,7 @@ interface NewsItem {
 
 interface Props {
   items: NewsItem[];
-  excludeIds: number[];
+  excludeIds: string[];
   /**
    * Hard override for tabs. Leave empty to auto-derive from each item's
    * `category` field (admin-driven). The first tab is always the "all" filter.

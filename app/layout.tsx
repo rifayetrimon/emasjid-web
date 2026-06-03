@@ -55,10 +55,7 @@ export async function generateMetadata(): Promise<Metadata> {
     const configData = await getCachedConfig();
     const general = configData.generalSettings || {};
     const logoUrl = getImageUrl(configData.logoCMS || general.logoCMS);
-    // Brand text comes entirely from the CMS — no template-side defaults
-    // for title or description. Empty strings are intentional: the tab
-    // shows nothing tenant-flavoured until the admin fills the fields in.
-    const title = general.title || "";
+    const title = general.title || "Title";
     const description = general.description || "";
 
     return {

@@ -6,6 +6,7 @@ import Image from "@/components/ui/FallbackImage";
 import { MenuItem, NavConfig, NavSocialLink } from "@/types/cms";
 import { Menu, X, ChevronDown, Sparkles } from "lucide-react";
 import { resolveNavStyles } from "@/lib/navStyles";
+import { withMoreDropdown } from "@/lib/navOverflow";
 
 interface Props {
   menuItems: MenuItem[];
@@ -30,6 +31,9 @@ export default function Demo7Nav({
   const hoverColor = ns.hoverColor || "var(--primary)";
   const underlineColor = ns.underlineColor || hoverColor;
   const navItemFontSize = ns.fontSizePx ? `${ns.fontSizePx}px` : undefined;
+
+  // Cap visible nav entries at 7; the rest collapse under a "More" item.
+  const displayMenuItems: MenuItem[] = withMoreDropdown(menuItems);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 30);
@@ -74,7 +78,7 @@ export default function Demo7Nav({
         </Link>
 
         <nav className="hidden lg:flex items-center gap-1">
-          {menuItems.map((item, i) => (
+          {displayMenuItems.map((item, i) =>(
             <div key={i} className="relative group">
               <a
                 href={item.link || "#"}
@@ -160,7 +164,7 @@ export default function Demo7Nav({
       {open && (
         <div className="lg:hidden mx-4 mb-4 rounded-3xl bg-white shadow-xl border border-gray-100">
           <nav className="px-5 py-4 space-y-1">
-            {menuItems.map((item, i) => {
+            {displayMenuItems.map((item, i) =>{
               const hasSub = item.submenu && item.submenu.length > 0;
               return (
                 <div key={i}>

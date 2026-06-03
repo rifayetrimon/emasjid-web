@@ -4,7 +4,7 @@ import { getCachedNews } from "./apiCache";
 export type DisplayMode = "grid" | "slide" | "full" | "sidebar";
 
 export interface NewsDetail {
-  id: number;
+  id: string;
   title: string;
   message: string;
   images: { src: string; alt: string }[];
@@ -44,7 +44,7 @@ export async function getNewsDetail(contentId: string): Promise<NewsDetail | nul
     if (raw.file3) images.push({ src: str(raw.file3), alt: str(raw.altImg3) || title });
 
     return {
-      id: Number(raw.contentId) || 0,
+      id: String(raw.contentId ?? "").trim(),
       title,
       message: str(raw.message),
       images,

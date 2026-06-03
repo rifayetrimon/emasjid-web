@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Image from "@/components/ui/FallbackImage";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, FileText } from "lucide-react";
 import type { GalleryItem } from "@/types/cms";
 
 interface GalleryPagePayload {
@@ -54,13 +54,27 @@ export default function Blog2GallerySection({
     if (page === data.currentPage || loading) return;
     setLoading(true);
     try {
-      const res = await fetch(`/api/gallery?page=${page}&perPage=${PER_PAGE}`, {
-        cache: "no-store",
-      });
-      if (res.ok) {
-        const next = (await res.json()) as GalleryPagePayload;
-        setData(next);
+      // `_t` is a per-click cache buster — defends against any intermediate
+      // (browser memory, service worker, CDN) treating same-URL responses
+      // as identical. The route itself is dynamic, but layered caches sit
+      // in front of it on real deployments.
+      const res = await fetch(
+        `/api/gallery?page=${page}&perPage=${PER_PAGE}&_t=${Date.now()}`,
+        { cache: "no-store" },
+      );
+      if (!res.ok) {
+        // Surface upstream / route failures instead of silently swallowing
+        // them — a 500 here used to leave the UI looking like "click did
+        // nothing" because we just kept the old state.
+        console.error(
+          `Gallery page ${page} request failed`,
+          res.status,
+          res.statusText,
+        );
+        return;
       }
+      const next = (await res.json()) as GalleryPagePayload;
+      setData(next);
     } catch (err) {
       console.error("Gallery page load failed:", err);
     } finally {
@@ -94,30 +108,46 @@ export default function Blog2GallerySection({
           loading ? "opacity-60" : "opacity-100"
         }`}
       >
-        {slots.map((item) => (
-          <button
-            type="button"
-            key={item.galleryId}
-            onClick={() => setLightbox(item)}
-            className="group relative block aspect-square overflow-hidden bg-gray-100 border border-gray-200"
-          >
-            {/* `object-contain` so banner-shaped images (e.g. wide headers)
-                display fully instead of being cropped to a tiny center crop.
-                Gray surround acts as a neutral matte. */}
-            <Image
-              src={item.file}
-              alt={item.title || "Galeri"}
-              fill
-              className="object-contain p-1.5 group-hover:scale-105 transition-transform duration-500"
-              sizes="(max-width:640px) 50vw, (max-width:1024px) 33vw, 20vw"
-            />
-            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors duration-300 flex items-end p-3 pointer-events-none">
-              <span className="text-white text-xs font-bold opacity-0 group-hover:opacity-100 transition line-clamp-2 text-left">
-                {item.title}
+        {slots.map((item) =>
+          item.kind === "image" ? (
+            <button
+              type="button"
+              key={item.galleryId}
+              onClick={() => setLightbox(item)}
+              className="group relative block aspect-square overflow-hidden bg-gray-100 border border-gray-200"
+            >
+              {/* `object-contain` so banner-shaped images (e.g. wide headers)
+                  display fully instead of being cropped to a tiny center crop.
+                  Gray surround acts as a neutral matte. */}
+              <Image
+                src={item.file}
+                alt={item.title || "Galeri"}
+                fill
+                className="object-contain p-1.5 group-hover:scale-105 transition-transform duration-500"
+                sizes="(max-width:640px) 50vw, (max-width:1024px) 33vw, 20vw"
+              />
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors duration-300 flex items-end p-3 pointer-events-none">
+                <span className="text-white text-xs font-bold opacity-0 group-hover:opacity-100 transition line-clamp-2 text-left">
+                  {item.title}
+                </span>
+              </div>
+            </button>
+          ) : (
+            // Document slot — lightbox doesn't apply, opens in new tab.
+            <a
+              key={item.galleryId}
+              href={item.file}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group relative aspect-square overflow-hidden bg-gray-100 border border-gray-200 flex flex-col items-center justify-center gap-3 p-4 text-center hover:bg-gray-50 transition-colors"
+            >
+              <FileText className="w-10 h-10 text-[var(--primary)]" />
+              <span className="text-xs font-bold text-gray-700 line-clamp-3 leading-snug">
+                {item.title || "Dokumen"}
               </span>
-            </div>
-          </button>
-        ))}
+            </a>
+          ),
+        )}
       </div>
 
       {/* Pagination */}

@@ -7,6 +7,7 @@ import Image from "@/components/ui/FallbackImage";
 import { MenuItem, NavConfig, NavSocialLink } from "@/types/cms";
 import { Menu, X, ChevronDown, ChevronRight, Search } from "lucide-react";
 import { resolveNavStyles } from "@/lib/navStyles";
+import { withMoreDropdown } from "@/lib/navOverflow";
 
 interface Props {
   menuItems: MenuItem[];
@@ -124,21 +125,10 @@ export default function Blog2Nav({
   const underlineColor = ns.underlineColor || hoverColor;
   const navItemFontSize = ns.fontSizePx ? `${ns.fontSizePx}px` : undefined;
 
-  // Cap the visible navbar to 6 top-level items. The 7th+ collapse into a
-  // synthetic "More" dropdown so the navbar stays compact.
-  const MAX_VISIBLE = 6;
-  const safeMenuItems = Array.isArray(menuItems) ? menuItems : [];
-  const displayMenuItems: MenuItem[] =
-    safeMenuItems.length > MAX_VISIBLE
-      ? [
-          ...safeMenuItems.slice(0, MAX_VISIBLE),
-          {
-            label: "More",
-            link: "#",
-            submenu: safeMenuItems.slice(MAX_VISIBLE),
-          },
-        ]
-      : safeMenuItems;
+  // Cap the visible navbar at 7 top-level entries (6 originals + a synthetic
+  // "More" trigger when there's overflow). Shared with the other 5 template
+  // navs so every template behaves the same.
+  const displayMenuItems: MenuItem[] = withMoreDropdown(menuItems);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 

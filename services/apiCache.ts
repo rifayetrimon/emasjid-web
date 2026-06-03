@@ -56,7 +56,10 @@ export const getCachedNews = cache(async () => {
   try {
     const sid = await getSID();
     const MAX_PAGES = 5;
-    const seen = new Set<number>();
+    // contentId is whatever the backend ships — historically a numeric
+    // string, now a 24-char Mongo-style hex (e.g. "6a1eb214a5cb07561f8a6a5c").
+    // Keep the dedup set as plain strings so both shapes coexist.
+    const seen = new Set<string>();
     const merged: Record<string, unknown>[] = [];
 
     for (let page = 1; page <= MAX_PAGES; page++) {
@@ -74,8 +77,8 @@ export const getCachedNews = cache(async () => {
 
       let added = 0;
       for (const item of dataset) {
-        const id = Number(item.contentId);
-        if (!Number.isFinite(id) || seen.has(id)) continue;
+        const id = String(item.contentId ?? "").trim();
+        if (!id || seen.has(id)) continue;
         seen.add(id);
         merged.push(item);
         added++;

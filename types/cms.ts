@@ -257,7 +257,10 @@ export interface NewsImage {
 }
 
 export interface NewsItem {
-  contentId: number;
+  // Backend used to ship numeric IDs; newer tenants ship 24-char hex IDs
+  // (e.g. "6a1eb214a5cb07561f8a6a5c"). Carry as a string so both shapes
+  // survive intact through React keys and URL params.
+  contentId: string;
   title: string;
   message: string;
   date: string;
@@ -295,10 +298,14 @@ export interface BannerRecord {
    Gallery
 ------------------------------ */
 export interface GalleryItem {
-  galleryId: number;
+  // Backend now ships 24-char hex IDs; keep as string so old numeric IDs
+  // and new ObjectId-style values both round-trip without NaN coercion.
+  galleryId: string;
   date: string;
   title: string;
   file: string;
+  /** "image" → render as <Image>; "document" → render as PDF/file tile. */
+  kind: "image" | "document";
   category: string;
 }
 

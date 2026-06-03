@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Image from "@/components/ui/FallbackImage";
-import { ChevronLeft, ChevronRight, Camera } from "lucide-react";
+import { ChevronLeft, ChevronRight, Camera, FileText } from "lucide-react";
 import type { GalleryItem } from "@/types/cms";
 
 interface GalleryPagePayload {
@@ -52,13 +52,23 @@ export default function Demo7GallerySection({
     if (page === data.currentPage || loading) return;
     setLoading(true);
     try {
-      const res = await fetch(`/api/gallery?page=${page}&perPage=${PER_PAGE}`, {
-        cache: "no-store",
-      });
-      if (res.ok) {
-        const next = (await res.json()) as GalleryPagePayload;
-        setData(next);
+      // `_t` is a per-click cache buster — defends against any intermediate
+      // (browser memory, service worker, CDN) treating same-URL responses
+      // as identical.
+      const res = await fetch(
+        `/api/gallery?page=${page}&perPage=${PER_PAGE}&_t=${Date.now()}`,
+        { cache: "no-store" },
+      );
+      if (!res.ok) {
+        console.error(
+          `Gallery page ${page} request failed`,
+          res.status,
+          res.statusText,
+        );
+        return;
       }
+      const next = (await res.json()) as GalleryPagePayload;
+      setData(next);
     } catch (err) {
       console.error("Gallery page load failed:", err);
     } finally {
@@ -99,27 +109,46 @@ export default function Demo7GallerySection({
             loading ? "opacity-60" : "opacity-100"
           }`}
         >
-          {data.items.map((item) => (
-            <button
-              type="button"
-              key={item.galleryId}
-              onClick={() => setLightbox(item)}
-              className="group relative block aspect-square rounded-3xl overflow-hidden bg-gradient-to-br from-rose-50 to-amber-50 border-2 border-white shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all"
-            >
-              <Image
-                src={item.file}
-                alt={item.title || "Galeri"}
-                fill
-                className="object-contain p-2 group-hover:scale-105 transition-transform duration-500"
-                sizes="(max-width:640px) 50vw, (max-width:1024px) 33vw, 20vw"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3 pointer-events-none">
-                <span className="text-white text-xs font-bold line-clamp-2 text-left drop-shadow">
-                  {item.title}
+          {data.items.map((item) =>
+            item.kind === "image" ? (
+              <button
+                type="button"
+                key={item.galleryId}
+                onClick={() => setLightbox(item)}
+                className="group relative block aspect-square rounded-3xl overflow-hidden bg-gradient-to-br from-rose-50 to-amber-50 border-2 border-white shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all"
+              >
+                <Image
+                  src={item.file}
+                  alt={item.title || "Galeri"}
+                  fill
+                  className="object-contain p-2 group-hover:scale-105 transition-transform duration-500"
+                  sizes="(max-width:640px) 50vw, (max-width:1024px) 33vw, 20vw"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3 pointer-events-none">
+                  <span className="text-white text-xs font-bold line-clamp-2 text-left drop-shadow">
+                    {item.title}
+                  </span>
+                </div>
+              </button>
+            ) : (
+              // Non-image entries (PDF, DOCX, etc.) open in a new tab —
+              // the lightbox can't render them, so we surface them as a
+              // document tile instead. Same grid slot so paginated
+              // counts ("10 per page") match the API.
+              <a
+                key={item.galleryId}
+                href={item.file}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group relative aspect-square rounded-3xl overflow-hidden bg-gradient-to-br from-rose-50 to-amber-50 border-2 border-white shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all flex flex-col items-center justify-center gap-3 p-4 text-center"
+              >
+                <FileText className="w-10 h-10 text-[var(--primary)]" />
+                <span className="text-xs font-bold text-gray-700 line-clamp-3 leading-snug">
+                  {item.title || "Dokumen"}
                 </span>
-              </div>
-            </button>
-          ))}
+              </a>
+            ),
+          )}
         </div>
 
         {data.totalPages > 1 && (

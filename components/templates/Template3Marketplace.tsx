@@ -16,7 +16,7 @@ import {
 import { Play, Info } from "lucide-react";
 
 interface NewsItem {
-  contentId: number;
+  contentId: string;
   title: string;
   message: string;
   date: string;

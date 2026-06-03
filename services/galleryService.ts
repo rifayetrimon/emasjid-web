@@ -6,6 +6,7 @@ import { getImageUrl } from "./utils";
 import type { GalleryCategory, GalleryItem } from "@/types/cms";
 
 const IMAGE_EXT_RE = /\.(png|jpe?g|gif|webp|svg|bmp|avif)(\?.*)?$/i;
+const DOCUMENT_EXT_RE = /\.(pdf|docx?|xlsx?|pptx?|txt|csv|rtf|odt|ods|odp)(\?.*)?$/i;
 
 interface RawGalleryItem {
   contentId?: number | string;
@@ -43,18 +44,29 @@ function isImage(url: string | null | undefined): boolean {
   return IMAGE_EXT_RE.test(url);
 }
 
+function isDocument(url: string | null | undefined): boolean {
+  if (!url) return false;
+  return DOCUMENT_EXT_RE.test(url);
+}
+
 function normalizeItem(raw: RawGalleryItem): GalleryItem | null {
   // API uses `file1` for the asset URL and `contentId` for the id.
   // Older mock data uses `file` / `galleryId` — accept either.
   const rawFile = (raw.file1 || raw.file || "").trim();
-  if (!rawFile || !isImage(rawFile)) return null;
+  if (!rawFile) return null;
+  const image = isImage(rawFile);
+  const document = !image && isDocument(rawFile);
+  // Anything that's neither an image nor a known document format
+  // (e.g. .zip, .mp4) is dropped — the gallery UI can't represent it.
+  if (!image && !document) return null;
   const file = getImageUrl(rawFile);
-  const id = Number(raw.contentId ?? raw.galleryId ?? 0);
+  const id = String(raw.contentId ?? raw.galleryId ?? "").trim();
   return {
     galleryId: id,
     date: raw.date || "",
     title: raw.title || "",
     file,
+    kind: image ? "image" : "document",
     category: raw.category || "",
   };
 }
@@ -100,8 +112,12 @@ export async function getGalleryPage(
 ): Promise<GalleryPage> {
   try {
     const sid = (await getConfig()).sid || "0";
+    // Backend pagination params are camelCase: `pageNumber` + `perPage`.
+    // The lowercase `currentpage` we used before was silently ignored —
+    // the server always returned page 1, which is why pagination clicks
+    // looked like they "didn't change the content".
     const res = await myAxios.get(
-      `api/v2/cms/eboss/cms/gallery?sid=${sid}&currentpage=${currentPage}`
+      `api/v2/cms/eboss/cms/gallery?sid=${sid}&pageNumber=${currentPage}&perPage=${perPage}`
     );
     const data = res.data?.data ?? res.data ?? {};
 

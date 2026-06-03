@@ -42,6 +42,36 @@ function pick(
   };
 }
 
+/**
+ * Treat CMS dropdown placeholder strings as empty. The admin panel often
+ * ships its unset-state option text verbatim (e.g. "- Select -",
+ * "|- Select -", "-- Pilih --") — those need to render as nothing, not
+ * as a literal "- Select -" banner above the site.
+ *
+ * Heuristic: strip framing punctuation (dashes, pipes, brackets, etc.)
+ * plus whitespace, lowercase, then compare. Real user copy that happens
+ * to contain "select" mid-sentence won't reduce to the bare token, so
+ * this stays safe for legitimate strings like "Select your branch above".
+ */
+function cleanText(v: string): string {
+  const trimmed = v.trim();
+  if (!trimmed) return "";
+  const stripped = trimmed
+    .replace(/[\s\-|–—_:.>~()[\]<>]+/g, " ")
+    .trim()
+    .toLowerCase();
+  if (
+    stripped === "" ||
+    stripped === "select" ||
+    stripped === "pilih" ||
+    stripped === "please select" ||
+    stripped === "sila pilih"
+  ) {
+    return "";
+  }
+  return trimmed;
+}
+
 export async function getSiteTheme(): Promise<SiteTheme> {
   const config = await getCachedConfig();
   const general = (config.generalSettings || {}) as Record<string, unknown>;
@@ -71,10 +101,16 @@ export async function getSiteTheme(): Promise<SiteTheme> {
     bgColorFooter: read("bgColorFooter"),
     colorFooterArea: read("colorFooterArea"),
     colorFooterAreaText: read("colorFooterAreaText"),
-    subheader: read("subheader"),
-    midBannerMainTitle: read("midBannerMainTitle"),
-    faqMainTitle: (faqCfg.faqTitle as string) || read("faqMainTitle"),
-    copyright: read("copyright"),
+    // Free-text fields run through cleanText() so CMS dropdown
+    // placeholders ("- Select -", "|- Select -", etc.) don't render as
+    // real content. Color/path fields don't need this — they can't reduce
+    // to a placeholder token by the same heuristic.
+    subheader: cleanText(read("subheader")),
+    midBannerMainTitle: cleanText(read("midBannerMainTitle")),
+    faqMainTitle: cleanText(
+      (faqCfg.faqTitle as string) || read("faqMainTitle"),
+    ),
+    copyright: cleanText(read("copyright")),
     currYearDownTo: Number.isFinite(currYearDownTo) ? currYearDownTo : 0,
     maxDisplay: Number.isFinite(maxDisplay) && maxDisplay > 0 ? maxDisplay : 0,
     complaintEnabled: isOn(read("complaint")),

@@ -4,7 +4,7 @@ import { DEMO_NEWS } from "@/lib/demoContent";
 import type { NewsItem, NewsPosDisplay, NewsImage } from "@/types/cms";
 
 export interface HighlightNewsItem {
-  contentId: number;
+  contentId: string;
   title: string;
   message: string;
   image: string | null;
@@ -46,7 +46,7 @@ function readField(raw: Record<string, unknown>, key: string): unknown {
 }
 
 export function normalizeNewsItem(raw: Record<string, unknown>): NewsItem {
-  const contentId = Number(raw.contentId ?? 0);
+  const contentId = String(raw.contentId ?? "").trim();
   const title = String(raw.title ?? "");
   const message = String(raw.message ?? "");
   const date = String(raw.date ?? "");
@@ -95,7 +95,7 @@ export function normalizeNewsItem(raw: Record<string, unknown>): NewsItem {
 const DEMO_HIGHLIGHTED: HighlightNewsItem[] = DEMO_NEWS
   .filter((n) => n.highlightPost === "yes")
   .map((n) => ({
-    contentId: n.contentId,
+    contentId: String(n.contentId),
     title: n.title,
     message: n.message,
     image: n.image,
