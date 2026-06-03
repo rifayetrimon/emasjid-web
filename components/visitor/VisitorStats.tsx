@@ -1,7 +1,6 @@
 import {
   Eye,
   CalendarCheck,
-  Calendar,
   TrendingUp,
   CalendarRange,
 } from "lucide-react";
