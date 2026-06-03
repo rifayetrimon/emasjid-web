@@ -1,75 +1,29 @@
-// app/page.tsx
-import Footer from "@/components/layouts/footer";
-import Navbar from "@/components/layouts/navbar";
-import Banner from "@/components/main/Banner";
-import Branding from "@/components/main/Branding";
-import Faq from "@/components/main/Faq";
-import Features from "@/components/main/Features";
-import Segment from "@/components/main/Segment";
-import configService from "@/services/configService";
-import { CMSData } from "@/types/cms";
+import { getActiveTemplateId } from "@/lib/getActiveTemplate";
+import Template1Website from "@/components/templates/Template1Website";
+import Template2Donation from "@/components/templates/Template2Donation";
+import Template3Marketplace from "@/components/templates/Template3Marketplace";
+import Template4Corporate from "@/components/templates/Template4Corporate";
+import Template5Portfolio from "@/components/templates/Template5Portfolio";
+import Template6Blog from "@/components/templates/Template6Blog";
 
-export default async function Home() {
-  let cmsData: CMSData;
+export const dynamic = "force-dynamic";
 
-  try {
-    // Fetch data from API
-    cmsData = await configService();
-  } catch (error) {
-    console.error("Failed to load configuration:", error);
+export default async function HomePage() {
+  const templateId = await getActiveTemplateId();
 
-    // Fallback UI in case of error
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <div className="text-center p-8">
-          <h1 className="text-3xl font-bold text-red-600 mb-4">
-            Ralat Memuatkan Halaman
-          </h1>
-          <p className="text-gray-600 mb-6">
-            Tidak dapat mengambil data konfigurasi. Sila cuba sebentar lagi.
-          </p>
-          <button
-            onClick={() => window.location.reload()}
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-          >
-            Cuba Semula
-          </button>
-        </div>
-      </div>
-    );
+  switch (templateId) {
+    case "2":
+      return <Template2Donation />;
+    case "3":
+      return <Template3Marketplace />;
+    case "4":
+      return <Template4Corporate />;
+    case "5":
+      return <Template5Portfolio />;
+    case "6":
+      return <Template6Blog />;
+    case "1":
+    default:
+      return <Template1Website />;
   }
-
-  const { base_settings, content } = cmsData;
-
-  // Apply CSS variables dynamically
-  const cssVars = {
-    "--primary": base_settings.primary_color,
-    "--secondary": base_settings.secondary_color,
-    "--text": base_settings.text_color,
-  } as React.CSSProperties;
-
-  return (
-    <div style={cssVars}>
-      {/* Navbar */}
-      <Navbar menuItems={content.banner.menu_items} />
-
-      {/* Banner */}
-      <Banner banner={content.banner} />
-
-      {/* Segment */}
-      <Segment segments={content.segments} />
-
-      {/* Features */}
-      <Features fetures={content.fetures} />
-
-      {/* FAQ */}
-      <Faq faq={content.faq} />
-
-      {/* Branding */}
-      <Branding branding={content.branding} />
-
-      {/* Footer */}
-      <Footer footer={content.footer} />
-    </div>
-  );
 }

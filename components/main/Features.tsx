@@ -1,34 +1,19 @@
-"use client";
+import Image from "@/components/ui/FallbackImage";
+import { getFeaturesData } from "@/services/featuresService";
+import InlineError from "@/components/ui/InlineError";
 
-import Image from "next/image";
-import { FeaturesProps } from "@/types/cms";
-import { assetPath } from "@/lib/assetPath";
-import { useEffect } from "react";
-
-export default function Features({ fetures }: FeaturesProps) {
-  // Log the API response data
-  useEffect(() => {
-    console.group("⭐ FEATURES - API Response Data");
-    console.log("Features Data:", fetures);
-    console.log("Features Title:", fetures?.title);
-    console.log("Total Feature Items:", fetures?.items?.length);
-    console.log("Feature Items:", fetures?.items);
-    if (fetures?.items) {
-      console.table(
-        fetures.items.map((item, index) => ({
-          index,
-          icon: item.icon,
-          title: item.title,
-          text: item.text,
-        }))
-      );
-    }
-    console.groupEnd();
-  }, [fetures]);
+export default async function Features() {
+  let fetures;
+  try {
+    fetures = await getFeaturesData();
+  } catch (error) {
+    console.error("❌ Features component error:", error);
+    return <InlineError componentName="Kelebihan" />;
+  }
 
   if (!fetures || !fetures.items || fetures.items.length === 0) {
     console.warn("⚠️ FEATURES: No feature items provided");
-    return null;
+    return <InlineError componentName="Kelebihan" />;
   }
 
   return (

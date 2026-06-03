@@ -1,23 +1,19 @@
-// components/main/Branding.tsx
-import Image from "next/image";
-import { assetPath } from "@/lib/assetPath";
-import { BrandingItem } from "@/types/cms";
+import Image from "@/components/ui/FallbackImage";
+import { getBrandingData } from "@/services/brandingService";
+import InlineError from "@/components/ui/InlineError";
 
-interface BrandingProps {
-  branding: BrandingItem[];
-}
-
-export default function Branding({ branding }: BrandingProps) {
-  // Log the API response data
-  console.group("🎨 BRANDING - API Response Data");
-  console.log("Branding Data:", branding);
-  console.log("Total Branding Items:", branding?.length);
-  console.table(branding);
-  console.groupEnd();
+export default async function Branding() {
+  let branding;
+  try {
+    branding = await getBrandingData();
+  } catch (error) {
+    console.error("❌ Branding component error:", error);
+    return <InlineError componentName="Penjenamaan" />;
+  }
 
   if (!branding || branding.length === 0) {
     console.warn("⚠️ BRANDING: No branding items provided");
-    return null;
+    return <InlineError componentName="Penjenamaan" />;
   }
 
   return (
@@ -25,7 +21,7 @@ export default function Branding({ branding }: BrandingProps) {
       {branding.map((item, index) => (
         <div key={index} className="relative w-full h-[500px]">
           <Image
-            src={assetPath(item.image)}
+            src={item.image}
             alt={`Branding ${index + 1}`}
             fill
             style={{ objectFit: "cover", objectPosition: "top" }}
