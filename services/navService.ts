@@ -153,11 +153,28 @@ export async function getNavData(): Promise<NavData> {
       };
     };
 
+    // Sort by config.index ascending. Use the original API position as
+    // an explicit tiebreaker so two items sharing the same index can never
+    // swap unpredictably (which would silently drop or re-order items like
+    // a freshly-added "new" entry that happens to share an index value).
     const menuItems: MenuItem[] = navData
-      ? navData
-          .sort((a: NavMenuItem, b: NavMenuItem) => (a.config?.index || 0) - (b.config?.index || 0))
-          .map((item: NavMenuItem) => mapMenuItem(item, ""))
+      ? (navData as NavMenuItem[])
+          .map((item, pos) => ({ item, pos }))
+          .sort((a, b) => {
+            const ai = a.item.config?.index || 0;
+            const bi = b.item.config?.index || 0;
+            if (ai !== bi) return ai - bi;
+            return a.pos - b.pos;
+          })
+          .map(({ item }) => mapMenuItem(item, ""))
       : [];
+
+    // Visibility into nav contents — keeps surprises like "added in CMS
+    // but missing from the rendered navbar" diagnosable from server logs.
+    console.log(
+      `🧭 [navService] resolved ${menuItems.length} menu item(s):`,
+      menuItems.map((m) => m.label).join(", "),
+    );
 
     // Append "E-shop" if the Shop plugin is enabled in CMS
     const shopFlag = configData?.generalSettings?.shopPlugin;

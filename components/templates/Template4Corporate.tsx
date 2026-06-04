@@ -7,6 +7,7 @@ import Demo2Contact from "@/components/demos/demo2/Contact";
 import { getBannerData } from "@/services/bannerService";
 import { getNewsData } from "@/services/newsService";
 import { getFaqData } from "@/services/faqService";
+import { getSiteTheme } from "@/services/themeService";
 import {
   getCachedConfig,
   getCachedNews,
@@ -31,6 +32,7 @@ export default async function Template4Corporate() {
     sideBannerRaw,
     faq,
     config,
+    theme,
   ] = await Promise.all([
     getBannerData(),
     getNewsData(),
@@ -38,7 +40,11 @@ export default async function Template4Corporate() {
     getCachedSideBanner(),
     getFaqData(),
     getCachedConfig(),
+    getSiteTheme(),
   ]);
+
+  // Honor admin's maxDisplay; fall back to 9 only when unset.
+  const cap = theme.maxDisplay > 0 ? theme.maxDisplay : 9;
 
   const footerCfg = config.footerConfig || {};
 
@@ -235,7 +241,7 @@ export default async function Template4Corporate() {
             </div>
 
             <div className="grid lg:grid-cols-3 gap-px bg-gray-200">
-              {allNews.slice(0, 9).map((item) => (
+              {allNews.slice(0, cap).map((item) => (
                 <Link
                   key={item.contentId}
                   href={`/news/${item.contentId}`}

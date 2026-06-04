@@ -63,7 +63,10 @@ export const getCachedNews = cache(async () => {
     const merged: Record<string, unknown>[] = [];
 
     for (let page = 1; page <= MAX_PAGES; page++) {
-      const res = await myAxios.get(`api/v2/cms/eboss/cms/news?sid=${sid}&currentpage=${page}`);
+      // Backend pagination params are camelCase: `pageNumber` + `perPage`.
+      // The old lowercase `currentpage` was silently ignored — pagination
+      // only "worked" by accident when total items fit in page 1.
+      const res = await myAxios.get(`api/v2/cms/eboss/cms/news?sid=${sid}&pageNumber=${page}&perPage=10`);
       const data = res.data?.data ?? {};
       const dataset: Record<string, unknown>[] = Array.isArray(data)
         ? (data as Record<string, unknown>[])
@@ -179,7 +182,9 @@ export const getCachedVisitors = cache(async () => {
 export const getCachedStaticContent = cache(async () => {
   try {
     const sid = await getSID();
-    const res = await myAxios.get(`api/v2/cms/eboss/cms/static-content?sid=${sid}&currentpage=1`);
+    // Backend pagination params are camelCase. `currentpage` was a
+    // silent miss — we'd only ever see page 1 regardless of intent.
+    const res = await myAxios.get(`api/v2/cms/eboss/cms/static-content?sid=${sid}&pageNumber=1&perPage=100`);
     return res.data?.data || [];
   } catch (error) {
     console.error("❌ getCachedStaticContent failed:", error);

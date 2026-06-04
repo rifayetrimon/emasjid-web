@@ -18,22 +18,51 @@ interface Props {
   navConfig: NavConfig;
 }
 
+// Approximate width of the nested submenu panel (matches `min-w-[220px]`
+// applied below). Used to decide whether to flip the fly-out to the left.
+const NESTED_SUBMENU_WIDTH = 240;
+
 /**
  * Recursive submenu item for the desktop nav. Top-level dropdown drops
- * down from the parent; deeper levels fly out to the right.
+ * down from the parent; deeper levels fly out to the right — unless the
+ * parent sits too close to the viewport's right edge, in which case the
+ * fly-out flips to the left so it doesn't get clipped.
  */
 function DesktopSubmenuItem({ item }: { item: MenuItem }) {
   const hasChildren = !!item.submenu && item.submenu.length > 0;
   const isExternal = item.targetWindow === "_blank";
+  const triggerRef = useRef<HTMLSpanElement>(null);
+  const [openLeft, setOpenLeft] = useState(false);
+
+  // Measure on hover instead of on mount because hover is the only time
+  // the user perceives the position. Re-measure each time — accounts for
+  // window resize, devtools open/close, sticky nav scroll offset, etc.
+  function handleEnter() {
+    const el = triggerRef.current;
+    if (!el || typeof window === "undefined") return;
+    const rect = el.getBoundingClientRect();
+    setOpenLeft(rect.right + NESTED_SUBMENU_WIDTH > window.innerWidth);
+  }
 
   if (hasChildren) {
     return (
-      <div className="relative group/sub">
-        <span className="flex items-center justify-between gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-[var(--primary)] transition cursor-default select-none">
+      <div
+        className="relative group/sub"
+        onMouseEnter={handleEnter}
+        onFocus={handleEnter}
+      >
+        <span
+          ref={triggerRef}
+          className="flex items-center justify-between gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-[var(--primary)] transition cursor-default select-none"
+        >
           {item.label}
           <ChevronRight className="w-3 h-3" />
         </span>
-        <div className="absolute top-0 left-full opacity-0 invisible group-hover/sub:opacity-100 group-hover/sub:visible transition-all z-50">
+        <div
+          className={`absolute top-0 ${
+            openLeft ? "right-full" : "left-full"
+          } opacity-0 invisible group-hover/sub:opacity-100 group-hover/sub:visible transition-all z-50`}
+        >
           <div className="bg-white border border-gray-200 shadow-xl py-2 min-w-[220px]">
             {item.submenu!.map((sub, si) => (
               <DesktopSubmenuItem key={si} item={sub} />

@@ -7,6 +7,7 @@ import Demo5Contact from "@/components/demos/demo5/Contact";
 import { getBannerData } from "@/services/bannerService";
 import { getNewsData } from "@/services/newsService";
 import { getFaqData } from "@/services/faqService";
+import { getSiteTheme } from "@/services/themeService";
 import {
   getCachedConfig,
   getCachedNews,
@@ -57,6 +58,7 @@ export default async function Template5Portfolio() {
     sideBannerRaw,
     faq,
     config,
+    theme,
   ] = await Promise.all([
     getBannerData(),
     getNewsData(),
@@ -64,7 +66,11 @@ export default async function Template5Portfolio() {
     getCachedSideBanner(),
     getFaqData(),
     getCachedConfig(),
+    getSiteTheme(),
   ]);
+
+  // Honor admin's maxDisplay; fall back to 6 only when unset.
+  const cap = theme.maxDisplay > 0 ? theme.maxDisplay : 6;
 
   const footerCfg = config.footerConfig || {};
 
@@ -172,7 +178,7 @@ export default async function Template5Portfolio() {
             </div>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {highlighted.slice(0, 6).map((item, i) => (
+              {highlighted.slice(0, cap).map((item, i) => (
                 <Link
                   key={item.contentId}
                   href={`/news/${item.contentId}`}
@@ -240,7 +246,7 @@ export default async function Template5Portfolio() {
 
             <div className="grid lg:grid-cols-3 gap-8">
               <div className="lg:col-span-2 space-y-6">
-                {allNews.slice(0, 6).map((item) => (
+                {allNews.slice(0, cap).map((item) => (
                   <Link
                     key={item.contentId}
                     href={`/news/${item.contentId}`}

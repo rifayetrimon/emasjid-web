@@ -29,7 +29,7 @@ function readDataset<T>(raw: unknown): T[] {
 
 function normalize(raw: RawPlugin): PluginItem {
   return {
-    pluginId: Number(raw.pluginId ?? 0),
+    pluginId: String(raw.pluginId ?? "").trim(),
     date: raw.date || "",
     time: raw.time || "",
     status: Number(raw.status ?? 0),

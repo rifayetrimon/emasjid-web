@@ -20,10 +20,29 @@
   }
 }
 
+/*
+ * Stop the page from "sliding" horizontally.
+ *
+ * 1. `scrollbar-gutter: stable` reserves the vertical scrollbar's track
+ *    even when nothing is scrolling, so a modal/dropdown that locks body
+ *    scroll can't make the page jump ~15px to fill the gap left behind
+ *    when the scrollbar disappears.
+ *
+ * 2. `overflow-x: clip` on <body> swallows any small horizontal overflow
+ *    (off-screen dropdown panels, slightly-too-wide hero images, etc.)
+ *    without spawning a horizontal scrollbar that would visibly nudge the
+ *    layout. Unlike `overflow: hidden`, `clip` does NOT create a new
+ *    containing block, so sticky headers and fixed overlays keep working.
+ */
+html {
+  scrollbar-gutter: stable;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  overflow-x: clip;
 }
 
 /* ✅ FAQ Answer Styling */

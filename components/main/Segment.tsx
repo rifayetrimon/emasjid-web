@@ -87,7 +87,13 @@ export default async function Segment() {
       getCachedConfig(),
     ]);
     newsItems = items.slice(0, 5);
-    trendingBg = configData?.newsTrendingConfig?.backgroundColorTrending || "";
+    // `backgroundColorTrending` may be returned at the top level of the
+    // config OR nested under newsTrendingConfig depending on the tenant's
+    // backend version. Try both before giving up.
+    trendingBg =
+      configData?.newsTrendingConfig?.backgroundColorTrending ||
+      configData?.backgroundColorTrending ||
+      "";
   } catch (error) {
     console.error("❌ Segment component error:", error);
     return <InlineError componentName="Makluman/Segmen" />;

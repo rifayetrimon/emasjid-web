@@ -69,7 +69,7 @@ function normalize(raw: RawStatic): StaticContentItem {
   if (file3) imgs.push({ src: getImageUrl(file3), alt: alt3 || title });
 
   return {
-    staticId: Number(raw.contentId ?? raw.staticId ?? 0),
+    staticId: String(raw.contentId ?? raw.staticId ?? "").trim(),
     date: raw.date || "",
     time: raw.time || "",
     status: Number(raw.status ?? 0),

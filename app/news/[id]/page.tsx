@@ -83,7 +83,10 @@ export default async function NewsDetailPage({
   }
 
   const isBlog = templateId === "6";
-  const category = categoryFor(Number(id) || 0);
+  // `id` is whatever the URL ships — numeric for legacy posts, 24-char hex
+  // for new ones. categoryFor accepts both shapes and hashes string IDs
+  // deterministically.
+  const category = categoryFor(id);
 
   // Build a relative share URL (no need for env var; browser resolves to full origin)
   const shareUrl = `/news/${id}`;

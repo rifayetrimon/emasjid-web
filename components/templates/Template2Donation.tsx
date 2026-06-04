@@ -7,6 +7,7 @@ import Demo4Contact from "@/components/demos/demo4/Contact";
 import { getBannerData } from "@/services/bannerService";
 import { getNewsData } from "@/services/newsService";
 import { getFaqData } from "@/services/faqService";
+import { getSiteTheme } from "@/services/themeService";
 import {
   getCachedConfig,
   getCachedNews,
@@ -31,6 +32,7 @@ export default async function Template2Donation() {
     sideBannerRaw,
     faq,
     config,
+    theme,
   ] = await Promise.all([
     getBannerData(),
     getNewsData(),
@@ -38,7 +40,11 @@ export default async function Template2Donation() {
     getCachedSideBanner(),
     getFaqData(),
     getCachedConfig(),
+    getSiteTheme(),
   ]);
+
+  // Honor admin's maxDisplay; fall back to 6 only when unset.
+  const cap = theme.maxDisplay > 0 ? theme.maxDisplay : 6;
 
   const footerCfg = config.footerConfig || {};
 
@@ -132,7 +138,7 @@ export default async function Template2Donation() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 auto-rows-[200px]">
-              {highlighted.slice(0, 5).map((item, i) => {
+              {highlighted.slice(0, cap).map((item, i) => {
                 const span =
                   i === 0
                     ? "md:col-span-2 md:row-span-2"
@@ -198,7 +204,7 @@ export default async function Template2Donation() {
                 </Link>
               </div>
               <div className="space-y-4">
-                {allNews.slice(0, 6).map((item) => (
+                {allNews.slice(0, cap).map((item) => (
                   <Link
                     key={item.contentId}
                     href={`/news/${item.contentId}`}

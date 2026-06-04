@@ -318,7 +318,8 @@ export interface GalleryCategory {
    Plugin / Module
 ------------------------------ */
 export interface PluginItem {
-  pluginId: number;
+  // Same shape rules as `staticId` — accept hex strings without lossy NaN.
+  pluginId: string;
   date: string;
   time: string;
   status: number;
@@ -337,7 +338,9 @@ export interface PluginCategory {
    Static content (about / TnC etc.)
 ------------------------------ */
 export interface StaticContentItem {
-  staticId: number;
+  // Backend may ship numeric IDs (legacy) or 24-char hex (new). Carry as
+  // a string so neither shape is lossily coerced.
+  staticId: string;
   date: string;
   time: string;
   status: number;
