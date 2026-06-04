@@ -20,6 +20,68 @@ interface Props {
 
 const PER_PAGE = 10;
 
+function isPdf(url: string): boolean {
+  return /\.pdf(\?.*)?$/i.test(url);
+}
+
+function DocumentTile({ item }: { item: GalleryItem }) {
+  const pdf = isPdf(item.file);
+  // `#toolbar=0&navpanes=0&scrollbar=0&view=FitH` strips Chrome's PDF
+  // chrome and fits the page to the iframe width — gives a clean
+  // first-page thumbnail. Firefox ignores most of these, but still renders
+  // the page itself, which is the only thing we actually need.
+  const previewSrc = pdf
+    ? `${item.file}#toolbar=0&navpanes=0&scrollbar=0&view=FitH`
+    : null;
+
+  return (
+    <a
+      href={item.file}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="group relative aspect-square overflow-hidden bg-gray-100 border border-gray-200 flex flex-col items-center justify-center hover:border-[var(--primary)] transition-colors"
+    >
+      {previewSrc ? (
+        <>
+          {/* `pointer-events-none` so clicks fall through to the parent
+              <a> instead of being captured by the PDF viewer's chrome. */}
+          <iframe
+            src={previewSrc}
+            title={item.title || "Dokumen"}
+            className="absolute inset-0 w-full h-full pointer-events-none bg-white"
+            loading="lazy"
+          />
+          {/* PDF badge — small chip in the top-left so docs are visually
+              distinguishable from images at a glance. */}
+          <span className="absolute top-2 left-2 px-1.5 py-0.5 bg-red-600 text-white text-[9px] font-bold uppercase tracking-wider rounded-sm shadow-sm">
+            PDF
+          </span>
+          {/* Title bar — gradient at the bottom so the document title
+              is readable regardless of what's on the PDF's first page. */}
+          {item.title && (
+            <div className="absolute bottom-0 left-0 right-0 px-3 py-2 bg-gradient-to-t from-black/80 via-black/55 to-transparent">
+              <span className="block text-[11px] font-bold text-white line-clamp-2 leading-snug">
+                {item.title}
+              </span>
+            </div>
+          )}
+          {/* Hover hint */}
+          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-200 pointer-events-none" />
+        </>
+      ) : (
+        // Non-PDF docs (docx/xlsx/etc.) — browser can't render these inline,
+        // so keep the icon fallback.
+        <div className="flex flex-col items-center justify-center gap-3 p-4 text-center">
+          <FileText className="w-10 h-10 text-[var(--primary)]" />
+          <span className="text-xs font-bold text-gray-700 line-clamp-3 leading-snug">
+            {item.title || "Dokumen"}
+          </span>
+        </div>
+      )}
+    </a>
+  );
+}
+
 export default function Blog2GallerySection({
   initial,
   title = "Galeri",
@@ -133,19 +195,12 @@ export default function Blog2GallerySection({
               </div>
             </button>
           ) : (
-            // Document slot — lightbox doesn't apply, opens in new tab.
-            <a
-              key={item.galleryId}
-              href={item.file}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group relative aspect-square overflow-hidden bg-gray-100 border border-gray-200 flex flex-col items-center justify-center gap-3 p-4 text-center hover:bg-gray-50 transition-colors"
-            >
-              <FileText className="w-10 h-10 text-[var(--primary)]" />
-              <span className="text-xs font-bold text-gray-700 line-clamp-3 leading-snug">
-                {item.title || "Dokumen"}
-              </span>
-            </a>
+            // Document slot — clicking opens in a new tab. For PDFs, the
+            // browser's native PDF viewer renders the first page inside an
+            // <iframe> so the tile is a real preview, not a generic icon.
+            // Non-PDFs fall back to the FileText icon since browsers don't
+            // render docx/xlsx/etc. without a server-side converter.
+            <DocumentTile key={item.galleryId} item={item} />
           ),
         )}
       </div>

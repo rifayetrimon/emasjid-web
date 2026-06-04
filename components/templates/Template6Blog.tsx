@@ -306,14 +306,20 @@ export default async function Template6Blog() {
         </div>
       )}
 
-      {/* ━━━━━━ TOP BANNER (admin-driven, matches content width) ━━━━━━ */}
+      {/* ━━━━━━ TOP BANNER (admin-driven, full-bleed) ━━━━━━ */}
+      {/*
+        `fit="contain"` shows the entire admin-uploaded image without
+        cropping — long horizontal banners (e.g. ~3.4:1 hero panoramas)
+        kept losing their left/right edges under cover-fit. Aspect ratio
+        widened to ~3.4:1 so the typical wide banner has minimal letterbox.
+      */}
       {hasAdminBanner && banner && (
-        <section className="max-w-7xl mx-auto px-6 pt-6">
-          <div className="relative w-full aspect-[21/9] md:aspect-[24/9] overflow-hidden bg-gray-900">
+        <section className="w-full pt-6">
+          <div className="relative w-full aspect-[21/9] md:aspect-[17/5] overflow-hidden bg-white">
             <BannerSlideshow
               media={banner.background_images}
               interval={6500}
-              fit="cover"
+              fit="contain"
             />
             {banner.overlayColor && (
               <div
@@ -520,11 +526,15 @@ export default async function Template6Blog() {
                   footer?.social_links.find((s) =>
                     s.platform.toLowerCase().includes(key)
                   )?.link;
+                // Real follower / subscriber counts aren't wired into the
+                // CMS yet, so the count slot stays "N/A" until a backend
+                // source exists. The action labels and social links are
+                // still admin-driven.
                 const cards = [
                   {
                     Icon: Users,
                     bg: "bg-blue-600",
-                    count: "24,856",
+                    count: "N/A",
                     label: "FANS",
                     action: "LIKE",
                     href: findLink("fb") || findLink("facebook") || "#",
@@ -532,7 +542,7 @@ export default async function Template6Blog() {
                   {
                     Icon: UserPlus,
                     bg: "bg-sky-400",
-                    count: "3,915",
+                    count: "N/A",
                     label: "FOLLOWERS",
                     action: "FOLLOW",
                     href: findLink("x.svg") || findLink("twitter") || "#",
@@ -540,7 +550,7 @@ export default async function Template6Blog() {
                   {
                     Icon: Bell,
                     bg: "bg-red-600",
-                    count: "22,800",
+                    count: "N/A",
                     label: "SUBSCRIBERS",
                     action: "SUBSCRIBE",
                     href: findLink("youtube") || "#",
