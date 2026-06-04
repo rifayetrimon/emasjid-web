@@ -49,13 +49,6 @@ export async function getNavData(): Promise<NavData> {
     const general = configData.generalSettings || {};
     const navCfg = configData.navConfig || {};
 
-    const generateSlug = (title: string) => {
-      return title
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/(^-|-$)/g, "");
-    };
-
     // Labels that always point to the home/landing page regardless of CMS URL
     const HOME_LABELS = new Set([
       "home",
@@ -69,76 +62,41 @@ export async function getNavData(): Promise<NavData> {
     const isHomeLabel = (title: string) =>
       HOME_LABELS.has(title.toLowerCase().trim());
 
-    /**
-     * Resolve the destination URL for a menu item.
-     *
-     * Priority:
-     *  1. News bindings → `/news/<id>` (news has its own dedicated route).
-     *  2. Static-page bindings and unbound items → slug-based path derived
-     *     from the menu hierarchy (e.g. `/profil/sejarah-penubuhan`). The
-     *     catch-all [...slug] handler resolves this path back to a static
-     *     binding (via `getStaticPathBindings`) and loads the content.
-     *  3. Admin-supplied `url` wins over slug fallback when present.
-     */
-    const resolveLink = (
-      item: NavMenuItem,
-      parentSlug: string,
-      fallbackUrl: string
-    ): string => {
-      const cfg = item.config || {};
-      const optionmenu = String(cfg.optionmenu || "").toLowerCase();
-      const article =
-        (cfg.article as string | number | null | undefined) ||
-        (cfg.staticPage as string | number | null | undefined) ||
-        (cfg.staticContent as string | number | null | undefined) ||
-        (cfg.staticContentId as string | number | null | undefined) ||
-        "";
-
-      const articleId = String(article ?? "").trim();
-      const isNewsBinding = /(news|article|listnews)/.test(optionmenu);
-      // News bindings keep the explicit /news/<id> URL — pretty URLs only
-      // apply to static pages.
-      if (articleId && isNewsBinding) {
-        return `/news/${articleId}`;
-      }
-
-      // Static-bound menus always use slug-based paths so URLs stay clean.
-      // Admin's `url` field is often a legacy PHP link
-      // (e.g. "page/pagedetail.php?schid=805&..."); we ignore it for
-      // static-bound items because the catch-all resolves the slug to the
-      // bound static-content ID. Unbound items honor admin's `url`.
-      const isStaticBinding = !!articleId && !isNewsBinding;
-      let link = isStaticBinding ? "" : fallbackUrl;
-      if (!link || link.trim() === "") {
-        const slug = generateSlug(item.title);
-        link = parentSlug ? `${parentSlug}/${slug}` : `/${slug}`;
-      }
-      return link;
-    };
-
-    const mapMenuItem = (item: NavMenuItem, parentSlug: string = ""): MenuItem => {
-      let link = resolveLink(item, parentSlug, item.url);
+    const mapMenuItem = (item: NavMenuItem, depth: number = 0): MenuItem => {
+      // Use the raw `url` from the API verbatim. CMS already ships the
+      // canonical destination (e.g. `/static/<contentId>`, full external
+      // URLs, or legacy PHP links) and the client has no business
+      // rewriting them — that just causes drift between what admin
+      // configured and what users land on.
+      let link = (item.url || "").trim();
 
       // Top-level "Home" / "Utama" menu items always go to /
-      if (!parentSlug && isHomeLabel(item.title)) {
+      if (depth === 0 && isHomeLabel(item.title)) {
         link = "/";
       }
 
       const submenu =
         item.submenu && item.submenu.length > 0
           ? item.submenu
-              .sort((a: NavMenuItem, b: NavMenuItem) => (a.config?.index || 0) - (b.config?.index || 0))
-              .map((sub: NavMenuItem) => mapMenuItem(sub, link))
+              .slice()
+              .sort(
+                (a: NavMenuItem, b: NavMenuItem) =>
+                  (a.config?.index || 0) - (b.config?.index || 0),
+              )
+              .map((sub: NavMenuItem) => mapMenuItem(sub, depth + 1))
           : undefined;
 
       // Parent menus (with a submenu) act purely as a dropdown trigger —
       // clicking the parent should reveal children, not navigate to a page.
       // The Home label is excluded because admins expect it to always go to /.
       const hasChildren = !!submenu && submenu.length > 0;
-      const isHome = !parentSlug && isHomeLabel(item.title);
+      const isHome = depth === 0 && isHomeLabel(item.title);
       if (hasChildren && !isHome) {
         link = "#";
       }
+
+      // No URL and no children → still nothing navigable, fall back to "#".
+      if (!link) link = "#";
 
       const targetWindow =
         typeof item.config?.targetwindow === "string"
@@ -166,7 +124,7 @@ export async function getNavData(): Promise<NavData> {
             if (ai !== bi) return ai - bi;
             return a.pos - b.pos;
           })
-          .map(({ item }) => mapMenuItem(item, ""))
+          .map(({ item }) => mapMenuItem(item, 0))
       : [];
 
     // Visibility into nav contents — keeps surprises like "added in CMS
