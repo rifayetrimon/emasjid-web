@@ -182,13 +182,52 @@ export const getCachedVisitors = cache(async () => {
 export const getCachedStaticContent = cache(async () => {
   try {
     const sid = await getSID();
-    // Backend pagination params are camelCase. `currentpage` was a
-    // silent miss — we'd only ever see page 1 regardless of intent.
-    const res = await myAxios.get(`api/v2/cms/eboss/cms/static-content?sid=${sid}&pageNumber=1&perPage=100`);
-    return res.data?.data || [];
+    // Walk ALL pages. A fixed `perPage=100` silently dropped any static
+    // pages beyond the 100th (the tenant currently has 104) — their
+    // `/static/<contentId>` routes then 404 because the item never loads.
+    // We page through until the server runs out, dedup'd by contentId.
+    // perPage=200 pulls the current full set in a single request while the
+    // page loop still covers tenants that grow past one page.
+    const PER_PAGE = 200;
+    const MAX_PAGES = 50; // hard backstop (10000 items) against a bad API
+    const seen = new Set<string>();
+    const merged: Record<string, unknown>[] = [];
+
+    for (let page = 1; page <= MAX_PAGES; page++) {
+      const res = await myAxios.get(
+        `api/v2/cms/eboss/cms/static-content?sid=${sid}&pageNumber=${page}&perPage=${PER_PAGE}`
+      );
+      const data = res.data?.data ?? {};
+      const dataset: Record<string, unknown>[] = Array.isArray(data)
+        ? (data as Record<string, unknown>[])
+        : Array.isArray(
+            (data as { dataset?: Record<string, unknown>[] })?.dataset
+          )
+        ? (data as { dataset: Record<string, unknown>[] }).dataset
+        : [];
+
+      if (dataset.length === 0) break;
+
+      let added = 0;
+      for (const item of dataset) {
+        const id = String(item.contentId ?? item.staticId ?? "").trim();
+        // Keep items even if they somehow lack an id; only dedup real ids.
+        if (id && seen.has(id)) continue;
+        if (id) seen.add(id);
+        merged.push(item);
+        added++;
+      }
+
+      // Stop if the API isn't paginating (page returned only dupes) or it
+      // handed back a partial page (no more pages on the server).
+      if (added === 0) break;
+      if (dataset.length < PER_PAGE) break;
+    }
+
+    return { dataset: merged };
   } catch (error) {
     console.error("❌ getCachedStaticContent failed:", error);
-    return [];
+    return { dataset: [] as Record<string, unknown>[] };
   }
 });
 

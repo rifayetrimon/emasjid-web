@@ -36,6 +36,10 @@ export default async function DynamicSlugPage(props: {
   if (staticId) {
     try {
       const item = await getStaticContentBySlug(staticId);
+      console.log(
+        `🖱️ [nav click] static content for "${path}" (staticId=${staticId}):`,
+        JSON.stringify(item, null, 2)
+      );
       if (item) {
         // The nav menu's link uses the path (e.g. /profil/sejarah-penubuhan)
         // while basePath is prepended for the browser; either form may appear
