@@ -22,6 +22,22 @@ FROM node:20-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 
+# The production container only runs `node server.js` — it never needs
+# npm/yarn/corepack at runtime. Those bundled package managers ship their
+# own old copies of tar/minimatch/glob/cross-spawn that the CVE scanner
+# flags (in /usr/local/lib/node_modules/npm and /opt/yarn-*). Remove them
+# so the final image has zero of those findings. Pure `node` remains.
+RUN rm -rf \
+      /usr/local/lib/node_modules/npm \
+      /usr/local/lib/node_modules/corepack \
+      /usr/local/bin/npm \
+      /usr/local/bin/npx \
+      /usr/local/bin/corepack \
+      /usr/local/bin/yarn \
+      /usr/local/bin/yarnpkg \
+      /opt/yarn-* \
+  && echo "removed npm/yarn/corepack from runtime image"
+
 # Copy only necessary build files
 
 COPY --from=builder /app/public ./public
