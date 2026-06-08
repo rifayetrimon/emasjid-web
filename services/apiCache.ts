@@ -12,13 +12,26 @@ async function getSID(): Promise<string> {
   return (await getConfig()).sid || "";
 }
 
+// A 404 from these endpoints means the tenant simply hasn't configured that
+// resource (e.g. no FAQ, no gallery) — it's expected, not a failure. We log
+// it quietly so it doesn't trip the Next.js dev error overlay, while any
+// other error (network, 5xx, auth) is still surfaced as a real error.
+function logApiError(label: string, error: unknown): void {
+  const status = (error as { response?: { status?: number } })?.response?.status;
+  if (status === 404) {
+    console.log(`ℹ️ ${label}: not available for this tenant (404) — skipping`);
+  } else {
+    console.error(`❌ ${label} failed:`, error);
+  }
+}
+
 export const getCachedConfig = cache(async () => {
   try {
     const sid = await getSID();
     const res = await myAxios.get(`api/v2/cms/eboss/cms/config?sid=${sid}`);
     return res.data?.data || {};
   } catch (error) {
-    console.error("❌ getCachedConfig failed:", error);
+    logApiError("getCachedConfig", error);
     return {};
   }
 });
@@ -29,7 +42,7 @@ export const getCachedNavHeader = cache(async () => {
     const res = await myAxios.get(`api/v2/cms/eboss/cms/nav-header?sid=${sid}`);
     return res.data?.data || null;
   } catch (error) {
-    console.error("❌ getCachedNavHeader failed:", error);
+    logApiError("getCachedNavHeader", error);
     return null;
   }
 });
@@ -40,7 +53,7 @@ export const getCachedBanner = cache(async () => {
     const res = await myAxios.get(`api/v2/cms/eboss/cms/banner?sid=${sid}&type=Banner`);
     return res.data?.data || [];
   } catch (error) {
-    console.error("❌ getCachedBanner failed:", error);
+    logApiError("getCachedBanner", error);
     return [];
   }
 });
@@ -97,7 +110,7 @@ export const getCachedNews = cache(async () => {
 
     return { dataset: merged };
   } catch (error) {
-    console.error("❌ getCachedNews failed:", error);
+    logApiError("getCachedNews", error);
     return { dataset: [] as Record<string, unknown>[] };
   }
 });
@@ -108,7 +121,7 @@ export const getCachedFooter = cache(async () => {
     const res = await myAxios.get(`api/v2/cms/eboss/cms/footer?sid=${sid}`);
     return res.data?.data || [];
   } catch (error) {
-    console.error("❌ getCachedFooter failed:", error);
+    logApiError("getCachedFooter", error);
     return [];
   }
 });
@@ -119,7 +132,7 @@ export const getCachedFaq = cache(async () => {
     const res = await myAxios.get(`api/v2/cms/eboss/cms/faq?sid=${sid}`);
     return res.data?.data || [];
   } catch (error) {
-    console.error("❌ getCachedFaq failed:", error);
+    logApiError("getCachedFaq", error);
     return [];
   }
 });
@@ -130,7 +143,7 @@ export const getCachedSideBanner = cache(async () => {
     const res = await myAxios.get(`api/v2/cms/eboss/cms/banner?sid=${sid}&type=Sider`);
     return res.data?.data || [];
   } catch (error) {
-    console.error("❌ getCachedSideBanner failed:", error);
+    logApiError("getCachedSideBanner", error);
     return [];
   }
 });
@@ -141,7 +154,7 @@ export const getCachedPromotagBanner = cache(async () => {
     const res = await myAxios.get(`api/v2/cms/eboss/cms/banner?sid=${sid}&type=Promotag`);
     return res.data?.data || [];
   } catch (error) {
-    console.error("❌ getCachedPromotagBanner failed:", error);
+    logApiError("getCachedPromotagBanner", error);
     return [];
   }
 });
@@ -152,7 +165,7 @@ export const getCachedNewsDetail = cache(async (contentId: string) => {
     const res = await myAxios.get(`api/v2/cms/eboss/cms/news/${contentId}?sid=${sid}`);
     return res.data?.data || null;
   } catch (error) {
-    console.error("❌ getCachedNewsDetail failed:", error);
+    logApiError("getCachedNewsDetail", error);
     return null;
   }
 });
@@ -163,7 +176,7 @@ export const getCachedAddonPlugin = cache(async () => {
     const res = await myAxios.get(`api/v2/cms/eboss/cms/addon-plugin?sid=${sid}`);
     return res.data?.data || [];
   } catch (error) {
-    console.error("❌ getCachedAddonPlugin failed:", error);
+    logApiError("getCachedAddonPlugin", error);
     return [];
   }
 });
@@ -174,7 +187,7 @@ export const getCachedVisitors = cache(async () => {
     const res = await myAxios.get(`api/v2/cms/eboss/cms/visitors?sid=${sid}`);
     return res.data?.data || {};
   } catch (error) {
-    console.error("❌ getCachedVisitors failed:", error);
+    logApiError("getCachedVisitors", error);
     return {};
   }
 });
@@ -226,7 +239,7 @@ export const getCachedStaticContent = cache(async () => {
 
     return { dataset: merged };
   } catch (error) {
-    console.error("❌ getCachedStaticContent failed:", error);
+    logApiError("getCachedStaticContent", error);
     return { dataset: [] as Record<string, unknown>[] };
   }
 });
@@ -237,7 +250,7 @@ export const getCachedGallery = cache(async () => {
     const res = await myAxios.get(`api/v2/cms/eboss/cms/gallery?sid=${sid}`);
     return res.data?.data || [];
   } catch (error) {
-    console.error("❌ getCachedGallery failed:", error);
+    logApiError("getCachedGallery", error);
     return [];
   }
 });
@@ -248,7 +261,7 @@ export const getCachedGalleryCategory = cache(async () => {
     const res = await myAxios.get(`api/v2/cms/eboss/cms/gallery/category?sid=${sid}`);
     return res.data?.data || [];
   } catch (error) {
-    console.error("❌ getCachedGalleryCategory failed:", error);
+    logApiError("getCachedGalleryCategory", error);
     return [];
   }
 });
@@ -259,7 +272,7 @@ export const getCachedPlugin = cache(async () => {
     const res = await myAxios.get(`api/v2/cms/eboss/cms/plugin?sid=${sid}`);
     return res.data?.data || [];
   } catch (error) {
-    console.error("❌ getCachedPlugin failed:", error);
+    logApiError("getCachedPlugin", error);
     return [];
   }
 });
@@ -270,7 +283,7 @@ export const getCachedPluginCategory = cache(async () => {
     const res = await myAxios.get(`api/v2/cms/eboss/cms/plugin-category?sid=${sid}`);
     return res.data?.data || [];
   } catch (error) {
-    console.error("❌ getCachedPluginCategory failed:", error);
+    logApiError("getCachedPluginCategory", error);
     return [];
   }
 });

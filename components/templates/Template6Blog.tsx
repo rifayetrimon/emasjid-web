@@ -308,18 +308,19 @@ export default async function Template6Blog() {
 
       {/* ━━━━━━ TOP BANNER (admin-driven, full-bleed) ━━━━━━ */}
       {/*
-        `fit="contain"` shows the entire admin-uploaded image without
-        cropping — long horizontal banners (e.g. ~3.4:1 hero panoramas)
-        kept losing their left/right edges under cover-fit. Aspect ratio
-        widened to ~3.4:1 so the typical wide banner has minimal letterbox.
+        `fit="cover"` fills the whole banner edge-to-edge regardless of the
+        uploaded image's dimensions — small/narrow images no longer leave
+        grey letterbox gutters on the sides. The trade-off is that very wide
+        panoramas get cropped top/bottom (centered), which is the expected
+        behavior for a full-bleed hero banner.
       */}
       {hasAdminBanner && banner && (
         <section className="w-full pt-6">
-          <div className="relative w-full aspect-[21/9] md:aspect-[17/5] overflow-hidden bg-white">
+          <div className="relative w-full aspect-[21/9] md:aspect-[17/5] overflow-hidden bg-gray-100">
             <BannerSlideshow
               media={banner.background_images}
               interval={6500}
-              fit="contain"
+              fit="cover"
             />
             {banner.overlayColor && (
               <div
