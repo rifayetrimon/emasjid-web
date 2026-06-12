@@ -1,18 +1,26 @@
+"use client";
+
 import TemplateLayout from "@/components/TemplateLayout";
 import { getActiveTemplateId } from "@/lib/getActiveTemplate";
 import { getDonationGroups } from "@/services/donationService";
 import { getCachedConfig } from "@/services/apiCache";
+import { useCmsData } from "@/lib/useCmsData";
 import { getImageUrl } from "@/services/utils";
 import DonateGrid from "@/components/donate/DonateGrid";
 
-export const dynamic = "force-dynamic";
+export default function DonatePage() {
+  const { data, loading } = useCmsData(async () => {
+    const [templateId, groups, config] = await Promise.all([
+      getActiveTemplateId(),
+      getDonationGroups(),
+      getCachedConfig(),
+    ]);
+    return { templateId, groups, config };
+  }, []);
 
-export default async function DonatePage() {
-  const [templateId, groups, config] = await Promise.all([
-    getActiveTemplateId(),
-    getDonationGroups(),
-    getCachedConfig(),
-  ]);
+  if (loading || !data) return <div className="min-h-screen bg-white" />;
+
+  const { templateId, groups, config } = data;
 
   const general = config?.generalSettings || {};
   const logoUrl = getImageUrl(

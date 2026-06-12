@@ -1,3 +1,6 @@
+"use client";
+
+import { useCmsData } from "@/lib/useCmsData";
 import Image from "@/components/ui/FallbackImage";
 import Link from "next/link";
 import TemplateLayout from "@/components/TemplateLayout";
@@ -170,8 +173,51 @@ function PromotagSlide({ banner }: { banner: BannerRecord }) {
   );
 }
 
-export default async function Template6Blog() {
-  const [
+export default function Template6Blog() {
+  const { data, loading } = useCmsData(async () => {
+    const [
+      banner,
+      allNews,
+      sideBanners,
+      promotagBanners,
+      faq,
+      config,
+      footer,
+      galleryPage,
+      sidebarPlugins,
+      theme,
+      donation,
+    ] = await Promise.all([
+      getBannerData(),
+      getAllNews(),
+      getSideBanners(),
+      getPromotagBanners(),
+      getFaqData(),
+      getCachedConfig(),
+      getFooterData(),
+      getGalleryPage(1, 10),
+      getPluginsByCate("sidebar"),
+      getSiteTheme(),
+      getDonationConfig(),
+    ]);
+    return {
+      banner,
+      allNews,
+      sideBanners,
+      promotagBanners,
+      faq,
+      config,
+      footer,
+      galleryPage,
+      sidebarPlugins,
+      theme,
+      donation,
+    };
+  }, []);
+
+  if (loading || !data) return <div className="min-h-screen bg-white" />;
+
+  const {
     banner,
     allNews,
     sideBanners,
@@ -183,19 +229,7 @@ export default async function Template6Blog() {
     sidebarPlugins,
     theme,
     donation,
-  ] = await Promise.all([
-    getBannerData(),
-    getAllNews(),
-    getSideBanners(),
-    getPromotagBanners(),
-    getFaqData(),
-    getCachedConfig(),
-    getFooterData(),
-    getGalleryPage(1, 10),
-    getPluginsByCate("sidebar"),
-    getSiteTheme(),
-    getDonationConfig(),
-  ]);
+  } = data;
 
   const footerCfg = config.footerConfig || {};
   const address = [
@@ -288,7 +322,7 @@ export default async function Template6Blog() {
               Trending
             </span>
             <Link
-              href={`/news/${heroFeatured.contentId}`}
+              href={`/news/detail/?id=${heroFeatured.contentId}`}
               className="text-sm text-gray-700 truncate hover:text-[var(--primary)] transition"
             >
               {heroFeatured.title}
@@ -368,7 +402,7 @@ export default async function Template6Blog() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             {/* Featured Big — most recent news, spans 2 columns on desktop */}
             <Link
-              href={`/news/${heroFeatured.contentId}`}
+              href={`/news/detail/?id=${heroFeatured.contentId}`}
               className="lg:col-span-2 group relative block aspect-[16/9] overflow-hidden bg-gray-900"
             >
               <NewsCardImage item={heroFeatured} />
@@ -396,7 +430,7 @@ export default async function Template6Blog() {
               {heroSideItems.slice(0, 2).map((item) => (
                 <Link
                   key={item.contentId}
-                  href={`/news/${item.contentId}`}
+                  href={`/news/detail/?id=${item.contentId}`}
                   className="group relative block aspect-[16/9] overflow-hidden bg-gray-100"
                 >
                   <NewsCardImage item={item} />
@@ -452,7 +486,7 @@ export default async function Template6Blog() {
               {lifestyleGrid.map((item) => (
                 <Link
                   key={item.contentId}
-                  href={`/news/${item.contentId}`}
+                  href={`/news/detail/?id=${item.contentId}`}
                   className="group flex flex-col h-full"
                 >
                   <div className="relative aspect-[16/10] overflow-hidden bg-gray-100 mb-3 shrink-0">
@@ -482,7 +516,7 @@ export default async function Template6Blog() {
               {lifestyleList.map((item) => (
                 <Link
                   key={item.contentId}
-                  href={`/news/${item.contentId}`}
+                  href={`/news/detail/?id=${item.contentId}`}
                   className="group flex gap-3"
                 >
                   <div className="relative w-20 h-16 flex-shrink-0 overflow-hidden bg-gray-100">
@@ -606,7 +640,7 @@ export default async function Template6Blog() {
                       )}
                     </div>
                     <Link
-                      href={`/news/${n.contentId}`}
+                      href={`/news/detail/?id=${n.contentId}`}
                       className="flex-1 text-xs font-bold text-gray-900 leading-snug line-clamp-3 hover:text-[var(--primary)]"
                     >
                       {n.title}
@@ -691,7 +725,7 @@ export default async function Template6Blog() {
             {latestArticles.map((item) => (
               <Link
                 key={item.contentId}
-                href={`/news/${item.contentId}`}
+                href={`/news/detail/?id=${item.contentId}`}
                 className="group block"
               >
                 <div className="relative aspect-[16/10] overflow-hidden bg-gray-100 mb-3">
@@ -735,7 +769,7 @@ export default async function Template6Blog() {
                       Trending
                     </span>
                     <Link
-                      href={`/news/${item.contentId}`}
+                      href={`/news/detail/?id=${item.contentId}`}
                       className="block mt-1"
                     >
                       <h4 className="text-xs font-bold text-gray-900 leading-snug line-clamp-2 group-hover:text-[var(--primary)] transition">

@@ -1,3 +1,6 @@
+"use client";
+
+import { useCmsData } from "@/lib/useCmsData";
 import Image from "@/components/ui/FallbackImage";
 import Link from "next/link";
 import BannerSlideshow from "@/components/main/BannerSlideshow";
@@ -50,8 +53,39 @@ function Divider({ className = "" }: { className?: string }) {
   );
 }
 
-export default async function Template5Portfolio() {
-  const [
+export default function Template5Portfolio() {
+  const { data, loading } = useCmsData(async () => {
+    const [
+      banner,
+      highlighted,
+      newsRaw,
+      sideBannerRaw,
+      faq,
+      config,
+      theme,
+    ] = await Promise.all([
+      getBannerData(),
+      getNewsData(),
+      getCachedNews(),
+      getCachedSideBanner(),
+      getFaqData(),
+      getCachedConfig(),
+      getSiteTheme(),
+    ]);
+    return {
+      banner,
+      highlighted,
+      newsRaw,
+      sideBannerRaw,
+      faq,
+      config,
+      theme,
+    };
+  }, []);
+
+  if (loading || !data) return <div className="min-h-screen bg-white" />;
+
+  const {
     banner,
     highlighted,
     newsRaw,
@@ -59,15 +93,7 @@ export default async function Template5Portfolio() {
     faq,
     config,
     theme,
-  ] = await Promise.all([
-    getBannerData(),
-    getNewsData(),
-    getCachedNews(),
-    getCachedSideBanner(),
-    getFaqData(),
-    getCachedConfig(),
-    getSiteTheme(),
-  ]);
+  } = data;
 
   // Honor admin's maxDisplay; fall back to 6 only when unset.
   const cap = theme.maxDisplay > 0 ? theme.maxDisplay : 6;
@@ -181,7 +207,7 @@ export default async function Template5Portfolio() {
               {highlighted.slice(0, cap).map((item, i) => (
                 <Link
                   key={item.contentId}
-                  href={`/news/${item.contentId}`}
+                  href={`/news/detail/?id=${item.contentId}`}
                   className="group block"
                 >
                   <div
@@ -249,7 +275,7 @@ export default async function Template5Portfolio() {
                 {allNews.slice(0, cap).map((item) => (
                   <Link
                     key={item.contentId}
-                    href={`/news/${item.contentId}`}
+                    href={`/news/detail/?id=${item.contentId}`}
                     className="group flex flex-col sm:flex-row gap-5 bg-[#fdfaf3] border-2 border-[#d4b88a]/50 hover:border-[var(--primary)] transition-colors p-4"
                   >
                     <div className="relative w-full sm:w-48 h-40 flex-shrink-0 overflow-hidden bg-[#f5e9d0] border border-[#d4b88a]/40">

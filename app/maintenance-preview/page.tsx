@@ -1,12 +1,14 @@
+"use client";
+
 import Link from "next/link";
 import { MAINTENANCE_DESIGN_OPTIONS } from "@/components/MaintenancePage";
 import { getCachedConfig } from "@/services/apiCache";
+import { useCmsData } from "@/lib/useCmsData";
 
-export const dynamic = "force-dynamic";
-
-export default async function MaintenancePreviewIndex() {
-  const config = await getCachedConfig();
-  const general = config?.generalSettings || {};
+export default function MaintenancePreviewIndex() {
+  const { data } = useCmsData(() => getCachedConfig(), []);
+  const config = (data || {}) as Record<string, unknown>;
+  const general = (config?.generalSettings as Record<string, unknown>) || {};
   const tenantTitle =
     (general.title as string) || (config?.title as string) || "Tenant";
 
@@ -34,14 +36,14 @@ export default async function MaintenancePreviewIndex() {
               className="rounded-2xl bg-white border border-gray-200 overflow-hidden shadow-sm hover:shadow-md transition"
             >
               <Link
-                href={`/maintenance-preview/${opt.id}`}
+                href={`/maintenance-preview/view/?id=${opt.id}`}
                 className="block"
                 target="_blank"
                 rel="noopener"
               >
                 <div className="aspect-[16/10] relative">
                   <iframe
-                    src={`/maintenance-preview/${opt.id}`}
+                    src={`/maintenance-preview/view/?id=${opt.id}`}
                     title={`Design ${opt.id} — ${opt.label}`}
                     className="absolute inset-0 w-full h-full border-0 pointer-events-none"
                     sandbox="allow-same-origin"

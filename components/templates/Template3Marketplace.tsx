@@ -1,3 +1,6 @@
+"use client";
+
+import { useCmsData } from "@/lib/useCmsData";
 import Image from "@/components/ui/FallbackImage";
 import Link from "next/link";
 import BannerSlideshow from "@/components/main/BannerSlideshow";
@@ -24,22 +27,29 @@ interface NewsItem {
   altImg1: string;
 }
 
-export default async function Template3Marketplace() {
-  const [
-    banner,
-    highlighted,
-    newsRaw,
-    sideBannerRaw,
-    faq,
-    config,
-  ] = await Promise.all([
-    getBannerData(),
-    getNewsData(),
-    getCachedNews(),
-    getCachedSideBanner(),
-    getFaqData(),
-    getCachedConfig(),
-  ]);
+export default function Template3Marketplace() {
+  const { data, loading } = useCmsData(async () => {
+    const [
+      banner,
+      highlighted,
+      newsRaw,
+      sideBannerRaw,
+      faq,
+      config,
+    ] = await Promise.all([
+      getBannerData(),
+      getNewsData(),
+      getCachedNews(),
+      getCachedSideBanner(),
+      getFaqData(),
+      getCachedConfig(),
+    ]);
+    return { banner, highlighted, newsRaw, sideBannerRaw, faq, config };
+  }, []);
+
+  if (loading || !data) return <div className="min-h-screen bg-white" />;
+
+  const { banner, highlighted, newsRaw, sideBannerRaw, faq, config } = data;
 
   const footerCfg = config.footerConfig || {};
 

@@ -1,12 +1,27 @@
 // services/apiCache.ts
-import { cache } from "react";
 import getConfig from "@/lib/getConfig";
 import myAxios from "@/lib/myAxios";
 
-// React `cache()` will deduplicate requests with the same arguments
-// during a single server-rendered request cycle.
+// Isomorphic request memoizer — replaces React's server-only `cache()` so
+// these helpers run in the browser too (the app is a static export with no
+// server). Dedupes by argument list and reuses the in-flight/resolved
+// promise for the lifetime of the page session; a full reload re-fetches.
 // IMPORTANT: Each function has try/catch to prevent cached rejected promises
-// from cascading and crashing the entire page render.
+// from cascading and crashing the entire render.
+function cache<A extends unknown[], R>(
+  fn: (...args: A) => Promise<R>,
+): (...args: A) => Promise<R> {
+  const store = new Map<string, Promise<R>>();
+  return (...args: A) => {
+    const key = args.length ? JSON.stringify(args) : "";
+    let hit = store.get(key);
+    if (!hit) {
+      hit = fn(...args);
+      store.set(key, hit);
+    }
+    return hit;
+  };
+}
 
 async function getSID(): Promise<string> {
   return (await getConfig()).sid || "";

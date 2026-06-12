@@ -1,3 +1,6 @@
+"use client";
+
+import { useCmsData } from "@/lib/useCmsData";
 import Image from "@/components/ui/FallbackImage";
 import Link from "next/link";
 import BannerSlideshow from "@/components/main/BannerSlideshow";
@@ -36,8 +39,51 @@ interface NewsItem {
   altImg1: string;
 }
 
-export default async function Template1Website() {
-  const [
+export default function Template1Website() {
+  const { data, loading } = useCmsData(async () => {
+    const [
+      banner,
+      highlighted,
+      newsRaw,
+      sideBannerRaw,
+      faq,
+      config,
+      promotagBanners,
+      galleryPage,
+      sidebarPlugins,
+      theme,
+      donation,
+    ] = await Promise.all([
+      getBannerData(),
+      getNewsData(),
+      getCachedNews(),
+      getCachedSideBanner(),
+      getFaqData(),
+      getCachedConfig(),
+      getPromotagBanners(),
+      getGalleryPage(1, 10),
+      getPluginsByCate("sidebar"),
+      getSiteTheme(),
+      getDonationConfig(),
+    ]);
+    return {
+      banner,
+      highlighted,
+      newsRaw,
+      sideBannerRaw,
+      faq,
+      config,
+      promotagBanners,
+      galleryPage,
+      sidebarPlugins,
+      theme,
+      donation,
+    };
+  }, []);
+
+  if (loading || !data) return <div className="min-h-screen bg-white" />;
+
+  const {
     banner,
     highlighted,
     newsRaw,
@@ -49,19 +95,7 @@ export default async function Template1Website() {
     sidebarPlugins,
     theme,
     donation,
-  ] = await Promise.all([
-    getBannerData(),
-    getNewsData(),
-    getCachedNews(),
-    getCachedSideBanner(),
-    getFaqData(),
-    getCachedConfig(),
-    getPromotagBanners(),
-    getGalleryPage(1, 10),
-    getPluginsByCate("sidebar"),
-    getSiteTheme(),
-    getDonationConfig(),
-  ]);
+  } = data;
 
   const footerCfg = config.footerConfig || {};
 
@@ -105,7 +139,7 @@ export default async function Template1Website() {
       {trendingItem && (
         <Demo7TrendingStrip
           title={trendingItem.title}
-          href={`/news/${trendingItem.contentId}`}
+          href={`/news/detail/?id=${trendingItem.contentId}`}
           backgroundColor={theme.backgroundColorTrending}
         />
       )}
@@ -210,7 +244,7 @@ export default async function Template1Website() {
                 return (
                   <Link
                     key={item.contentId}
-                    href={`/news/${item.contentId}`}
+                    href={`/news/detail/?id=${item.contentId}`}
                     className="group block"
                   >
                     <div
@@ -277,7 +311,7 @@ export default async function Template1Website() {
               {allNewsCapped.map((item) => (
                 <Link
                   key={item.contentId}
-                  href={`/news/${item.contentId}`}
+                  href={`/news/detail/?id=${item.contentId}`}
                   className="group block bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-xl hover:-translate-y-1 transition-all"
                 >
                   <div className="relative h-44 overflow-hidden bg-gray-100">

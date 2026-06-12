@@ -1,3 +1,6 @@
+"use client";
+
+import { useCmsData } from "@/lib/useCmsData";
 import Image from "@/components/ui/FallbackImage";
 import Link from "next/link";
 import BannerSlideshow from "@/components/main/BannerSlideshow";
@@ -24,8 +27,39 @@ interface NewsItem {
   altImg1: string;
 }
 
-export default async function Template2Donation() {
-  const [
+export default function Template2Donation() {
+  const { data, loading } = useCmsData(async () => {
+    const [
+      banner,
+      highlighted,
+      newsRaw,
+      sideBannerRaw,
+      faq,
+      config,
+      theme,
+    ] = await Promise.all([
+      getBannerData(),
+      getNewsData(),
+      getCachedNews(),
+      getCachedSideBanner(),
+      getFaqData(),
+      getCachedConfig(),
+      getSiteTheme(),
+    ]);
+    return {
+      banner,
+      highlighted,
+      newsRaw,
+      sideBannerRaw,
+      faq,
+      config,
+      theme,
+    };
+  }, []);
+
+  if (loading || !data) return <div className="min-h-screen bg-white" />;
+
+  const {
     banner,
     highlighted,
     newsRaw,
@@ -33,15 +67,7 @@ export default async function Template2Donation() {
     faq,
     config,
     theme,
-  ] = await Promise.all([
-    getBannerData(),
-    getNewsData(),
-    getCachedNews(),
-    getCachedSideBanner(),
-    getFaqData(),
-    getCachedConfig(),
-    getSiteTheme(),
-  ]);
+  } = data;
 
   // Honor admin's maxDisplay; fall back to 6 only when unset.
   const cap = theme.maxDisplay > 0 ? theme.maxDisplay : 6;
@@ -148,7 +174,7 @@ export default async function Template2Donation() {
                 return (
                   <Link
                     key={item.contentId}
-                    href={`/news/${item.contentId}`}
+                    href={`/news/detail/?id=${item.contentId}`}
                     className={`group relative rounded-3xl overflow-hidden bg-gray-100 ${span}`}
                   >
                     {item.image ? (
@@ -207,7 +233,7 @@ export default async function Template2Donation() {
                 {allNews.slice(0, cap).map((item) => (
                   <Link
                     key={item.contentId}
-                    href={`/news/${item.contentId}`}
+                    href={`/news/detail/?id=${item.contentId}`}
                     className="group flex gap-4 p-3 rounded-2xl hover:bg-gray-50 transition-colors"
                   >
                     <div className="relative w-28 h-20 md:w-36 md:h-24 flex-shrink-0 rounded-xl overflow-hidden bg-gray-100">

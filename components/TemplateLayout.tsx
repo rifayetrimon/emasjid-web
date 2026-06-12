@@ -1,4 +1,7 @@
+"use client";
+
 import { ReactNode } from "react";
+import { useCmsData } from "@/lib/useCmsData";
 import { getNavData } from "@/services/navService";
 import { getFooterData } from "@/services/footerService";
 import { getCachedConfig, getCachedNews } from "@/services/apiCache";
@@ -73,22 +76,41 @@ const TEMPLATE_DEFAULTS: Record<
   },
 };
 
-export default async function TemplateLayout({
+export default function TemplateLayout({
   templateId,
   children,
   padForFixedNav = false,
 }: Props) {
-  const [nav, footer, config, theme, visitorsRaw, highlighted, newsRaw] = await Promise.all([
-    getNavData(),
-    getFooterData(),
-    getCachedConfig(),
-    getSiteTheme(),
-    getVisitorStats(),
-    // News data — only used by Template 6 (Blog) nav (trending bar) and footer columns.
-    // React cache() dedupes with page-level fetches, so no double-fetch.
-    templateId === "6" ? getNewsData() : Promise.resolve([] as HighlightNewsItem[]),
-    templateId === "6" ? getCachedNews() : Promise.resolve(null),
-  ]);
+  const { data, loading } = useCmsData(
+    async () => {
+      const [nav, footer, config, theme, visitorsRaw, highlighted, newsRaw] =
+        await Promise.all([
+          getNavData(),
+          getFooterData(),
+          getCachedConfig(),
+          getSiteTheme(),
+          getVisitorStats(),
+          // News data — only used by Template 6 (Blog) nav (trending bar) and
+          // footer columns. The memoizer dedupes with page-level fetches.
+          templateId === "6"
+            ? getNewsData()
+            : Promise.resolve([] as HighlightNewsItem[]),
+          templateId === "6" ? getCachedNews() : Promise.resolve(null),
+        ]);
+      return { nav, footer, config, theme, visitorsRaw, highlighted, newsRaw };
+    },
+    [templateId],
+  );
+
+  // Hold a blank frame until the shell data (nav/footer/theme) is loaded —
+  // the CSS theme vars set by ThemedShell wrap everything, so rendering
+  // children before they exist would flash an unthemed page.
+  if (loading || !data) {
+    return <div className="min-h-screen bg-white" />;
+  }
+
+  const { nav, footer, config, theme, visitorsRaw, highlighted, newsRaw } =
+    data;
 
   // Suppress visitor stats when admin disabled the counter.
   const visitors = footer?.showVisitorCounter ?? theme.showVisitorCounter

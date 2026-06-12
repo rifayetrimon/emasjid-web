@@ -1,3 +1,5 @@
+import { withBasePath } from "./withBasePath";
+
 type ConfigType = {
   BASE_PATH?: string;
   NEXT_PUBLIC_API_URL: string;
@@ -83,30 +85,52 @@ function parseConfig(raw: string): ConfigType {
   return JSON.parse(stripJsonComments(raw)) as ConfigType;
 }
 
+// ── Runtime fetch (browser) ────────────────────────────────────────────
+// In the static export there is no server: the browser fetches the tenant
+// config from /config.json (emitted from public/config.json into out/).
+// Editing out/config.json on the deployed host re-points the tenant on the
+// next page load — no rebuild. The fetch is memoized so we read it once per
+// session; a hard reload picks up edits.
+let clientCache: Promise<ConfigType> | null = null;
+
+async function loadFromBrowser(): Promise<ConfigType> {
+  if (!clientCache) {
+    clientCache = (async () => {
+      // cache: "no-store" so an operator editing out/config.json sees the
+      // change on reload instead of a stale disk-cached copy.
+      const res = await fetch(withBasePath("/config.json"), {
+        cache: "no-store",
+      });
+      if (!res.ok) {
+        throw new Error(
+          `Failed to load /config.json (HTTP ${res.status}). It must exist ` +
+            `alongside the static export.`,
+        );
+      }
+      return parseConfig(await res.text());
+    })().catch((err) => {
+      // Don't permanently cache a failed fetch — let the next call retry.
+      clientCache = null;
+      throw err;
+    });
+  }
+  return clientCache;
+}
+
 async function loadRaw(): Promise<ConfigType> {
   if (typeof window === "undefined") {
-    // Server-side: read directly from disk. The file lives at
-    // <project-root>/configuration/config.json (outside `public/`) so it is
-    // NOT served as a public URL — only this Node process can read it.
-    const { readFile } = await import("node:fs/promises");
-    const path = await import("node:path");
-    const file = path.join(
-      process.cwd(),
-      "configuration",
-      "config.json"
+    // Server side only runs during `next build` (e.g. generateMetadata).
+    // There is no Node disk read here on purpose: pulling `node:fs` into the
+    // module would break the CLIENT bundle, since client components import
+    // this file. Build-time callers are wrapped in try/catch and fall back
+    // to defaults; the real tenant config is fetched from /config.json in
+    // the browser at runtime.
+    throw new Error(
+      "getConfig() resolves from /config.json in the browser at runtime; " +
+        "it is not available during the static build.",
     );
-    const raw = await readFile(file, "utf-8");
-    return parseConfig(raw);
   }
-  // Client-side: refuse cleanly. Config is now server-only by design;
-  // calling getConfig() from a client component is a bug — pass any needed
-  // values down as props from a server component instead, or rely on
-  // build-time `process.env.NEXT_PUBLIC_*` constants where appropriate.
-  throw new Error(
-    "getConfig() is server-only. configuration/config.json is not served " +
-      "to browsers. Move this call into a Server Component, or pass the " +
-      "needed values via props."
-  );
+  return loadFromBrowser();
 }
 
 export default async function getConfig(): Promise<ResolvedConfig> {

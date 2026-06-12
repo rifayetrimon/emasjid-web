@@ -110,24 +110,29 @@ if (basePath) {
 }
 
 const nextConfig = {
-  output: "standalone",
+  // Fully static HTML/JS/CSS export — emits an `out/` directory that can be
+  // served from any plain file host with NO Node server and NO port. All
+  // data (and the tenant config.json) is fetched by the browser at runtime,
+  // so content stays live and editing out/config.json re-points the tenant
+  // without a rebuild. See README "Static deployment".
+  output: "export",
 
   basePath,
 
-  // Expose basePath to client-side code
-  env: {
-    NEXT_PUBLIC_BASE_PATH: basePath,
+  // Static export can't use the Next.js image optimizer (it needs a server),
+  // so images are served as-is. next/image still works for layout/sizing.
+  images: {
+    unoptimized: true,
   },
 
-  images: {
-    remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "**.awfatech.com",
-        port: "",
-        pathname: "/**",
-      },
-    ],
+  // Emit `route/index.html` instead of `route.html` so a dumb file server
+  // resolves `/news/` correctly without rewrite rules.
+  trailingSlash: true,
+
+  // Expose basePath to client-side code (baked at build — the one value that
+  // requires a rebuild to change).
+  env: {
+    NEXT_PUBLIC_BASE_PATH: basePath,
   },
 };
 

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Image from "@/components/ui/FallbackImage";
 import { ChevronLeft, ChevronRight, Camera, FileText } from "lucide-react";
 import type { GalleryItem } from "@/types/cms";
+import { getGalleryPage } from "@/services/galleryService";
 
 interface GalleryPagePayload {
   items: GalleryItem[];
@@ -52,22 +53,9 @@ export default function Demo7GallerySection({
     if (page === data.currentPage || loading) return;
     setLoading(true);
     try {
-      // `_t` is a per-click cache buster — defends against any intermediate
-      // (browser memory, service worker, CDN) treating same-URL responses
-      // as identical.
-      const res = await fetch(
-        `/api/gallery?page=${page}&perPage=${PER_PAGE}&_t=${Date.now()}`,
-        { cache: "no-store" },
-      );
-      if (!res.ok) {
-        console.error(
-          `Gallery page ${page} request failed`,
-          res.status,
-          res.statusText,
-        );
-        return;
-      }
-      const next = (await res.json()) as GalleryPagePayload;
+      // Direct client call to the external API (no server proxy in the
+      // static export). myAxios attaches the x-encrypted-key.
+      const next = (await getGalleryPage(page, PER_PAGE)) as GalleryPagePayload;
       setData(next);
     } catch (err) {
       console.error("Gallery page load failed:", err);

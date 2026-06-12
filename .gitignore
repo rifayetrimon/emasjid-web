@@ -17,6 +17,9 @@
 /.next/
 /out/
 
+# generated at build from configuration/config.json (see scripts/copy-config.mjs)
+/public/config.json
+
 # production
 /build
 
@@ -40,3 +43,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# repo uses yarn; ignore npm lockfile from local installs
+/package-lock.json

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Image from "@/components/ui/FallbackImage";
 import { ChevronLeft, ChevronRight, FileText } from "lucide-react";
 import type { GalleryItem } from "@/types/cms";
+import { getGalleryPage } from "@/services/galleryService";
 
 interface GalleryPagePayload {
   items: GalleryItem[];
@@ -116,26 +117,9 @@ export default function Blog2GallerySection({
     if (page === data.currentPage || loading) return;
     setLoading(true);
     try {
-      // `_t` is a per-click cache buster — defends against any intermediate
-      // (browser memory, service worker, CDN) treating same-URL responses
-      // as identical. The route itself is dynamic, but layered caches sit
-      // in front of it on real deployments.
-      const res = await fetch(
-        `/api/gallery?page=${page}&perPage=${PER_PAGE}&_t=${Date.now()}`,
-        { cache: "no-store" },
-      );
-      if (!res.ok) {
-        // Surface upstream / route failures instead of silently swallowing
-        // them — a 500 here used to leave the UI looking like "click did
-        // nothing" because we just kept the old state.
-        console.error(
-          `Gallery page ${page} request failed`,
-          res.status,
-          res.statusText,
-        );
-        return;
-      }
-      const next = (await res.json()) as GalleryPagePayload;
+      // Direct client call to the external API (no server proxy in the
+      // static export). myAxios attaches the x-encrypted-key.
+      const next = (await getGalleryPage(page, PER_PAGE)) as GalleryPagePayload;
       setData(next);
     } catch (err) {
       console.error("Gallery page load failed:", err);

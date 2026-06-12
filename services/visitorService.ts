@@ -1,4 +1,6 @@
 import { getCachedVisitors } from "./apiCache";
+import getConfig from "@/lib/getConfig";
+import myAxios from "@/lib/myAxios";
 
 // Mirrors the four rolling windows the backend exposes plus a derived
 // `today`. Fields named for the API so the wire format matches the
@@ -54,6 +56,21 @@ export async function getVisitorStats(): Promise<VisitorStats> {
   } catch {
     return EMPTY_VISITOR_STATS;
   }
+}
+
+/**
+ * Records a single visit. In the static export the browser calls the
+ * tracker endpoint directly (there is no server proxy), so myAxios attaches
+ * the x-encrypted-key and the backend sees the real client IP/UA from the
+ * request itself — no manual forwarding needed. Failures are swallowed by
+ * the caller; a tracking miss must never break the page.
+ */
+export async function trackVisit(): Promise<void> {
+  const { sid } = await getConfig();
+  await myAxios.post(
+    `api/v2/cms/eboss/cms/visitors/track?sid=${encodeURIComponent(sid ?? "0")}`,
+    "",
+  );
 }
 
 /** Format a count with thousand separators; >999_999 becomes "1.2M". */

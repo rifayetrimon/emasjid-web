@@ -90,7 +90,7 @@ export default function Demo8Carousel({ title, items, large = false }: Props) {
           {items.map((item, i) => (
             <Link
               key={item.contentId}
-              href={`/news/${item.contentId}`}
+              href={`/news/detail/?id=${item.contentId}`}
               className={`group/card relative flex-shrink-0 ${
                 large
                   ? "w-[300px] md:w-[420px] h-[200px] md:h-[260px]"

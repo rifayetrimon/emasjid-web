@@ -1,3 +1,6 @@
+"use client";
+
+import { useCmsData } from "@/lib/useCmsData";
 import Image from "@/components/ui/FallbackImage";
 import Link from "next/link";
 import BannerSlideshow from "@/components/main/BannerSlideshow";
@@ -24,8 +27,39 @@ interface NewsItem {
   altImg1: string;
 }
 
-export default async function Template4Corporate() {
-  const [
+export default function Template4Corporate() {
+  const { data, loading } = useCmsData(async () => {
+    const [
+      banner,
+      highlighted,
+      newsRaw,
+      sideBannerRaw,
+      faq,
+      config,
+      theme,
+    ] = await Promise.all([
+      getBannerData(),
+      getNewsData(),
+      getCachedNews(),
+      getCachedSideBanner(),
+      getFaqData(),
+      getCachedConfig(),
+      getSiteTheme(),
+    ]);
+    return {
+      banner,
+      highlighted,
+      newsRaw,
+      sideBannerRaw,
+      faq,
+      config,
+      theme,
+    };
+  }, []);
+
+  if (loading || !data) return <div className="min-h-screen bg-white" />;
+
+  const {
     banner,
     highlighted,
     newsRaw,
@@ -33,15 +67,7 @@ export default async function Template4Corporate() {
     faq,
     config,
     theme,
-  ] = await Promise.all([
-    getBannerData(),
-    getNewsData(),
-    getCachedNews(),
-    getCachedSideBanner(),
-    getFaqData(),
-    getCachedConfig(),
-    getSiteTheme(),
-  ]);
+  } = data;
 
   // Honor admin's maxDisplay; fall back to 9 only when unset.
   const cap = theme.maxDisplay > 0 ? theme.maxDisplay : 9;
@@ -154,7 +180,7 @@ export default async function Template4Corporate() {
 
             <div className="grid lg:grid-cols-12 gap-8">
               <Link
-                href={`/news/${featured.contentId}`}
+                href={`/news/detail/?id=${featured.contentId}`}
                 className="lg:col-span-7 group"
               >
                 <div className="relative w-full h-[300px] md:h-[460px] mb-5 overflow-hidden bg-gray-100">
@@ -190,7 +216,7 @@ export default async function Template4Corporate() {
                 {restHighlights.map((item) => (
                   <Link
                     key={item.contentId}
-                    href={`/news/${item.contentId}`}
+                    href={`/news/detail/?id=${item.contentId}`}
                     className="group flex gap-4 pb-6 border-b border-gray-200 last:border-0"
                   >
                     <div className="relative w-32 h-24 flex-shrink-0 overflow-hidden bg-gray-100">
@@ -244,7 +270,7 @@ export default async function Template4Corporate() {
               {allNews.slice(0, cap).map((item) => (
                 <Link
                   key={item.contentId}
-                  href={`/news/${item.contentId}`}
+                  href={`/news/detail/?id=${item.contentId}`}
                   className="group bg-white p-6 hover:bg-gray-50 transition-colors"
                 >
                   <div className="relative w-full h-44 mb-4 overflow-hidden bg-gray-100">

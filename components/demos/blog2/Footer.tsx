@@ -101,7 +101,7 @@ export default function Blog2Footer({
               <ul className="space-y-4">
                 {popular.slice(0, 3).map((p) => (
                   <li key={p.contentId}>
-                    <Link href={`/news/${p.contentId}`} className="flex gap-3 group">
+                    <Link href={`/news/detail/?id=${p.contentId}`} className="flex gap-3 group">
                       <div className="relative w-14 h-14 flex-shrink-0 overflow-hidden bg-white/5">
                         {p.file1 && (
                           <Image
@@ -140,7 +140,7 @@ export default function Blog2Footer({
               <ul className="space-y-4">
                 {trending.slice(0, 3).map((p) => (
                   <li key={p.contentId}>
-                    <Link href={`/news/${p.contentId}`} className="flex gap-3 group">
+                    <Link href={`/news/detail/?id=${p.contentId}`} className="flex gap-3 group">
                       <div className="relative w-14 h-14 flex-shrink-0 overflow-hidden bg-white/5">
                         {p.file1 && (
                           <Image

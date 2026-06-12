@@ -120,7 +120,7 @@ export default function DontMissSection({
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {featured && (
-            <Link href={`/news/${featured.contentId}`} className="group block">
+            <Link href={`/news/detail/?id=${featured.contentId}`} className="group block">
               <div className="relative aspect-[16/10] overflow-hidden bg-gray-100 mb-3">
                 {featured.file1 && (
                   <Image
@@ -157,7 +157,7 @@ export default function DontMissSection({
             {list.map((item) => (
               <Link
                 key={item.contentId}
-                href={`/news/${item.contentId}`}
+                href={`/news/detail/?id=${item.contentId}`}
                 className="group flex gap-3"
               >
                 <div className="relative w-24 h-20 flex-shrink-0 overflow-hidden bg-gray-100">

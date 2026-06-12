@@ -38,6 +38,22 @@ const SOCIAL_ICON_MAP: Record<string, { icon: string; label: string }> = {
 
 const SOCIAL_CATEGORIES = new Set(Object.keys(SOCIAL_ICON_MAP));
 
+// In the static export there are no on-demand routes, so CMS content links
+// are funnelled through two query-param pages: /static/?slug=<id> and
+// /news/detail/?id=<id>. This rewrites any verbatim `/static/<id>` or
+// `/news/<id>` URL the CMS ships into that form. Home, dropdown (#), external
+// URLs, and already-query links are passed through untouched.
+function normalizeContentLink(link: string): string {
+  if (!link || link === "/" || link === "#") return link;
+  if (/^[a-z][a-z0-9+.-]*:/i.test(link)) return link; // http:, mailto:, etc.
+  if (link.includes("?")) return link;
+  const news = link.match(/^\/news\/([^/]+)\/?$/);
+  if (news && news[1] !== "detail") return `/news/detail/?id=${news[1]}`;
+  const stat = link.match(/^\/static\/([^/]+)\/?$/);
+  if (stat) return `/static/?slug=${stat[1]}`;
+  return link;
+}
+
 export async function getNavData(): Promise<NavData> {
   try {
     const [navData, configData, addonData] = await Promise.all([
@@ -63,11 +79,12 @@ export async function getNavData(): Promise<NavData> {
       HOME_LABELS.has(title.toLowerCase().trim());
 
     const mapMenuItem = (item: NavMenuItem, depth: number = 0): MenuItem => {
-      // Use the raw `url` from the API verbatim. CMS already ships the
-      // canonical destination (e.g. `/static/<contentId>`, full external
-      // URLs, or legacy PHP links) and the client has no business
-      // rewriting them — that just causes drift between what admin
-      // configured and what users land on.
+      // Use the raw `url` the CMS ships verbatim — it carries the canonical
+      // destination, including the real content id (e.g.
+      // `/static/<hexId>` or `/news/<id>`). `normalizeContentLink` (applied
+      // below) rewrites those into the static-export query-param routes.
+      // NOTE: do NOT synthesize from config.article — that field can hold a
+      // stale legacy numeric id that no longer matches the content store.
       let link = (item.url || "").trim();
 
       // Top-level "Home" / "Utama" menu items always go to /
@@ -105,7 +122,7 @@ export async function getNavData(): Promise<NavData> {
 
       return {
         label: item.title,
-        link: withBasePath(link),
+        link: withBasePath(normalizeContentLink(link)),
         targetWindow,
         submenu,
       };
@@ -201,76 +218,5 @@ export async function getNavData(): Promise<NavData> {
       },
       socialLinks: [],
     };
-  }
-}
-
-/**
- * Walk the CMS nav tree and produce a map from slug-based path → static
- * content ID. Used by the catch-all [...slug] route so a menu URL like
- * `/profil/sejarah-penubuhan` resolves to the CMS static page bound on
- * that menu item.
- *
- * Only static-page bindings are tracked. News bindings keep using their
- * own `/news/<id>` route and don't need this map.
- */
-export async function getStaticPathBindings(): Promise<Record<string, string>> {
-  try {
-    const navData = await getCachedNavHeader();
-    if (!Array.isArray(navData)) return {};
-
-    const generateSlug = (title: string) =>
-      title
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/(^-|-$)/g, "");
-
-    const map: Record<string, string> = {};
-
-    // Walk must mirror the path that `mapMenuItem` produces: admin-supplied
-    // `item.url` wins over slug, and child paths are built off the parent's
-    // RESOLVED link. Otherwise the binding key won't match the rendered href.
-    const walk = (item: NavMenuItem, parentSlug: string = "") => {
-      const cfg = item.config || {};
-      const optionmenu = String(cfg.optionmenu || "").toLowerCase();
-      const article = String(
-        cfg.article ??
-          cfg.staticPage ??
-          cfg.staticContent ??
-          cfg.staticContentId ??
-          ""
-      ).trim();
-      const isNewsBinding = /(news|article|listnews)/.test(optionmenu);
-
-      const isStaticBinding = !!article && !isNewsBinding;
-
-      let link: string;
-      if (article && isNewsBinding) {
-        link = `/news/${article}`;
-      } else {
-        // Match resolveLink: static-bound menus ignore admin's url and use
-        // the slug-based path so the binding key matches the rendered href.
-        const adminUrl = isStaticBinding ? "" : String(item.url || "").trim();
-        if (adminUrl) {
-          link = adminUrl;
-        } else {
-          const slug = generateSlug(item.title || "");
-          link = parentSlug ? `${parentSlug}/${slug}` : `/${slug}`;
-        }
-      }
-
-      if (isStaticBinding) {
-        map[link] = article;
-      }
-
-      if (Array.isArray(item.submenu)) {
-        item.submenu.forEach((sub) => walk(sub, link));
-      }
-    };
-
-    navData.forEach((item: NavMenuItem) => walk(item));
-    return map;
-  } catch (error) {
-    console.error("❌ Error building static path bindings:", error);
-    return {};
   }
 }

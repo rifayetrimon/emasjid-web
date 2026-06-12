@@ -1,18 +1,26 @@
+"use client";
+
 import TemplateLayout from "@/components/TemplateLayout";
 import { getActiveTemplateId } from "@/lib/getActiveTemplate";
 import { getShopGroups } from "@/services/shopService";
 import { getCachedConfig } from "@/services/apiCache";
+import { useCmsData } from "@/lib/useCmsData";
 import { getImageUrl } from "@/services/utils";
 import ShopGrid from "@/components/shop/ShopGrid";
 
-export const dynamic = "force-dynamic";
+export default function ShopPage() {
+  const { data, loading } = useCmsData(async () => {
+    const [templateId, groups, config] = await Promise.all([
+      getActiveTemplateId(),
+      getShopGroups(),
+      getCachedConfig(),
+    ]);
+    return { templateId, groups, config };
+  }, []);
 
-export default async function ShopPage() {
-  const [templateId, groups, config] = await Promise.all([
-    getActiveTemplateId(),
-    getShopGroups(),
-    getCachedConfig(),
-  ]);
+  if (loading || !data) return <div className="min-h-screen bg-white" />;
+
+  const { templateId, groups, config } = data;
 
   const ownerEmail = config?.footerConfig?.email || "";
   const general = config?.generalSettings || {};
