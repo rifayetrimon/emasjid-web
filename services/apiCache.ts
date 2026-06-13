@@ -27,6 +27,18 @@ async function getSID(): Promise<string> {
   return (await getConfig()).sid || "";
 }
 
+// The list endpoints (news / static-content) ship a trimmed record that omits
+// heavy fields like `message`. The by-id call returns the full record wrapped
+// in the same `{ data: { dataset: [...] } }` envelope — pull the single item.
+function firstDatasetItem(data: unknown): Record<string, unknown> | null {
+  const dataset: Record<string, unknown>[] = Array.isArray(data)
+    ? (data as Record<string, unknown>[])
+    : Array.isArray((data as { dataset?: Record<string, unknown>[] })?.dataset)
+    ? (data as { dataset: Record<string, unknown>[] }).dataset
+    : [];
+  return dataset[0] ?? null;
+}
+
 // A 404 from these endpoints means the tenant simply hasn't configured that
 // resource (e.g. no FAQ, no gallery) — it's expected, not a failure. We log
 // it quietly so it doesn't trip the Next.js dev error overlay, while any
@@ -177,10 +189,31 @@ export const getCachedPromotagBanner = cache(async () => {
 export const getCachedNewsDetail = cache(async (contentId: string) => {
   try {
     const sid = await getSID();
-    const res = await myAxios.get(`api/v2/cms/eboss/cms/news/${contentId}?sid=${sid}`);
-    return res.data?.data || null;
+    // The detail record (with `message`, etc.) comes from the SAME list
+    // endpoint filtered by `idnews` — not a `/news/{id}` path. The response
+    // is a one-item dataset.
+    const res = await myAxios.get(
+      `api/v2/cms/eboss/cms/news?sid=${sid}&idnews=${contentId}&pageNumber=1&perPage=10`
+    );
+    return firstDatasetItem(res.data?.data);
   } catch (error) {
     logApiError("getCachedNewsDetail", error);
+    return null;
+  }
+});
+
+export const getCachedStaticContentDetail = cache(async (contentId: string) => {
+  try {
+    const sid = await getSID();
+    // Same shape as news: the static-content list omits `message`; the by-id
+    // call returns the full record. The id param is `idnews` on this endpoint
+    // too (the backend reuses the param name).
+    const res = await myAxios.get(
+      `api/v2/cms/eboss/cms/static-content?sid=${sid}&idnews=${contentId}&pageNumber=1&perPage=10`
+    );
+    return firstDatasetItem(res.data?.data);
+  } catch (error) {
+    logApiError("getCachedStaticContentDetail", error);
     return null;
   }
 });

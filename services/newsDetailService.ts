@@ -1,5 +1,5 @@
 // services/newsDetailService.ts
-import { getCachedNews } from "./apiCache";
+import { getCachedNewsDetail } from "./apiCache";
 
 export type DisplayMode = "grid" | "slide" | "full" | "sidebar";
 
@@ -24,13 +24,9 @@ function parseDisplayMode(posDisplay: string): DisplayMode {
 
 export async function getNewsDetail(contentId: string): Promise<NewsDetail | null> {
   try {
-    const newsData = await getCachedNews();
-    const dataset = newsData?.dataset || [];
-
-    const raw = dataset.find(
-      (item: Record<string, unknown>) =>
-        String(item.contentId) === contentId
-    );
+    // Fetch the FULL record by id. The list endpoint omits `message`, so we
+    // must hit the by-id detail call to render the article body.
+    const raw = await getCachedNewsDetail(contentId);
 
     if (!raw) return null;
 

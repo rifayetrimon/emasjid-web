@@ -1,5 +1,5 @@
 // services/staticContentService.ts
-import { getCachedStaticContent } from "./apiCache";
+import { getCachedStaticContent, getCachedStaticContentDetail } from "./apiCache";
 import { getImageUrl } from "./utils";
 import type { StaticContentItem, NewsImage, NewsPosDisplay } from "@/types/cms";
 
@@ -121,10 +121,22 @@ function slugify(s: string): string {
 }
 
 /**
+ * Fetch the FULL static-content record by id and normalize it. The list call
+ * omits `message`, so a detail view must hit the by-id endpoint. Falls back to
+ * the supplied list item (no body) if the detail call comes back empty.
+ */
+async function withDetail(
+  listItem: StaticContentItem
+): Promise<StaticContentItem> {
+  const raw = await getCachedStaticContentDetail(listItem.staticId);
+  return raw ? normalize(raw as RawStatic) : listItem;
+}
+
+/**
  * Find a static content item by its admin-supplied slug. Admin stores the
  * slug in `urlIframe` (e.g. "home", "about-us", or sometimes a URL like
  * "https://home"). We try multiple match strategies so admin can be loose
- * with formatting.
+ * with formatting. Returns the full record (incl. `message`) for the match.
  */
 export async function getStaticContentBySlug(
   slug: string
@@ -135,11 +147,15 @@ export async function getStaticContentBySlug(
 
   for (const item of items) {
     // 1) Match against the urlIframe slug (case-insensitive, ignoring protocol/host noise)
-    if (slugify(item.urlIframe) === needle) return item;
     // 2) Match against the contentId / staticId
-    if (String(item.staticId) === needle) return item;
     // 3) Match against the slugified title
-    if (slugify(item.title) === needle) return item;
+    if (
+      slugify(item.urlIframe) === needle ||
+      String(item.staticId) === needle ||
+      slugify(item.title) === needle
+    ) {
+      return withDetail(item);
+    }
   }
   return null;
 }
@@ -154,9 +170,8 @@ export async function getPrivacyTncStatic(
   const items = await getStaticContent();
   const needle = privacyTncPage.trim().toLowerCase();
   if (!needle) return null;
-  const byId = items.find((s) => String(s.staticId) === needle);
-  if (byId) return byId;
-  return (
-    items.find((s) => s.title.toLowerCase().includes(needle)) ?? null
-  );
+  const match =
+    items.find((s) => String(s.staticId) === needle) ??
+    items.find((s) => s.title.toLowerCase().includes(needle));
+  return match ? withDetail(match) : null;
 }

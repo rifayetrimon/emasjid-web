@@ -179,6 +179,16 @@ const nextConfig = {
   // resolves `/news/` correctly without rewrite rules.
   trailingSlash: true,
 
+  // With `trailingSlash: true`, `next dev` would 308-redirect the same-origin
+  // API proxy path (`/api/.../config?sid=2` → `/api/.../config/?sid=2`) BEFORE
+  // the rewrite runs. The upstream then 307s the trailing-slash form back to a
+  // cross-origin absolute URL — defeating the same-origin proxy. Skipping the
+  // redirect lets `/api/*` reach the upstream exactly as written (no slash →
+  // 200). This is a dev-server runtime behaviour only; the static export still
+  // emits `route/index.html` dirs, and production is served by nginx where
+  // this flag has no effect.
+  skipTrailingSlashRedirect: true,
+
   // Expose basePath to client-side code (baked at build — the one value that
   // requires a rebuild to change).
   env: {
