@@ -135,9 +135,23 @@ async function loadRaw(): Promise<ConfigType> {
 
 export default async function getConfig(): Promise<ResolvedConfig> {
   const data = await loadRaw();
+  // The browser ALWAYS calls the API on its own origin (e.g.
+  // http://localhost:3000/api/... or https://<host>/api/...). A direct
+  // cross-origin call to the upstream gateway triggers a CORS preflight
+  // (OPTIONS); the AWS API Gateway in front of aws01 has no OPTIONS method,
+  // so the preflight returns 403 and the browser blocks the request. Routing
+  // same-origin avoids the preflight entirely — the serving layer then
+  // proxies /api/* to the real upstream server-to-server, which is not
+  // subject to CORS at all (nginx in production, the `next dev` rewrite
+  // locally). `NEXT_PUBLIC_API_URL` in config.json still selects which
+  // upstream that proxy targets; it is just no longer the host the browser
+  // hits directly. (getConfig only resolves in the browser, so `window` is
+  // defined here; the empty-string fallback is for type-safety only.)
+  const sameOriginBase =
+    typeof window !== "undefined" ? window.location.origin : "";
   return {
     basePath: data.BASE_PATH || "",
-    baseApiUrl: data.NEXT_PUBLIC_API_URL || "",
+    baseApiUrl: sameOriginBase,
     imageUrl: data.NEXT_PUBLIC_IMAGE_URL || "",
     sid: data.NEXT_PUBLIC_SID || null,
     sysapp: data.NEXT_PUBLIC_SYSAPP || null,

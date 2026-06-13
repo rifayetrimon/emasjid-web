@@ -103,11 +103,61 @@ function readBasePath(): string {
   }
 }
 
+// Read the API upstream from configuration/config.json so the dev server can
+// proxy /api/* to it. This mirrors the production nginx proxy: the browser
+// calls its own origin (/api/...) and the dev server forwards server-to-server
+// to the real backend, sidestepping the CORS preflight the upstream gateway
+// rejects. `API_PROXY_TARGET` env wins if set.
+function readApiTarget(): string {
+  if (process.env.API_PROXY_TARGET) {
+    return process.env.API_PROXY_TARGET.replace(/\/+$/, "");
+  }
+  try {
+    const file = path.join(__dirname, "configuration", "config.json");
+    const raw = fs.readFileSync(file, "utf-8");
+    const parsed = JSON.parse(stripJsonComments(raw));
+    const url = parsed.NEXT_PUBLIC_API_URL || "https://aws01.awfatech.com";
+    return String(url).replace(/\/+$/, "");
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.warn(
+      "[next.config] Could not read NEXT_PUBLIC_API_URL from config.json:",
+      msg,
+    );
+    return "https://aws01.awfatech.com";
+  }
+}
+
 const basePath = readBasePath();
+const apiTarget = readApiTarget();
 
 if (basePath) {
   console.log(`[next.config] basePath = "${basePath}"`);
 }
+
+// DEV-ONLY same-origin API proxy. `output: "export"` ignores rewrites at build
+// time (the static `out/` has no server to run them), so production CORS is
+// handled by nginx instead — see nginx.conf. But `next dev` DOES honour
+// rewrites, so locally the browser hits http://localhost:3000/api/* (same
+// origin → no CORS preflight) and the dev server forwards to the real
+// upstream. We only attach `rewrites` in development so the export build log
+// stays warning-free.
+const isDev = process.env.NODE_ENV === "development";
+
+if (isDev) {
+  console.log(`[next.config] dev API proxy: /api/* -> ${apiTarget}/api/*`);
+}
+
+const devRewrites = isDev
+  ? {
+      rewrites: async () => [
+        {
+          source: "/api/:path*",
+          destination: `${apiTarget}/api/:path*`,
+        },
+      ],
+    }
+  : {};
 
 const nextConfig = {
   // Fully static HTML/JS/CSS export — emits an `out/` directory that can be
@@ -134,6 +184,9 @@ const nextConfig = {
   env: {
     NEXT_PUBLIC_BASE_PATH: basePath,
   },
+
+  // Same-origin API proxy in `next dev` only (see comment above devRewrites).
+  ...devRewrites,
 };
 
 module.exports = nextConfig;

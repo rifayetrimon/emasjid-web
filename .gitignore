@@ -1,6 +1,6 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# dependencies
+# ── Dependencies ─────────────────────────────────────────────
 /node_modules
 /.pnp
 .pnp.*
@@ -9,40 +9,44 @@
 !.yarn/plugins
 !.yarn/releases
 !.yarn/versions
+# This repo uses yarn (yarn.lock). Ignore npm's lockfile from a stray install.
+/package-lock.json
 
-# testing
-/coverage
-
-# next.js
+# ── Build output ─────────────────────────────────────────────
 /.next/
 /out/
+/build
+# Legacy release artifacts — generated, must not be committed.
+/dist/
 
-# generated at build from configuration/config.json (see scripts/copy-config.mjs)
+# ── Generated ────────────────────────────────────────────────
+# Copied from configuration/config.json by scripts/copy-config.mjs at build.
 /public/config.json
 
-# production
-/build
+# ── TypeScript ───────────────────────────────────────────────
+*.tsbuildinfo
+next-env.d.ts
 
-# misc
-.DS_Store
+# ── Testing ──────────────────────────────────────────────────
+/coverage
+
+# ── Env & secrets ────────────────────────────────────────────
+.env*
+!.env.example
 *.pem
 
-# debug
+# ── Logs ─────────────────────────────────────────────────────
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+*.log
 
-# env files (can opt-in for committing if needed)
-.env*
-!.env.example
-
-# vercel
+# ── Deploy / tooling ─────────────────────────────────────────
 .vercel
+.claude/
 
-# typescript
-*.tsbuildinfo
-next-env.d.ts
-
-# repo uses yarn; ignore npm lockfile from local installs
-/package-lock.json
+# ── OS / editor cruft ────────────────────────────────────────
+.DS_Store
+Thumbs.db
+*.swp

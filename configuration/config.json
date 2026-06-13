@@ -1,8 +1,15 @@
 {
   "BASE_PATH": "",
-  "NEXT_PUBLIC_API_URL": "https://devapi02.awfatech.com",
+  // Upstream the same-origin /api proxy forwards to. The browser never calls
+  // this host directly (that would hit the CORS preflight the gateway
+  // rejects) — nginx (prod) / `next dev` (local) proxy /api/* here
+  // server-to-server. Switch env here:
+  //   production:  "https://aws01.awfatech.com"
+  //   dev/testing: "https://devapi02.awfatech.com"
+  // Takes effect on `next dev` restart (local) or container restart (docker).
+  "NEXT_PUBLIC_API_URL": "https://aws01.awfatech.com",
   "NEXT_PUBLIC_SID": "2",
   "NEXT_PUBLIC_ENVIRONMENT": "production",
   "NEXT_PUBLIC_DOMAIN": "client2",
-  "NEXT_PUBLIC_X_ENCRYPTED_KEY": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjdXN0X25hbWUiOiJERU1PIFBVU0FUIFBFTkRJRElLQU4gQUwtQU1JTiBCRVJIQUQiLCJhcHBfY29kZSI6ImRlbW9hbGFtaW4iLCJhcHBfbmFtZSI6IkFTSVMgKyBFQk9TUyIsInNpZCI6IjAiLCJhcHBlbmdpbmUiOiJodHRwczovL21vYmlnYXRlLmF3ZmF0ZWNoLmNvbS9hcHBfYXNpc3YzIiwidXJsIjoiaHR0cHM6Ly9teTAzLmF3ZmF0ZWNoLmNvbS9kZW1vYWxhbWluIiwiZGJfbmFtZSI6Im15MDNfZGVtb2FsYW1pbiIsImRiX25hbWUyIjoiIiwiaG9zdCI6IjEwMy40LjcuMjM4IiwiY3NpZCI6IjE3ODA2NDk0NTkiLCJpYXQiOjE3ODA4NDAxMTIsIm5iZiI6MTc4MDg0MDA4MiwiYXVkIjoidXNlciIsImlzcyI6ImF3ZmF0ZWNoIGdsb2JhbCIsInN1YiI6ImFwcGNvZGUifQ.nQYRyolPKFaaco5a9nQ1cO1Qfm3255aqZNSU_vFKKNZxFBQM6wO33wYLo8fpioS_bC9DjojnBG3rqAgA4i4xySheMjAloGq8By5MTNfzv1UL0Q0EamPkerkSViiYSl_E3Nxhvz_yS6mMaX6AjQofT0GObzIJ0IfduMCAR42qggsZgV4Lfooai9PxGn4ir_8PO0Ay1inooEDGaRnpdryU-Hp6ba7_H3-z7ACSfKhJYcTLnwl6sPs8MjbOcaQhkwp0ITg9HK-LBRpWGbQbh-_atnSZMWOP3u9kPDmfjhc8xvuP84YcYtLVtVaKCaE9d-lDb-e5B0Nq66QCMrzqoTtw8A"
+  "NEXT_PUBLIC_X_ENCRYPTED_KEY": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjdXN0X25hbWUiOiJLdW1wdWxhbiBBRERJTiIsImFwcF9jb2RlIjoiZGVtb2FkZGluIiwiYXBwX25hbWUiOiJFQk9TUyIsInNpZCI6IjAiLCJhcHBlbmdpbmUiOiJodHRwczovL21vYmlnYXRlLmF3ZmF0ZWNoLmNvbS9jdHJsX21vYmlsZXYyIiwidXJsIjoiaHR0cHM6Ly9kZW1vLmF3ZmF0ZWNoLmNvbS9kZW1vYWRkaW4iLCJkYl9uYW1lIjoiZGVtb19kZW1vYWRkaW4iLCJkYl9uYW1lMiI6IiIsImhvc3QiOiI0My4yNTIuMzYuMTkxIiwiY3NpZCI6IjE3ODA0NTE5MjkiLCJpYXQiOjE3ODEyNzIyNzksIm5iZiI6MTc4MTI3MjI0OSwiYXVkIjoidXNlciIsImlzcyI6ImF3ZmF0ZWNoIGdsb2JhbCIsInN1YiI6ImFwcGNvZGUifQ.QBjntGs2B5ieDfYMxryf1LngRz7RHlvHyeK9mZqDwKraXsh1uLeGW1fDHCzjs2gfRW82_2MSENlZ_siB4-hvbDhga3EjmYFYBW8qmsJrRokPrOh9RFpK9e5MqS6oe89wNxtQzI1POLJTM0hoBM6ccZRACqTJlbB2mRqtbfthK73WTHSjGfS0q4jgqEHche4iOZrAkdySP1Jwd_55PvkUNXZzPtepF0_U_6y9IZBe-yS6rpbEMTQlga_SYVYc7hC-spwtKrMUbL9I86aLpLdUhcpyVmorkl0wThEmkk6gJ1-DgaF6ZkwR3E5EEvPavUjLHCu2meeV-uVf5anzffsKtg"
 }
