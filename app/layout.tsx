@@ -33,11 +33,17 @@ export async function generateMetadata(): Promise<Metadata> {
     const configData = await getCachedConfig();
     const general = configData.generalSettings || {};
     const logoUrl = getImageUrl(configData.logoCMS || general.logoCMS);
-    const title = general.title || "Title";
+    // No literal "Title" placeholder. In this static export `configData` is
+    // empty at build time, so when the tenant hasn't set a title we leave the
+    // <title> unset here and let <RuntimeGate> fill it with the live domain
+    // (hostname) in the browser — never the word "Title".
+    const title = general.title || "";
     const description = general.description || "";
 
     return {
-      title: { default: title, template: `%s — ${title}` },
+      ...(title
+        ? { title: { default: title, template: `%s — ${title}` } }
+        : {}),
       description,
       // Keywords come from the tenant's configured title only. No
       // hardcoded brand or domain terms — anything else should be
@@ -50,15 +56,14 @@ export async function generateMetadata(): Promise<Metadata> {
       icons: { icon: logoUrl || DEFAULT_FAVICON },
       openGraph: {
         type: "website",
-        title,
+        ...(title ? { title, siteName: title } : {}),
         description,
-        siteName: title,
-        ...(logoUrl ? { images: [{ url: logoUrl, alt: title }] } : {}),
+        ...(logoUrl ? { images: [{ url: logoUrl, alt: title || "" }] } : {}),
         locale: "ms_MY",
       },
       twitter: {
         card: "summary_large_image",
-        title,
+        ...(title ? { title } : {}),
         description,
         ...(logoUrl ? { images: [logoUrl] } : {}),
       },

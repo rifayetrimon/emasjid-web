@@ -56,6 +56,9 @@ export const getCachedConfig = cache(async () => {
   try {
     const sid = await getSID();
     const res = await myAxios.get(`api/v2/cms/eboss/cms/config?sid=${sid}`);
+    // DEBUG: full config response so we can see whether a site-title field is
+    // present (and under what key). Expand this object in the browser console.
+    console.log("🟦 [CONFIG] response:", res.data?.data);
     return res.data?.data || {};
   } catch (error) {
     logApiError("getCachedConfig", error);

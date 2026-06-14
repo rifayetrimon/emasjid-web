@@ -58,7 +58,14 @@ export default function RuntimeGate({
       g.title as string,
       (config.title as string) || undefined,
     );
-    if (title) document.title = title;
+    // DEBUG: see whether a site title is present and which field carries it.
+    console.log("🏷️ [TITLE] config.generalSettings.title:", g.title,
+      "| config.title:", config.title,
+      "| resolved title:", title,
+      "| will show:", title || window.location.hostname);
+    // Fall back to the site's own domain (hostname) when the tenant hasn't
+    // set a title — never leave the baked "Title" placeholder in the tab.
+    document.title = title || window.location.hostname;
     const logoUrl = getImageUrl(
       (config.logoCMS as string) || (g.logoCMS as string),
     );
