@@ -137,6 +137,28 @@ export async function getAllNewsWithFallback() {
   }
 }
 
+/**
+ * Home-page feed: only posts the admin marked BOTH highlight (`highlightPost`)
+ * AND front-page (`frontPage`). Both flags are parsed by `truthy()`, so every
+ * backend variant ("Yes"/"true"/1/true vs "No"/"false"/0/false/null) is
+ * handled.
+ */
+export async function getFrontPageNews(): Promise<NewsItem[]> {
+  const items = await getAllNews();
+  return items.filter((n) => n.isHighlight && n.isFrontPage);
+}
+
+/**
+ * "Lihat Semua" archive: everything that is NOT on the home page — i.e. the
+ * complement of {highlight AND front-page}. Using the complement (rather than
+ * a strict `!highlight && !frontPage`) guarantees no post is orphaned if the
+ * admin sets only one of the two flags.
+ */
+export async function getListingNews(): Promise<NewsItem[]> {
+  const items = await getAllNews();
+  return items.filter((n) => !(n.isHighlight && n.isFrontPage));
+}
+
 export async function getNewsData(): Promise<HighlightNewsItem[]> {
   try {
     const items = await getAllNews();

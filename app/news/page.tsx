@@ -6,13 +6,12 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import TemplateLayout from "@/components/TemplateLayout";
 import { getActiveTemplateId } from "@/lib/getActiveTemplate";
-import {
-  getCachedNews,
-  getCachedSideBanner,
-} from "@/services/apiCache";
+import { getCachedSideBanner } from "@/services/apiCache";
+import { getListingNews } from "@/services/newsService";
 import { useCmsData } from "@/lib/useCmsData";
 import { categoryFor } from "@/lib/blog2Categories";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import type { NewsItem } from "@/types/cms";
 
 function SectionLoader() {
   return (
@@ -20,16 +19,6 @@ function SectionLoader() {
       <div className="w-8 h-8 border-4 border-gray-200 border-t-gray-600 rounded-full animate-spin" />
     </div>
   );
-}
-
-interface NewsItem {
-  contentId: number;
-  title: string;
-  message: string;
-  date: string;
-  time: string;
-  file1: string | null;
-  altImg1: string;
 }
 
 const PAGE_SIZE = 10;
@@ -42,20 +31,21 @@ function NewsListingInner() {
   const currentPage = Math.max(1, parseInt(page || "1", 10) || 1);
 
   const { data, loading } = useCmsData(async () => {
-    const [templateId, newsData, sideBannerRaw] = await Promise.all([
+    const [templateId, listingNews, sideBannerRaw] = await Promise.all([
       getActiveTemplateId(),
-      getCachedNews(),
+      // Non-featured posts only — the complement of the home page's
+      // {highlight AND frontPage} set.
+      getListingNews(),
       getCachedSideBanner(),
     ]);
-    return { templateId, newsData, sideBannerRaw };
+    return { templateId, listingNews, sideBannerRaw };
   }, []);
 
   if (loading || !data) return <div className="min-h-screen bg-white" />;
 
-  const { templateId, newsData, sideBannerRaw } = data;
+  const { templateId, listingNews, sideBannerRaw } = data;
 
-  const allNews: NewsItem[] = (newsData?.dataset ||
-    (Array.isArray(newsData) ? newsData : [])) as unknown as NewsItem[];
+  const allNews: NewsItem[] = listingNews;
   const sideBanners = (
     sideBannerRaw?.dataset || (Array.isArray(sideBannerRaw) ? sideBannerRaw : [])
   )

@@ -225,11 +225,12 @@ export default function Template6Blog() {
     .filter(Boolean)
     .join(", ");
 
-  // `theme.maxDisplay` is admin's pagination cap. Don't apply it to the
-  // master list — that starves smaller sections like "Jangan Lepaskan"
-  // when the hero consumes the only few items. Sections below apply it
-  // per-section instead (or ignore it, e.g. fixed 6-item "Berita Terkini").
-  const newsList = allNews;
+  // Home page shows ONLY featured posts: admin highlight (`highlightPost`)
+  // AND front-page (`frontPage`). Everything else lives on the "Lihat Semua"
+  // archive (/news). `theme.maxDisplay` is admin's pagination cap — don't apply
+  // it to this master list (that starves smaller sections like "Jangan
+  // Lepaskan"); sections below apply it per-section instead.
+  const newsList = allNews.filter((n) => n.isHighlight && n.isFrontPage);
 
   // Sort by date + time descending so "most recent" works on real data.
   const recencyKey = (n: NewsItem) =>
