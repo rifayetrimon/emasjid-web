@@ -12,6 +12,7 @@ import Blog2GallerySection from "@/components/demos/blog2/GallerySection";
 import Blog2DonationBlock from "@/components/demos/blog2/DonationBlock";
 import Blog2ComplaintBanner from "@/components/demos/blog2/ComplaintBanner";
 import NewsCardCarousel from "@/components/news/NewsCardCarousel";
+import PromotagBannerItem from "@/components/banner/PromotagBannerItem";
 import { categoryFor, colorForCategoryName } from "@/lib/blog2Categories";
 import { getBannerData, getSideBanners, getPromotagBanners } from "@/services/bannerService";
 import { getAllNews } from "@/services/newsService";
@@ -150,27 +151,9 @@ function NewsCardImage({
 }
 
 function PromotagSlide({ banner }: { banner: BannerRecord }) {
-  const slide = banner.slides[0];
-  if (!slide) return null;
-  return (
-    <a
-      href={slide.url || "#"}
-      target={slide.url ? "_blank" : undefined}
-      rel="noopener noreferrer"
-      className="block relative h-40 md:h-52 overflow-hidden bg-gray-100 group"
-    >
-      <Image
-        src={slide.src}
-        alt="Promosi"
-        fill
-        className="object-cover group-hover:scale-[1.01] transition-transform duration-500"
-        sizes="100vw"
-      />
-      <span className="absolute top-3 right-3 text-[9px] uppercase tracking-wider text-white bg-black/60 px-2 py-0.5">
-        Promosi
-      </span>
-    </a>
-  );
+  // Blog template uses the square-cornered "sharp" treatment; the shared
+  // component handles the admin's image mode / colours / message placement.
+  return <PromotagBannerItem banner={banner} variant="sharp" />;
 }
 
 export default function Template6Blog() {

@@ -16,6 +16,14 @@ function isModeOn(value: unknown): boolean {
   return s === "1" || s === "true" || s === "on";
 }
 
+// True when rendered inside the CMS live preview (the iframe URL carries
+// `?preview=1`). In preview we always show the real site so admins can
+// configure it while watching — even with maintenance/coming-soon toggled on.
+function isPreviewMode(): boolean {
+  if (typeof window === "undefined") return false;
+  return new URLSearchParams(window.location.search).get("preview") === "1";
+}
+
 // Pull the first non-empty string from a set of possible field names.
 function firstNonEmpty(...values: unknown[]): string | undefined {
   for (const v of values) {
@@ -69,6 +77,10 @@ export default function RuntimeGate({
   // decision but keep children mounted underneath would flash the site, so
   // hold a blank frame. The data layer caches, so this is a single brief tick.
   if (loading) return null;
+
+  // Live preview: never gate behind maintenance/coming-soon — render the actual
+  // site so it can be configured while those modes are enabled.
+  if (isPreviewMode()) return <>{children}</>;
 
   const g = ((config?.generalSettings as Record<string, unknown>) ||
     {}) as Record<string, unknown>;

@@ -156,9 +156,17 @@ export const getCachedFooter = cache(async () => {
 export const getCachedFaq = cache(async () => {
   try {
     const sid = await getSID();
-    const res = await myAxios.get(`api/v2/cms/eboss/cms/faq?sid=${sid}`);
+    const url = `api/v2/cms/eboss/cms/faq?sid=${sid}`;
+    // DEBUG: trace the FAQ request/response. The upstream gateway returns the
+    // FAQ differently per environment (aws01 currently 401s the content key on
+    // this route while devapi02 returns data), so log both to compare.
+    console.log("🟡 [FAQ] request:", url);
+    const res = await myAxios.get(url);
+    console.log("🟢 [FAQ] response:", res.status, res.data);
     return res.data?.data || [];
   } catch (error) {
+    const resp = (error as { response?: { status?: number; data?: unknown } })?.response;
+    console.log("🔴 [FAQ] error:", resp?.status, resp?.data ?? error);
     logApiError("getCachedFaq", error);
     return [];
   }

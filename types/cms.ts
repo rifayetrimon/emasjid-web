@@ -288,10 +288,28 @@ export interface BannerSlide {
   alt?: string;
 }
 
+// Promotag banners carry an admin-authored message and presentation details.
+// `imagemode` decides whether the image is a backdrop for the message
+// ("background") or the promo creative itself ("banner").
+export type PromotagImageMode = "background" | "banner";
+
+export interface PromotagDetails {
+  message: string;
+  imageMode: PromotagImageMode;
+  pillColor: string; // admin `colopix` — accent / message-box background
+  fontColor: string; // admin `colofont` — message text colour
+  fontSize: string; // admin `fontsize` — raw value, may be empty
+  tagPosition: string; // admin `tagposition` — "Position1".."Position5"
+}
+
 export interface BannerRecord {
-  bannerId: number;
+  // Backend ships numeric ids for header/sider but 24-char hex for promotag;
+  // keep as string so both round-trip (a hex id Number()'d to NaN broke keys).
+  bannerId: string;
   sta: number;
   slides: BannerSlide[];
+  /** Present only for promotag banners that carry a message/details block. */
+  promo?: PromotagDetails;
 }
 
 /* ------------------------------

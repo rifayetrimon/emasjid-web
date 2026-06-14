@@ -5,7 +5,12 @@ import {
   getCachedSideBanner,
   getCachedPromotagBanner,
 } from "./apiCache";
-import { BannerProps, BannerRecord, BannerSlide } from "@/types/cms";
+import {
+  BannerProps,
+  BannerRecord,
+  BannerSlide,
+  PromotagDetails,
+} from "@/types/cms";
 import { getImageUrl } from "./utils";
 import { DEMO_BANNER, DEMO_BANNER_IMAGE } from "@/lib/demoContent";
 
@@ -14,14 +19,43 @@ interface RawBannerFile {
   url?: string | null;
 }
 
+interface RawBannerDetails {
+  fontsize?: string;
+  colopix?: string;
+  colofont?: string;
+  tagposition?: string;
+  imagemode?: string;
+}
+
 interface RawBannerRecord {
-  bannerId?: number;
+  bannerId?: number | string;
   sta?: number | string;
   files?: RawBannerFile[];
   urllink1?: string;
   urllink2?: string;
   urllink3?: string;
   url?: string;
+  // Promotag-only fields.
+  message?: string;
+  details?: RawBannerDetails;
+}
+
+// Build the promo block for a promotag banner. Returns undefined for
+// header/sider banners (no message/details), so `promo` only appears where it
+// applies. `imagemode` is normalized to our two-value union.
+function buildPromo(record: RawBannerRecord): PromotagDetails | undefined {
+  const d = record.details;
+  const message = (record.message || "").trim();
+  if (!d && !message) return undefined;
+  const mode = String(d?.imagemode || "").trim().toLowerCase();
+  return {
+    message,
+    imageMode: mode === "asbackground" ? "background" : "banner",
+    pillColor: (d?.colopix || "").trim(),
+    fontColor: (d?.colofont || "").trim(),
+    fontSize: (d?.fontsize || "").trim(),
+    tagPosition: (d?.tagposition || "").trim(),
+  };
 }
 
 function isLive(record: RawBannerRecord): boolean {
@@ -43,9 +77,10 @@ function buildSlides(record: RawBannerRecord): BannerSlide[] {
 
 function normalizeRecord(record: RawBannerRecord): BannerRecord {
   return {
-    bannerId: Number(record.bannerId ?? 0),
+    bannerId: String(record.bannerId ?? "").trim(),
     sta: Number(record.sta ?? 0) || (String(record.sta) === "1" ? 1 : 0),
     slides: buildSlides(record),
+    promo: buildPromo(record),
   };
 }
 
