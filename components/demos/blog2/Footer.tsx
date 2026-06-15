@@ -34,17 +34,15 @@ interface Props extends FooterProps {
 }
 
 /**
- * Footer used by ALL templates. It renders ONLY what the footer API returns —
- * the admin's columns (title + content), logo, contact details, social links,
- * copyright, and the visitor counter (when enabled). No hardcoded section
- * text: every label comes from the tenant's CMS config.
+ * Footer used by ALL templates. Renders ONLY what the footer API returns —
+ * admin columns (title + content), logo, contact, social links, copyright,
+ * and the visitor counter (when enabled). No hardcoded section text.
  *
- * Layout:
- *  - Row 1: the admin columns (col1/col2/col3) side by side — three across
- *    on large screens when the admin configured three.
- *  - Row 2: social media icons and the visitor counter (pengunjung) together
- *    in one row.
- *  - Bottom: copyright.
+ * Layout adapts to how many columns the admin configured:
+ *  - 3 columns → Row 1: the three columns. Row 2: social icons + visitor
+ *    counter (pengunjung) together.
+ *  - fewer than 3 columns → the visitor counter joins the columns row (taking
+ *    col3's place), and the social icons sit in their own row below.
  */
 export default function Blog2Footer({ footer: rawFooter, visitors }: Props) {
   // Layer live-preview overrides (colours, copyright, email) on top of the
@@ -56,15 +54,19 @@ export default function Blog2Footer({ footer: rawFooter, visitors }: Props) {
   const showVisitor = !!visitors && footer.showVisitorCounter;
   const hasContact = !!(footer.address || footer.phone || footer.email);
   const hasSocial = footer.social_links.length > 0;
+  const isThreeCols = columns.length >= 3;
+
+  // With fewer than 3 columns, the visitor counter rides ALONG the columns
+  // row (in col3's slot). With 3 columns (or none), it drops to the bottom
+  // row alongside the social icons.
+  const visitorInColumns = showVisitor && !isThreeCols && columns.length > 0;
+  const visitorInBottom = showVisitor && !visitorInColumns;
 
   // Overlay tint over the background image — admin colour + opacity (0–100).
   const overlayAlpha = Math.max(0, Math.min(1, (footer.overlayOpacity ?? 80) / 100));
   const overlayRgba = hexToRgba(footer.overlayColor || "#000000", overlayAlpha);
-  // Column-header colour from admin (textColorHeaderFooter); falls through to
-  // the className colour when empty.
   const headerStyle = footer.headerColor ? { color: footer.headerColor } : undefined;
 
-  // Nothing configured at all → render no footer rather than an empty bar.
   const hasAnything =
     columns.length > 0 ||
     !!footer.image.image ||
@@ -78,12 +80,13 @@ export default function Blog2Footer({ footer: rawFooter, visitors }: Props) {
     "text-sm font-bold uppercase tracking-wider text-white mb-3";
   const bodyClass = "text-xs leading-relaxed text-current/70 whitespace-pre-line";
 
-  // Columns grid widens with the number of admin columns: 1 → single, 2 → two,
-  // 3 → three across (the case in the shared sample).
+  // Number of cells in the columns row (admin columns + maybe the visitor),
+  // used to choose how many sit across on desktop.
+  const columnCells = columns.length + (visitorInColumns ? 1 : 0);
   const colsClass =
-    columns.length >= 3
+    columnCells >= 3
       ? "sm:grid-cols-2 lg:grid-cols-3"
-      : columns.length === 2
+      : columnCells === 2
       ? "sm:grid-cols-2"
       : "grid-cols-1";
 
@@ -114,8 +117,8 @@ export default function Blog2Footer({ footer: rawFooter, visitors }: Props) {
           </div>
         )}
 
-        {/* Row 1 — admin columns (col1/col2/col3), three across when present */}
-        {columns.length > 0 && (
+        {/* Row 1 — admin columns (+ visitor counter when fewer than 3 columns) */}
+        {(columns.length > 0 || visitorInColumns) && (
           <div className={`grid gap-10 ${colsClass} pb-10 border-b border-white/10`}>
             {columns.map((col, i) => (
               <div key={i}>
@@ -132,11 +135,16 @@ export default function Blog2Footer({ footer: rawFooter, visitors }: Props) {
                 )}
               </div>
             ))}
+            {visitorInColumns && (
+              <div>
+                <VisitorList stats={visitors!} tone="dark" align="left" />
+              </div>
+            )}
           </div>
         )}
 
         {/* Contact details — only when the admin did NOT model them as columns,
-            so we never duplicate (the sample puts address/contact in columns). */}
+            so we never duplicate. */}
         {columns.length === 0 && hasContact && (
           <div className="space-y-1 text-xs text-current/70 pb-10 border-b border-white/10">
             {footer.address && <p className="whitespace-pre-line">{footer.address}</p>}
@@ -156,9 +164,14 @@ export default function Blog2Footer({ footer: rawFooter, visitors }: Props) {
           </div>
         )}
 
-        {/* Row 2 — social media + pengunjung (visitor counter) together */}
-        {(hasSocial || showVisitor) && (
-          <div className="grid gap-10 md:grid-cols-2 items-start py-8 border-b border-white/10">
+        {/* Row 2 — social icons (and the visitor counter when it didn't ride in
+            the columns row above) */}
+        {(hasSocial || visitorInBottom) && (
+          <div
+            className={`grid gap-10 items-start py-8 border-b border-white/10 ${
+              hasSocial && visitorInBottom ? "md:grid-cols-2" : "grid-cols-1"
+            }`}
+          >
             {hasSocial && (
               <div className="flex flex-wrap gap-2 items-start content-start">
                 {footer.social_links.map((s, i) => (
@@ -181,7 +194,7 @@ export default function Blog2Footer({ footer: rawFooter, visitors }: Props) {
                 ))}
               </div>
             )}
-            {showVisitor && (
+            {visitorInBottom && (
               <div>
                 <VisitorList stats={visitors!} tone="dark" align="left" />
               </div>

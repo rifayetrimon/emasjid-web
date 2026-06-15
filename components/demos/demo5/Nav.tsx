@@ -101,6 +101,8 @@ export default function Demo5Nav({
             <div key={i} className="relative group">
               <a
                 href={item.link || "#"}
+                target={item.targetWindow === "_blank" ? "_blank" : undefined}
+                rel={item.targetWindow === "_blank" ? "noopener noreferrer" : undefined}
                 className="relative px-4 py-2 text-sm font-medium transition-colors flex items-center gap-1"
                 style={{
                   fontFamily: "'Times New Roman', serif",
@@ -133,6 +135,8 @@ export default function Demo5Nav({
                       <a
                         key={si}
                         href={sub.link}
+                        target={sub.targetWindow === "_blank" ? "_blank" : undefined}
+                        rel={sub.targetWindow === "_blank" ? "noopener noreferrer" : undefined}
                         className="block px-4 py-2 text-sm text-[var(--secondary)] hover:bg-[#f5e9d0] hover:text-[var(--primary)] transition"
                       >
                         {sub.label}
@@ -208,6 +212,8 @@ export default function Demo5Nav({
                             <a
                               key={si}
                               href={sub.link}
+                              target={sub.targetWindow === "_blank" ? "_blank" : undefined}
+                              rel={sub.targetWindow === "_blank" ? "noopener noreferrer" : undefined}
                               className="block text-sm text-[var(--secondary)]/80 hover:text-[var(--primary)]"
                             >
                               {sub.label}
@@ -219,6 +225,8 @@ export default function Demo5Nav({
                   ) : (
                     <a
                       href={item.link || "#"}
+                      target={item.targetWindow === "_blank" ? "_blank" : undefined}
+                      rel={item.targetWindow === "_blank" ? "noopener noreferrer" : undefined}
                       className="block py-3 text-sm font-medium text-[var(--secondary)]"
                     >
                       {item.label}

@@ -114,6 +114,8 @@ export default function Demo2Nav({
             <div key={i} className="relative group">
               <a
                 href={item.link || "#"}
+                target={item.targetWindow === "_blank" ? "_blank" : undefined}
+                rel={item.targetWindow === "_blank" ? "noopener noreferrer" : undefined}
                 className="relative text-[13px] font-bold tracking-[0.15em] uppercase transition-colors flex items-center gap-1"
                 style={{ color: itemColor, fontSize: navItemFontSize }}
                 onMouseEnter={(e) =>
@@ -142,6 +144,8 @@ export default function Demo2Nav({
                       <a
                         key={si}
                         href={sub.link}
+                        target={sub.targetWindow === "_blank" ? "_blank" : undefined}
+                        rel={sub.targetWindow === "_blank" ? "noopener noreferrer" : undefined}
                         className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-[var(--secondary)] transition border-l-2 border-transparent hover:border-[var(--secondary)]"
                       >
                         {sub.label}
@@ -189,6 +193,8 @@ export default function Demo2Nav({
                             <a
                               key={si}
                               href={sub.link}
+                              target={sub.targetWindow === "_blank" ? "_blank" : undefined}
+                              rel={sub.targetWindow === "_blank" ? "noopener noreferrer" : undefined}
                               className="block text-sm text-gray-600 hover:text-[var(--secondary)]"
                             >
                               {sub.label}
@@ -200,6 +206,8 @@ export default function Demo2Nav({
                   ) : (
                     <a
                       href={item.link || "#"}
+                      target={item.targetWindow === "_blank" ? "_blank" : undefined}
+                      rel={item.targetWindow === "_blank" ? "noopener noreferrer" : undefined}
                       className="block py-3 text-sm font-bold uppercase tracking-wider text-gray-800 hover:text-[var(--secondary)]"
                     >
                       {item.label}

@@ -82,6 +82,8 @@ export default function Demo7Nav({
             <div key={i} className="relative group">
               <a
                 href={item.link || "#"}
+                target={item.targetWindow === "_blank" ? "_blank" : undefined}
+                rel={item.targetWindow === "_blank" ? "noopener noreferrer" : undefined}
                 className="relative px-4 py-2 rounded-full text-sm font-medium hover:bg-gray-100/80 transition-all flex items-center gap-1"
                 style={{ color: itemColor, fontSize: navItemFontSize }}
                 onMouseEnter={(e) =>
@@ -110,6 +112,8 @@ export default function Demo7Nav({
                       <a
                         key={si}
                         href={sub.link}
+                        target={sub.targetWindow === "_blank" ? "_blank" : undefined}
+                        rel={sub.targetWindow === "_blank" ? "noopener noreferrer" : undefined}
                         className="block mx-2 px-3 py-2.5 text-sm text-gray-700 hover:bg-rose-50 rounded-xl transition"
                       >
                         {sub.label}
@@ -187,6 +191,8 @@ export default function Demo7Nav({
                             <a
                               key={si}
                               href={sub.link}
+                              target={sub.targetWindow === "_blank" ? "_blank" : undefined}
+                              rel={sub.targetWindow === "_blank" ? "noopener noreferrer" : undefined}
                               className="block text-sm text-gray-600 hover:text-[var(--primary)]"
                             >
                               {sub.label}
@@ -198,6 +204,8 @@ export default function Demo7Nav({
                   ) : (
                     <a
                       href={item.link || "#"}
+                      target={item.targetWindow === "_blank" ? "_blank" : undefined}
+                      rel={item.targetWindow === "_blank" ? "noopener noreferrer" : undefined}
                       className="block py-2.5 text-sm font-medium text-gray-800"
                     >
                       {item.label}
