@@ -1,7 +1,8 @@
 import Link from "next/link";
 import MediaLayout from "@/components/news/MediaLayout";
 import TemplateLayout, { type TemplateId } from "@/components/TemplateLayout";
-import type { NewsImage, NewsPosDisplay } from "@/types/cms";
+import PluginLinks from "@/components/common/PluginLinks";
+import type { NewsImage, NewsPosDisplay, NavSocialLink } from "@/types/cms";
 
 export interface StaticContentItem {
   staticId: number | string;
@@ -18,12 +19,15 @@ interface Props {
   templateId: TemplateId;
   item: StaticContentItem;
   breadcrumbLabel: string;
+  /** Addon-plugin links (same as header/footer) — rendered on the page too. */
+  socialLinks?: NavSocialLink[];
 }
 
 export default function StaticContentView({
   templateId,
   item,
   breadcrumbLabel,
+  socialLinks = [],
 }: Props) {
   const formattedDate = item.date
     ? new Date(item.date).toLocaleDateString("ms-MY", {
@@ -78,6 +82,9 @@ export default function StaticContentView({
               )}
             </p>
           )}
+
+          {/* Tenant plugin/social links — same set as the header/footer */}
+          <PluginLinks links={socialLinks} className="mb-8" />
 
           {item.images.length > 0 && (
             <div className="mb-8">

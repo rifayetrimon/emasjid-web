@@ -83,6 +83,7 @@ function StaticContentInner() {
       templateId={templateId}
       item={item}
       breadcrumbLabel={breadcrumbLabel}
+      socialLinks={nav.socialLinks}
     />
   );
 }
