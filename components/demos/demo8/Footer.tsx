@@ -10,6 +10,7 @@ interface Props extends FooterProps {
 export default function Demo8Footer({ footer, visitors }: Props) {
   if (!footer) return null;
   const year = new Date().getFullYear();
+  const extraColumns = (footer.columns || []).slice(1);
   return (
     <footer className="bg-black border-t border-white/5 py-14 px-6">
       <div className="max-w-[1400px] mx-auto">
@@ -27,9 +28,12 @@ export default function Demo8Footer({ footer, visitors }: Props) {
             <h3 className="text-xl font-bold mb-3 text-white">
               {footer.footer_title}
             </h3>
-            <p className="text-sm text-white/50 leading-relaxed max-w-md">
-              {footer.text}
-            </p>
+            {footer.text && (
+              <div
+                className="text-sm text-white/50 leading-relaxed max-w-md"
+                dangerouslySetInnerHTML={{ __html: footer.text }}
+              />
+            )}
           </div>
           <div className="lg:col-span-3">
             <h4 className="text-xs uppercase tracking-[0.25em] font-bold text-[var(--primary)] mb-4">
@@ -83,6 +87,23 @@ export default function Demo8Footer({ footer, visitors }: Props) {
             </div>
           )}
         </div>
+        {extraColumns.length > 0 && (
+          <div className="grid sm:grid-cols-2 gap-8 pt-10 mt-10 border-t border-white/10">
+            {extraColumns.map((col, i) => (
+              <div key={i}>
+                <h4 className="text-xs uppercase tracking-[0.25em] font-bold text-[var(--primary)] mb-4">
+                  {col.title}
+                </h4>
+                {col.content && (
+                  <div
+                    className="text-sm text-white/50 leading-relaxed"
+                    dangerouslySetInnerHTML={{ __html: col.content }}
+                  />
+                )}
+              </div>
+            ))}
+          </div>
+        )}
         <div className="mt-10 pt-6 border-t border-white/10 text-center">
           <p className="text-xs text-white/40">
             {footer.copyright || `© ${year}. All Rights Reserved.`}

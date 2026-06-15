@@ -4,6 +4,7 @@ import { MenuItem, NavConfig, NavSocialLink } from "@/types/cms";
 import { getImageUrl } from "./utils";
 import { isPluginFlagOn } from "@/lib/getShopPlugin";
 import { withBasePath } from "@/lib/withBasePath";
+import { withPreviewParams } from "@/lib/previewContext";
 
 interface NavMenuItem {
   title: string;
@@ -122,7 +123,7 @@ export async function getNavData(): Promise<NavData> {
 
       return {
         label: item.title,
-        link: withBasePath(normalizeContentLink(link)),
+        link: withPreviewParams(withBasePath(normalizeContentLink(link))),
         targetWindow,
         submenu,
       };
@@ -158,7 +159,10 @@ export async function getNavData(): Promise<NavData> {
       `🛒 [navService] shopPlugin=${JSON.stringify(shopFlag)} (type: ${typeof shopFlag}) → enabled=${shopOn}`
     );
     if (shopOn) {
-      menuItems.push({ label: "E-shop", link: withBasePath("/shop") });
+      menuItems.push({
+        label: "E-shop",
+        link: withPreviewParams(withBasePath("/shop")),
+      });
     }
 
     const logo = getImageUrl(configData.logoCMS || general.logoCMS);

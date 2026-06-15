@@ -37,6 +37,7 @@ function Divider({ className = "" }: { className?: string }) {
 export default function Demo5Footer({ footer, visitors }: Props) {
   if (!footer) return null;
   const year = new Date().getFullYear();
+  const extraColumns = (footer.columns || []).slice(1);
   return (
     <footer className="bg-[#082a29] text-[#e8d5a8] py-16 px-6 relative overflow-hidden">
       <div
@@ -69,9 +70,12 @@ export default function Demo5Footer({ footer, visitors }: Props) {
             >
               {footer.footer_title}
             </h3>
-            <p className="text-sm text-[#e8d5a8]/70 leading-relaxed">
-              {footer.text}
-            </p>
+            {footer.text && (
+              <div
+                className="text-sm text-[#e8d5a8]/70 leading-relaxed"
+                dangerouslySetInnerHTML={{ __html: footer.text }}
+              />
+            )}
           </div>
           <div className="lg:col-span-3">
             <h4
@@ -138,6 +142,26 @@ export default function Demo5Footer({ footer, visitors }: Props) {
             </div>
           )}
         </div>
+        {extraColumns.length > 0 && (
+          <div className="grid sm:grid-cols-2 gap-8 pt-10 mt-10 border-t border-[#e8d5a8]/20 text-center md:text-left">
+            {extraColumns.map((col, i) => (
+              <div key={i}>
+                <h4
+                  className="text-sm uppercase tracking-[0.2em] font-bold mb-4 text-[#fdfaf3]"
+                  style={{ fontFamily: "'Times New Roman', serif" }}
+                >
+                  {col.title}
+                </h4>
+                {col.content && (
+                  <div
+                    className="text-sm text-[#e8d5a8]/70 leading-relaxed"
+                    dangerouslySetInnerHTML={{ __html: col.content }}
+                  />
+                )}
+              </div>
+            ))}
+          </div>
+        )}
         <div className="mt-10 pt-6 border-t border-[#e8d5a8]/15 text-center">
           <p className="text-xs text-[#e8d5a8]/60 uppercase tracking-[0.2em]">
             {footer.copyright || `© ${year}. All Rights Reserved.`}

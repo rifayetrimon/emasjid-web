@@ -1,4 +1,5 @@
 import { withBasePath } from "./withBasePath";
+import { resolvePreviewContext } from "./previewContext";
 
 type ConfigType = {
   BASE_PATH?: string;
@@ -85,6 +86,7 @@ function parseConfig(raw: string): ConfigType {
   return JSON.parse(stripJsonComments(raw)) as ConfigType;
 }
 
+
 // ── Runtime fetch (browser) ────────────────────────────────────────────
 // In the static export there is no server: the browser fetches the tenant
 // config from /config.json (emitted from public/config.json into out/).
@@ -149,15 +151,20 @@ export default async function getConfig(): Promise<ResolvedConfig> {
   // defined here; the empty-string fallback is for type-safety only.)
   const sameOriginBase =
     typeof window !== "undefined" ? window.location.origin : "";
+  // In preview mode, the branch (sid) and tenant key come from the iframe URL
+  // (or persisted preview context on sub-pages), not the baked config.json — so
+  // the preview tracks the CMS's selected branch and the logged-in user's
+  // tenant instead of one hardcoded tenant.
+  const preview = resolvePreviewContext();
   return {
     basePath: data.BASE_PATH || "",
     baseApiUrl: sameOriginBase,
     imageUrl: data.NEXT_PUBLIC_IMAGE_URL || "",
-    sid: data.NEXT_PUBLIC_SID || null,
+    sid: preview?.sid ?? (data.NEXT_PUBLIC_SID || null),
     sysapp: data.NEXT_PUBLIC_SYSAPP || null,
     environment: data.NEXT_PUBLIC_ENVIRONMENT || null,
     domain: data.NEXT_PUBLIC_DOMAIN || "",
     token_key: data.NEXT_PUBLIC_TOKEN_KEY || "",
-    x_encrypted_key: data.NEXT_PUBLIC_X_ENCRYPTED_KEY || "",
+    x_encrypted_key: preview?.key || data.NEXT_PUBLIC_X_ENCRYPTED_KEY || "",
   };
 }

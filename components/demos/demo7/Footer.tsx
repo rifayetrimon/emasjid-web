@@ -10,6 +10,9 @@ interface Props extends FooterProps {
 export default function Demo7Footer({ footer, visitors }: Props) {
   if (!footer) return null;
   const year = new Date().getFullYear();
+  // Admin-defined footer columns 2 & 3 (col1 is rendered as the "about" block
+  // via footer_title/text). Rendered like Blog2 so all templates match.
+  const extraColumns = (footer.columns || []).slice(1);
   return (
     <footer className="relative pt-16 pb-8 px-6 overflow-hidden bg-gradient-to-br from-rose-50 to-amber-50">
       <div className="max-w-6xl mx-auto">
@@ -27,9 +30,12 @@ export default function Demo7Footer({ footer, visitors }: Props) {
             <h3 className="text-2xl font-bold tracking-tight text-gray-900 mb-3">
               {footer.footer_title}
             </h3>
-            <p className="text-sm text-gray-600 leading-relaxed max-w-md">
-              {footer.text}
-            </p>
+            {footer.text && (
+              <div
+                className="text-sm text-gray-600 leading-relaxed max-w-md"
+                dangerouslySetInnerHTML={{ __html: footer.text }}
+              />
+            )}
           </div>
           <div className="lg:col-span-3">
             <h4 className="text-xs uppercase tracking-wider font-bold text-gray-500 mb-4">
@@ -83,6 +89,23 @@ export default function Demo7Footer({ footer, visitors }: Props) {
             </div>
           )}
         </div>
+        {extraColumns.length > 0 && (
+          <div className="grid sm:grid-cols-2 gap-8 pt-10">
+            {extraColumns.map((col, i) => (
+              <div key={i}>
+                <h4 className="text-xs uppercase tracking-wider font-bold text-gray-500 mb-4">
+                  {col.title}
+                </h4>
+                {col.content && (
+                  <div
+                    className="text-sm text-gray-600 leading-relaxed"
+                    dangerouslySetInnerHTML={{ __html: col.content }}
+                  />
+                )}
+              </div>
+            ))}
+          </div>
+        )}
         <div className="mt-10 pt-6 border-t border-rose-100 text-center">
           <p className="text-xs text-gray-500">
             {footer.copyright || `© ${year}. All Rights Reserved.`}

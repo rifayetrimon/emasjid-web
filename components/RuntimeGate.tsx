@@ -6,6 +6,7 @@ import { getImageUrl } from "@/services/utils";
 import { useCmsData } from "@/lib/useCmsData";
 import { MaintenancePage } from "@/components/MaintenancePage";
 import { ComingSoonPage } from "@/components/ComingSoonPage";
+import { isPreviewActive } from "@/lib/previewContext";
 
 // Treats anything that means "on" — string "1", number 1, boolean true,
 // "true"/"on" — as enabled. Empty / missing / "0" / false → disabled.
@@ -16,12 +17,13 @@ function isModeOn(value: unknown): boolean {
   return s === "1" || s === "true" || s === "on";
 }
 
-// True when rendered inside the CMS live preview (the iframe URL carries
-// `?preview=1`). In preview we always show the real site so admins can
-// configure it while watching — even with maintenance/coming-soon toggled on.
+// True when rendered inside the CMS live preview. The iframe HOME url carries
+// `?preview=1`; sub-pages reached by clicking a menu drop that param, so we
+// also honor the persisted preview context (bundled preview only). In preview
+// we always show the real site so admins can configure it while watching —
+// even with maintenance/coming-soon toggled on.
 function isPreviewMode(): boolean {
-  if (typeof window === "undefined") return false;
-  return new URLSearchParams(window.location.search).get("preview") === "1";
+  return isPreviewActive();
 }
 
 // Pull the first non-empty string from a set of possible field names.

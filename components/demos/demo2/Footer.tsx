@@ -10,6 +10,7 @@ interface Props extends FooterProps {
 export default function Demo2Footer({ footer, visitors }: Props) {
   if (!footer) return null;
   const year = new Date().getFullYear();
+  const extraColumns = (footer.columns || []).slice(1);
   return (
     <footer className="bg-gray-900 text-white pt-16 pb-8 px-6">
       <div className="max-w-7xl mx-auto">
@@ -30,9 +31,12 @@ export default function Demo2Footer({ footer, visitors }: Props) {
             >
               {footer.footer_title}
             </h3>
-            <p className="text-sm text-gray-400 leading-relaxed max-w-md">
-              {footer.text}
-            </p>
+            {footer.text && (
+              <div
+                className="text-sm text-gray-400 leading-relaxed max-w-md"
+                dangerouslySetInnerHTML={{ __html: footer.text }}
+              />
+            )}
           </div>
 
           <div className="lg:col-span-3">
@@ -95,6 +99,23 @@ export default function Demo2Footer({ footer, visitors }: Props) {
             </div>
           )}
         </div>
+        {extraColumns.length > 0 && (
+          <div className="grid sm:grid-cols-2 gap-8 pt-10 mt-10 border-t border-white/10">
+            {extraColumns.map((col, i) => (
+              <div key={i}>
+                <h4 className="text-base uppercase tracking-[0.15em] font-bold mb-4 text-[var(--secondary)]">
+                  {col.title}
+                </h4>
+                {col.content && (
+                  <div
+                    className="text-sm text-gray-400 leading-relaxed"
+                    dangerouslySetInnerHTML={{ __html: col.content }}
+                  />
+                )}
+              </div>
+            ))}
+          </div>
+        )}
         <div className="mt-10 pt-6 border-t border-white/10 text-center">
           <p className="text-xs text-gray-400 uppercase tracking-wider">
             {footer.copyright || `© ${year}. All Rights Reserved.`}

@@ -10,16 +10,12 @@ import { getVisitorStats, EMPTY_VISITOR_STATS } from "@/services/visitorService"
 import { getSiteTheme } from "@/services/themeService";
 
 import Demo7Nav from "@/components/demos/demo7/Nav";
-import Demo7Footer from "@/components/demos/demo7/Footer";
 import Demo4Nav from "@/components/demos/demo4/Nav";
-import Demo4Footer from "@/components/demos/demo4/Footer";
 import Demo8Nav from "@/components/demos/demo8/Nav";
-import Demo8Footer from "@/components/demos/demo8/Footer";
 import Demo2Nav from "@/components/demos/demo2/Nav";
-import Demo2Footer from "@/components/demos/demo2/Footer";
 import Demo5Nav from "@/components/demos/demo5/Nav";
-import Demo5Footer from "@/components/demos/demo5/Footer";
 import Blog2Nav from "@/components/demos/blog2/Nav";
+// Every template renders the same API-driven footer (the Blog2 design).
 import Blog2Footer from "@/components/demos/blog2/Footer";
 import ScrollToTop from "@/components/ui/ScrollToTop";
 import ThemedShell from "@/components/ThemedShell";
@@ -90,8 +86,8 @@ export default function TemplateLayout({
           getCachedConfig(),
           getSiteTheme(),
           getVisitorStats(),
-          // News data — only used by Template 6 (Blog) nav (trending bar) and
-          // footer columns. The memoizer dedupes with page-level fetches.
+          // News — only Template 6's nav shows a trending headline. The
+          // footer no longer uses news, so other templates skip the fetch.
           templateId === "6"
             ? getNewsData()
             : Promise.resolve([] as HighlightNewsItem[]),
@@ -117,27 +113,11 @@ export default function TemplateLayout({
     ? visitorsRaw
     : EMPTY_VISITOR_STATS;
 
-  // Build Popular/Trending lists for the Blog template footer
-  const allNews = newsRaw?.dataset || (Array.isArray(newsRaw) ? newsRaw : []);
-  const popularPosts = (highlighted.length > 0 ? highlighted : allNews)
-    .slice(0, 2)
-    .map((n: { contentId: number; title: string; date: string; image?: string | null; file1?: string | null; altImg1: string }) => ({
-      contentId: n.contentId,
-      title: n.title,
-      date: n.date,
-      file1: n.image ?? n.file1 ?? null,
-      altImg1: n.altImg1,
-    }));
-  const trendingPosts = allNews
-    .slice(0, 2)
-    .map((n: { contentId: number; title: string; date: string; file1: string | null; altImg1: string }) => ({
-      contentId: n.contentId,
-      title: n.title,
-      date: n.date,
-      file1: n.file1,
-      altImg1: n.altImg1,
-    }));
-  const trendingTitle = highlighted[0]?.title || allNews[0]?.title;
+  // Template 6's nav shows a trending headline (most recent / first highlight).
+  const allNews = (newsRaw?.dataset ||
+    (Array.isArray(newsRaw) ? newsRaw : [])) as Record<string, unknown>[];
+  const trendingTitle =
+    highlighted[0]?.title || (allNews[0]?.title as string | undefined);
 
   const general = config.generalSettings || {};
   const footerCfg = config.footerConfig || {};
@@ -181,7 +161,6 @@ export default function TemplateLayout({
           navConfig={nav.navConfig}
         />
       );
-      footerElement = footer && <Demo7Footer footer={footer} visitors={visitors} />;
       break;
     case "2":
       navElement = (
@@ -193,7 +172,6 @@ export default function TemplateLayout({
           navConfig={nav.navConfig}
         />
       );
-      footerElement = footer && <Demo4Footer footer={footer} visitors={visitors} />;
       break;
     case "3":
       navElement = (
@@ -205,7 +183,6 @@ export default function TemplateLayout({
           navConfig={nav.navConfig}
         />
       );
-      footerElement = footer && <Demo8Footer footer={footer} visitors={visitors} />;
       usesFixedNav = true;
       break;
     case "4":
@@ -220,7 +197,6 @@ export default function TemplateLayout({
           navConfig={nav.navConfig}
         />
       );
-      footerElement = footer && <Demo2Footer footer={footer} visitors={visitors} />;
       break;
     case "5":
       navElement = (
@@ -232,7 +208,6 @@ export default function TemplateLayout({
           navConfig={nav.navConfig}
         />
       );
-      footerElement = footer && <Demo5Footer footer={footer} visitors={visitors} />;
       break;
     case "6": {
       navElement = (
@@ -245,17 +220,14 @@ export default function TemplateLayout({
           navConfig={nav.navConfig}
         />
       );
-      footerElement = footer && (
-        <Blog2Footer
-          footer={footer}
-          visitors={visitors}
-          popular={popularPosts}
-          trending={trendingPosts}
-        />
-      );
       break;
     }
   }
+
+  // Every template uses the same API-driven footer: it renders only what the
+  // footer API returns (admin columns, logo, contact, social, copyright,
+  // visitor counter, colours, background) — no hardcoded section text.
+  footerElement = footer && <Blog2Footer footer={footer} visitors={visitors} />;
 
   return (
     <ThemedShell cssVars={cssVars} bgClass={defaults.bg}>
