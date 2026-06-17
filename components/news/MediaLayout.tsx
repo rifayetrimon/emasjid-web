@@ -16,6 +16,13 @@ interface Props {
   sizes?: string;
   /** Tailwind class applied to image objects. Defaults to object-cover. */
   fit?: "cover" | "contain";
+  /**
+   * When true, every image is shown at its OWN natural aspect ratio (measured
+   * at runtime) — full image, no cropping, no letterbox bars — stacked
+   * vertically. Used on the news-detail and static content pages so the
+   * uploaded images render exactly as they are. Overrides grid/slide modes.
+   */
+  naturalAspect?: boolean;
 }
 
 /**
@@ -36,9 +43,22 @@ export default function MediaLayout({
   aspect,
   sizes = "(max-width:1024px) 100vw, 800px",
   fit = "cover",
+  naturalAspect = false,
 }: Props) {
   const visible = images.filter((img) => !!img?.src).slice(0, 3);
   if (visible.length === 0) return null;
+
+  // Show every image at its true aspect ratio (full image, no crop). Overrides
+  // the grid/slide modes — used on content detail pages.
+  if (naturalAspect) {
+    return (
+      <div className="space-y-4">
+        {visible.map((img, i) => (
+          <NaturalFrame key={i} img={img} sizes={sizes} />
+        ))}
+      </div>
+    );
+  }
 
   const fitClass = fit === "contain" ? "object-contain" : "object-cover";
   const aspectClass = aspect || "aspect-[16/9]";
@@ -204,6 +224,41 @@ function SlideLayout({
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+/**
+ * A single image rendered at its own natural aspect ratio (measured at
+ * runtime) — full image, edge-to-edge width, no cropping or letterbox bars.
+ */
+function NaturalFrame({ img, sizes }: { img: NewsImage; sizes: string }) {
+  const [ratio, setRatio] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !img.src) return;
+    const probe = new window.Image();
+    probe.onload = () => {
+      if (probe.naturalWidth && probe.naturalHeight) {
+        setRatio(probe.naturalWidth / probe.naturalHeight);
+      }
+    };
+    probe.src = img.src;
+  }, [img.src]);
+
+  return (
+    <div
+      className="relative w-full overflow-hidden bg-gray-100 rounded-lg"
+      style={{ aspectRatio: ratio ?? 16 / 9 }}
+    >
+      <Image
+        src={img.src}
+        alt={img.alt}
+        fill
+        className="object-cover"
+        sizes={sizes}
+        priority
+      />
     </div>
   );
 }

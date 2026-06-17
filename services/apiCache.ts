@@ -89,16 +89,17 @@ export const getCachedBanner = cache(async () => {
 });
 
 /**
- * Fetch ALL active news by walking the paginated endpoint. The backend
- * caps a single response at ~10 items, but the home page slot design
- * needs at least 13. We walk pages until we either run out of items or
- * hit a hard cap (5 pages → 50 items). Items are dedup'd by `contentId`
- * to be safe in case the API ignores `currentpage`.
+ * Fetch ALL active news by walking the paginated endpoint, so the "Lihat
+ * Semua" archive truly shows every news item (a tenant may have hundreds).
+ * `perPage=100` pulls big pages; the loop stops on a partial/empty page, so a
+ * small tenant still does one request. MAX_PAGES is a hard backstop. Items are
+ * dedup'd by `contentId` in case the API ignores pagination.
  */
 export const getCachedNews = cache(async () => {
   try {
     const sid = await getSID();
-    const MAX_PAGES = 5;
+    const PER_PAGE = 100;
+    const MAX_PAGES = 30; // hard backstop (3000 items) against a bad API
     // contentId is whatever the backend ships — historically a numeric
     // string, now a 24-char Mongo-style hex (e.g. "6a1eb214a5cb07561f8a6a5c").
     // Keep the dedup set as plain strings so both shapes coexist.
@@ -109,7 +110,9 @@ export const getCachedNews = cache(async () => {
       // Backend pagination params are camelCase: `pageNumber` + `perPage`.
       // The old lowercase `currentpage` was silently ignored — pagination
       // only "worked" by accident when total items fit in page 1.
-      const res = await myAxios.get(`api/v2/cms/eboss/cms/news?sid=${sid}&pageNumber=${page}&perPage=10`);
+      const res = await myAxios.get(
+        `api/v2/cms/eboss/cms/news?sid=${sid}&pageNumber=${page}&perPage=${PER_PAGE}`
+      );
       const data = res.data?.data ?? {};
       const dataset: Record<string, unknown>[] = Array.isArray(data)
         ? (data as Record<string, unknown>[])
@@ -135,7 +138,7 @@ export const getCachedNews = cache(async () => {
       if (added === 0) break;
 
       // Stop if we got a partial page — no more pages on the server.
-      if (dataset.length < 10) break;
+      if (dataset.length < PER_PAGE) break;
     }
 
     return { dataset: merged };

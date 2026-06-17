@@ -9,6 +9,14 @@ interface BannerSlideshowProps {
   fit?: "cover" | "contain";
   /** Show clickable dot indicators + prev/next arrows. Default: true. */
   showControls?: boolean;
+  /**
+   * When true, the slideshow sizes ITSELF to the first image's natural aspect
+   * ratio (measured at runtime) instead of filling a fixed-height parent. This
+   * shows the whole image full-width with no cropping and no letterbox bars —
+   * the professional "show the full banner image" behavior. The parent should
+   * NOT impose a fixed height when this is on.
+   */
+  naturalAspect?: boolean;
 }
 
 const VIDEO_EXTENSIONS = [".mp4", ".webm", ".ogg", ".mov"];
@@ -23,10 +31,14 @@ export default function BannerSlideshow({
   interval = 7000,
   fit = "cover",
   showControls = true,
+  naturalAspect = false,
 }: BannerSlideshowProps) {
   const videoFitClass = fit === "contain" ? "object-contain" : "object-cover";
   const imageBgClass = fit === "contain" ? "bg-contain bg-no-repeat" : "bg-cover";
   const [currentIndex, setCurrentIndex] = useState(0);
+  // Natural aspect ratio (width/height) of the first image, measured at
+  // runtime so the banner can size itself to show the whole image.
+  const [naturalRatio, setNaturalRatio] = useState<number | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
 
@@ -76,11 +88,25 @@ export default function BannerSlideshow({
     });
   }, [currentIndex]);
 
+  // Measure the first image so the banner can match its aspect ratio.
+  useEffect(() => {
+    if (!naturalAspect || typeof window === "undefined") return;
+    const firstImg = media.find((m) => !isVideo(m));
+    if (!firstImg) return;
+    const img = new window.Image();
+    img.onload = () => {
+      if (img.naturalWidth && img.naturalHeight) {
+        setNaturalRatio(img.naturalWidth / img.naturalHeight);
+      }
+    };
+    img.src = firstImg;
+  }, [naturalAspect, media]);
+
   if (media.length === 0) return null;
 
   const hasControls = showControls && !isSingleItem;
 
-  return (
+  const content = (
     <>
       {media.map((url, index) => {
         const active = index === currentIndex;
@@ -194,4 +220,19 @@ export default function BannerSlideshow({
       )}
     </>
   );
+
+  // Self-size to the first image's natural aspect ratio (full image, no crop,
+  // no bars). Falls back to 16/9 only until the image is measured.
+  if (naturalAspect) {
+    return (
+      <div
+        className="relative w-full overflow-hidden"
+        style={{ aspectRatio: naturalRatio ?? 16 / 9 }}
+      >
+        {content}
+      </div>
+    );
+  }
+
+  return content;
 }

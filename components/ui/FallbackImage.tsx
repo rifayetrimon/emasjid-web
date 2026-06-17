@@ -4,6 +4,24 @@ import React, { useState, useEffect } from "react";
 import Image, { ImageProps, StaticImageData } from "next/image";
 import { withBasePath } from "@/lib/withBasePath";
 
+/**
+ * Percent-encode an image URL so unencoded spaces / unsafe characters (common
+ * in CMS uploads like ".../newsf1_PKT 12.png") don't break loading. Idempotent
+ * for already-encoded URLs: we decode-then-encode so existing %20 stays %20
+ * rather than becoming %2520. Falls back to the raw URL if decoding fails.
+ */
+function safeEncodeUrl(url: string): string {
+  try {
+    return encodeURI(decodeURI(url));
+  } catch {
+    try {
+      return encodeURI(url);
+    } catch {
+      return url;
+    }
+  }
+}
+
 interface FallbackImageProps extends Omit<ImageProps, "src"> {
   src?: string | StaticImageData | null;
   fallbackSrc?: string;
@@ -49,10 +67,14 @@ export default function FallbackImage({
   const isSvg = isStringSrc && /\.svg(\?.*)?$/i.test(imgSrc as string);
   const isRemote = isStringSrc && /^https?:\/\//i.test(imgSrc as string);
 
+  // Encode remote URLs so unencoded spaces / unsafe chars don't fail to load.
+  const finalSrc =
+    isStringSrc && isRemote ? safeEncodeUrl(imgSrc as string) : imgSrc;
+
   return (
     <Image
       {...props}
-      src={imgSrc}
+      src={finalSrc}
       alt={alt || "Image"}
       unoptimized={unoptimized ?? (isSvg || isRemote)}
       onError={() => {

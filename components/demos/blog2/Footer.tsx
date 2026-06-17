@@ -107,12 +107,14 @@ export default function Blog2Footer({ footer: rawFooter, visitors }: Props) {
         {/* Logo */}
         {footer.image.image && (
           <div className="pb-8">
+            {/* Footer background is dark (bgColor / navy), so render the
+                (black) logo in white via invert — matches the other templates. */}
             <Image
               src={footer.image.image}
               alt="Logo"
               width={150}
               height={50}
-              className="h-12 w-auto object-contain"
+              className="h-12 w-auto object-contain brightness-0 invert"
             />
           </div>
         )}

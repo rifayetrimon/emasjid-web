@@ -207,7 +207,7 @@ function NewsDetailInner() {
                     : [{ src: withBasePath("/icons/default-img.png"), alt: news.title }]
                 }
                 mode={galleryMode}
-                aspect="aspect-[16/9]"
+                naturalAspect
                 sizes="(max-width: 768px) 100vw, 800px"
               />
             </div>

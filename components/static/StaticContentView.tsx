@@ -91,7 +91,7 @@ export default function StaticContentView({
               <MediaLayout
                 images={item.images}
                 mode={item.posDisplay}
-                aspect="aspect-[16/9]"
+                naturalAspect
                 sizes="(max-width: 768px) 100vw, 800px"
               />
             </div>

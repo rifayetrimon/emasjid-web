@@ -1,6 +1,5 @@
 // services/newsService.ts
 import { getCachedNews } from "./apiCache";
-import { DEMO_NEWS } from "@/lib/demoContent";
 import type { NewsItem, NewsPosDisplay, NewsImage } from "@/types/cms";
 
 export interface HighlightNewsItem {
@@ -92,48 +91,20 @@ export function normalizeNewsItem(raw: Record<string, unknown>): NewsItem {
   };
 }
 
-const DEMO_HIGHLIGHTED: HighlightNewsItem[] = DEMO_NEWS
-  .filter((n) => n.highlightPost === "yes")
-  .map((n) => ({
-    contentId: String(n.contentId),
-    title: n.title,
-    message: n.message,
-    image: n.image,
-    date: n.date,
-    altImg1: n.altImg1,
-  }));
-
 /**
- * Returns every active (status === 1) news item, normalized. Falls back to
- * the bundled demo dataset only when the admin returns an empty list.
+ * Returns every active (status === 1) news item, normalized. No demo/hardcoded
+ * fallback — an empty or failed response yields an empty list so only real
+ * tenant news is ever shown.
  */
 export async function getAllNews(): Promise<NewsItem[]> {
   try {
     const newsData = await getCachedNews();
     const dataset: Record<string, unknown>[] =
       newsData?.dataset || (Array.isArray(newsData) ? newsData : []);
-    const items = dataset
-      .map(normalizeNewsItem)
-      .filter((n) => n.status === 1);
-    if (items.length > 0) return items;
-    return DEMO_NEWS.map((n) =>
-      normalizeNewsItem({ ...n, status: 1 } as Record<string, unknown>)
-    );
-  } catch {
-    return DEMO_NEWS.map((n) =>
-      normalizeNewsItem({ ...n, status: 1 } as Record<string, unknown>)
-    );
-  }
-}
-
-export async function getAllNewsWithFallback() {
-  try {
-    const newsData = await getCachedNews();
-    const dataset =
-      newsData?.dataset || (Array.isArray(newsData) ? newsData : []);
-    return dataset.length > 0 ? dataset : DEMO_NEWS;
-  } catch {
-    return DEMO_NEWS;
+    return dataset.map(normalizeNewsItem).filter((n) => n.status === 1);
+  } catch (error) {
+    console.error("❌ Error fetching news:", error);
+    return [];
   }
 }
 
@@ -149,31 +120,29 @@ export async function getFrontPageNews(): Promise<NewsItem[]> {
 }
 
 /**
- * "Lihat Semua" archive: everything that is NOT on the home page — i.e. the
- * complement of {highlight AND front-page}. Using the complement (rather than
- * a strict `!highlight && !frontPage`) guarantees no post is orphaned if the
- * admin sets only one of the two flags.
+ * "Lihat Semua" archive: ALL active news — trending or not, front-page or not.
+ * (The home page still shows only the featured subset via getFrontPageNews;
+ * the full listing intentionally shows everything.)
  */
 export async function getListingNews(): Promise<NewsItem[]> {
-  const items = await getAllNews();
-  return items.filter((n) => !(n.isHighlight && n.isFrontPage));
+  return getAllNews();
 }
 
 export async function getNewsData(): Promise<HighlightNewsItem[]> {
   try {
     const items = await getAllNews();
-    const highlighted = items.filter((i) => i.isHighlight);
-    if (highlighted.length === 0) return DEMO_HIGHLIGHTED;
-    return highlighted.map((item) => ({
-      contentId: item.contentId,
-      title: item.title,
-      message: item.message,
-      image: item.file1,
-      date: item.date,
-      altImg1: item.altImg1,
-    }));
+    return items
+      .filter((i) => i.isHighlight)
+      .map((item) => ({
+        contentId: item.contentId,
+        title: item.title,
+        message: item.message,
+        image: item.file1,
+        date: item.date,
+        altImg1: item.altImg1,
+      }));
   } catch (error) {
     console.error("❌ Error fetching news data:", error);
-    return DEMO_HIGHLIGHTED;
+    return [];
   }
 }
