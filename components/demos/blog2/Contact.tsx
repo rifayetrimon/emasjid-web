@@ -125,7 +125,7 @@ export default function Blog2Contact({ email, phone, address, state }: Props) {
             <button
               type="submit"
               disabled={status === "sending"}
-              className="mt-6 inline-flex items-center gap-2 px-7 py-3 bg-[var(--primary)] hover:bg-yellow-500 text-gray-900 text-xs font-bold uppercase tracking-[0.15em] transition disabled:opacity-50"
+              className="mt-6 inline-flex items-center gap-2 px-7 py-3 bg-gray-900 hover:bg-[var(--primary)] hover:text-gray-900 text-white text-xs font-bold uppercase tracking-[0.15em] transition disabled:opacity-50"
             >
               {status === "sending"
                 ? "Menghantar..."
