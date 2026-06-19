@@ -37,6 +37,16 @@ export default function StaticContentView({
       })
     : "";
 
+  // Apply the admin's web layout (posDisplay) the same way the news detail does:
+  //   full    → auto-rotating slider (3s) above the body
+  //   grid    → collage grid above the body
+  //   sidebar → images in a side column beside the body text
+  const isSidebar = item.posDisplay === "sidebar";
+  const stackedMode = item.posDisplay === "full" ? "slide" : item.posDisplay;
+  const hasImages = item.images.length > 0;
+  const proseClass =
+    "prose prose-lg max-w-none leading-relaxed text-[var(--text)] prose-headings:font-bold prose-headings:text-[var(--text)] prose-p:text-[var(--text)] prose-li:text-[var(--text)] prose-strong:text-[var(--text)] prose-a:text-[var(--primary)] prose-img:rounded-lg";
+
   return (
     <TemplateLayout templateId={templateId} padForFixedNav>
       <main className="min-h-screen">
@@ -86,28 +96,45 @@ export default function StaticContentView({
           {/* Tenant plugin/social links — same set as the header/footer */}
           <PluginLinks links={socialLinks} className="mb-8" />
 
-          {item.images.length > 0 && (
-            <div className="mb-8">
-              <MediaLayout
-                images={item.images}
-                mode={item.posDisplay}
-                naturalAspect
-                sizes="(max-width: 768px) 100vw, 800px"
-              />
+          {isSidebar && hasImages ? (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+              {item.message && (
+                <div
+                  className={`lg:col-span-2 ${proseClass}`}
+                  dangerouslySetInnerHTML={{ __html: item.message }}
+                />
+              )}
+              <aside className={item.message ? "lg:col-span-1" : "lg:col-span-3"}>
+                <div className="lg:sticky lg:top-24 space-y-4">
+                  <MediaLayout
+                    images={item.images}
+                    mode="full"
+                    naturalAspect
+                    sizes="(max-width: 1024px) 100vw, 360px"
+                  />
+                </div>
+              </aside>
             </div>
-          )}
-
-          {item.message && (
-            <div
-              className="prose prose-lg max-w-none leading-relaxed
-                         text-[var(--text)]
-                         prose-headings:font-bold prose-headings:text-[var(--text)]
-                         prose-p:text-[var(--text)] prose-li:text-[var(--text)]
-                         prose-strong:text-[var(--text)]
-                         prose-a:text-[var(--primary)]
-                         prose-img:rounded-lg"
-              dangerouslySetInnerHTML={{ __html: item.message }}
-            />
+          ) : (
+            <>
+              {hasImages && (
+                <div className="mb-8">
+                  <MediaLayout
+                    images={item.images}
+                    mode={stackedMode}
+                    // "full" → auto-rotating slider every 3s; "grid" → collage.
+                    interval={3000}
+                    sizes="(max-width: 768px) 100vw, 800px"
+                  />
+                </div>
+              )}
+              {item.message && (
+                <div
+                  className={proseClass}
+                  dangerouslySetInnerHTML={{ __html: item.message }}
+                />
+              )}
+            </>
           )}
 
           {item.urlIframe && item.urlIframe.startsWith("http") && (

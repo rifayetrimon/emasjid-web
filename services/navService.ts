@@ -22,6 +22,11 @@ export interface NavData {
   logo: string;
   navConfig: NavConfig;
   socialLinks: NavSocialLink[];
+  // Active "share this page" buttons (ShareFB / ShareWA / ShareTwitter),
+  // as ShareButtons registry keys (e.g. ["facebook", "whatsapp"]). These are
+  // SEPARATE from the profile socialLinks above and are only used on the news
+  // detail page — never the navbar/footer.
+  sharePlatforms: string[];
 }
 
 // Map API category names to local icon files
@@ -38,6 +43,15 @@ const SOCIAL_ICON_MAP: Record<string, { icon: string; label: string }> = {
 };
 
 const SOCIAL_CATEGORIES = new Set(Object.keys(SOCIAL_ICON_MAP));
+
+// "Share this page" plugin categories → ShareButtons registry key. Kept
+// separate from the profile categories above so they toggle independently
+// (e.g. turning the Facebook profile off must NOT remove the ShareFB button).
+const SHARE_CATEGORY_MAP: Record<string, string> = {
+  sharefb: "facebook",
+  sharewa: "whatsapp",
+  sharetwitter: "twitter",
+};
 
 // In the static export there are no on-demand routes, so CMS content links
 // are funnelled through two query-param pages: /static/?slug=<id> and
@@ -178,16 +192,21 @@ export async function getNavData(): Promise<NavData> {
       navbarDropdownBg: navCfg.navbarDropdownBg || "",
     };
 
-    // Extract social links from addon-plugin
+    // Extract social profile links AND share buttons from addon-plugin.
+    // Profile links need a urllink (they point to the brand's account); share
+    // buttons do NOT (they share the current page, so urllink is irrelevant).
     const socialLinks: NavSocialLink[] = [];
+    const sharePlatforms: string[] = [];
     const seenCategories = new Set<string>();
+    const seenShare = new Set<string>();
 
     if (Array.isArray(addonData)) {
       for (const item of addonData) {
         const cate = item?.data?.cate?.toLowerCase();
         const urllink = item?.data?.urllink;
+        if (!cate) continue;
 
-        if (cate && urllink && SOCIAL_CATEGORIES.has(cate) && !seenCategories.has(cate)) {
+        if (urllink && SOCIAL_CATEGORIES.has(cate) && !seenCategories.has(cate)) {
           seenCategories.add(cate);
           const mapped = SOCIAL_ICON_MAP[cate];
           socialLinks.push({
@@ -195,6 +214,11 @@ export async function getNavData(): Promise<NavData> {
             icon: mapped.icon,
             link: urllink,
           });
+        }
+
+        if (SHARE_CATEGORY_MAP[cate] && !seenShare.has(cate)) {
+          seenShare.add(cate);
+          sharePlatforms.push(SHARE_CATEGORY_MAP[cate]);
         }
       }
     }
@@ -204,6 +228,7 @@ export async function getNavData(): Promise<NavData> {
       logo,
       navConfig,
       socialLinks,
+      sharePlatforms,
     };
   } catch (error) {
     console.error("❌ Error fetching navigation data:", error);
@@ -221,6 +246,7 @@ export async function getNavData(): Promise<NavData> {
         navbarDropdownBg: "",
       },
       socialLinks: [],
+      sharePlatforms: [],
     };
   }
 }

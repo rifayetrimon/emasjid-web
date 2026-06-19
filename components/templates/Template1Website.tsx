@@ -17,7 +17,11 @@ import Demo7SidebarPlugins from "@/components/demos/demo7/SidebarPlugins";
 import {
   getBannerData,
   getPromotagBanners,
+  getSideBanners,
 } from "@/services/bannerService";
+import SideBannerColumn, {
+  flattenSideBanners,
+} from "@/components/banner/SideBannerColumn";
 import { getNewsData } from "@/services/newsService";
 import { getFaqData } from "@/services/faqService";
 import { getGalleryPage } from "@/services/galleryService";
@@ -26,7 +30,6 @@ import { getSiteTheme, getDonationConfig } from "@/services/themeService";
 import {
   getCachedConfig,
   getCachedNews,
-  getCachedSideBanner,
 } from "@/services/apiCache";
 import { ArrowRight, Sparkles } from "lucide-react";
 
@@ -45,7 +48,7 @@ export default function Template1Website() {
       banner,
       highlighted,
       newsRaw,
-      sideBannerRaw,
+      sideBanners,
       faq,
       config,
       promotagBanners,
@@ -57,7 +60,7 @@ export default function Template1Website() {
       getBannerData(),
       getNewsData(),
       getCachedNews(),
-      getCachedSideBanner(),
+      getSideBanners(),
       getFaqData(),
       getCachedConfig(),
       getPromotagBanners(),
@@ -70,7 +73,7 @@ export default function Template1Website() {
       banner,
       highlighted,
       newsRaw,
-      sideBannerRaw,
+      sideBanners,
       faq,
       config,
       promotagBanners,
@@ -87,7 +90,7 @@ export default function Template1Website() {
     banner,
     highlighted,
     newsRaw,
-    sideBannerRaw,
+    sideBanners,
     faq,
     config,
     promotagBanners,
@@ -102,14 +105,7 @@ export default function Template1Website() {
   const allNews: NewsItem[] = (newsRaw?.dataset ||
     (Array.isArray(newsRaw) ? newsRaw : [])) as unknown as NewsItem[];
 
-  const sideBanners = (
-    sideBannerRaw?.dataset || (Array.isArray(sideBannerRaw) ? sideBannerRaw : [])
-  )
-    .map((b: { files?: { file?: string }[]; url?: string }) => {
-      const file = b.files?.find((f) => f.file && f.file.trim());
-      return file ? { src: file.file as string, url: b.url || "" } : null;
-    })
-    .filter(Boolean) as { src: string; url: string }[];
+  const sideBannerSlides = flattenSideBanners(sideBanners);
 
   const address = [
     footerCfg.address1,
@@ -339,24 +335,9 @@ export default function Template1Website() {
               ))}
             </div>
 
-            {sideBanners.length > 0 && (
-              <div className="mt-10 grid md:grid-cols-3 gap-4">
-                {sideBanners.slice(0, 3).map((b, i) => (
-                  <a
-                    key={i}
-                    href={b.url || "#"}
-                    target={b.url ? "_blank" : undefined}
-                    rel="noopener noreferrer"
-                    className="block relative h-32 rounded-3xl overflow-hidden hover:scale-[1.02] transition-transform shadow-sm border border-gray-100"
-                  >
-                    <Image
-                      src={b.src}
-                      alt={`Iklan ${i + 1}`}
-                      fill
-                      className="object-cover"
-                    />
-                  </a>
-                ))}
+            {sideBannerSlides.length > 0 && (
+              <div className="mt-10">
+                <SideBannerColumn slides={sideBannerSlides} />
               </div>
             )}
           </div>

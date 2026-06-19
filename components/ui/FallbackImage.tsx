@@ -25,6 +25,10 @@ function safeEncodeUrl(url: string): string {
 interface FallbackImageProps extends Omit<ImageProps, "src"> {
   src?: string | StaticImageData | null;
   fallbackSrc?: string;
+  // When true (and the image uses `fill`), show an animated skeleton placeholder
+  // until the image finishes loading — for banners whose images come from a slow
+  // remote host, so the slot shimmers instead of showing a blank box.
+  showSkeleton?: boolean;
 }
 
 /**
@@ -39,6 +43,7 @@ export default function FallbackImage({
   fallbackSrc = DEFAULT_FALLBACK,
   alt,
   unoptimized,
+  showSkeleton = false,
   ...props
 }: FallbackImageProps) {
   const initial: string | StaticImageData = src ? src : fallbackSrc;
@@ -46,6 +51,8 @@ export default function FallbackImage({
   // `failed` tracks whether we've already swapped to the fallback. If the
   // fallback itself errors we stop, so we don't loop.
   const [failed, setFailed] = useState(!src);
+  // Tracks whether the image has finished loading (for the skeleton overlay).
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     if (src) {
@@ -55,6 +62,7 @@ export default function FallbackImage({
       setImgSrc(fallbackSrc);
       setFailed(true);
     }
+    setLoaded(false);
   }, [src, fallbackSrc]);
 
   // Skip Next/Image optimization for:
@@ -72,17 +80,29 @@ export default function FallbackImage({
     isStringSrc && isRemote ? safeEncodeUrl(imgSrc as string) : imgSrc;
 
   return (
-    <Image
-      {...props}
-      src={finalSrc}
-      alt={alt || "Image"}
-      unoptimized={unoptimized ?? (isSvg || isRemote)}
-      onError={() => {
-        if (!failed) {
-          setImgSrc(fallbackSrc);
-          setFailed(true);
-        }
-      }}
-    />
+    <>
+      {showSkeleton && props.fill && !loaded && (
+        <div
+          aria-hidden
+          className="absolute inset-0 z-0 animate-pulse bg-slate-200 dark:bg-slate-700"
+        />
+      )}
+      <Image
+        {...props}
+        src={finalSrc}
+        alt={alt || "Image"}
+        unoptimized={unoptimized ?? (isSvg || isRemote)}
+        onLoad={(e) => {
+          setLoaded(true);
+          props.onLoad?.(e);
+        }}
+        onError={() => {
+          if (!failed) {
+            setImgSrc(fallbackSrc);
+            setFailed(true);
+          }
+        }}
+      />
+    </>
   );
 }

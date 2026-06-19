@@ -1,20 +1,27 @@
 "use client";
 
 import { useCmsData } from "@/lib/useCmsData";
-import Image from "@/components/ui/FallbackImage";
 import Link from "next/link";
 import BannerSlideshow from "@/components/main/BannerSlideshow";
 import TemplateLayout from "@/components/TemplateLayout";
 import Demo8Carousel from "@/components/demos/demo8/Carousel";
 import Demo8Faq from "@/components/demos/demo8/Faq";
 import Demo8Contact from "@/components/demos/demo8/Contact";
-import { getBannerData } from "@/services/bannerService";
+import {
+  getBannerData,
+  getPromotagBanners,
+  getSideBanners,
+} from "@/services/bannerService";
+import SideBannerColumn, {
+  flattenSideBanners,
+} from "@/components/banner/SideBannerColumn";
+import Demo7PromotagBanner from "@/components/demos/demo7/PromotagBanner";
+import Demo7ComplaintBanner from "@/components/demos/demo7/ComplaintBanner";
 import { getNewsData } from "@/services/newsService";
 import { getFaqData } from "@/services/faqService";
 import {
   getCachedConfig,
   getCachedNews,
-  getCachedSideBanner,
 } from "@/services/apiCache";
 import { Play, Info } from "lucide-react";
 
@@ -33,37 +40,34 @@ export default function Template3Marketplace() {
       banner,
       highlighted,
       newsRaw,
-      sideBannerRaw,
+      sideBanners,
       faq,
       config,
+      promotagBanners,
     ] = await Promise.all([
       getBannerData(),
       getNewsData(),
       getCachedNews(),
-      getCachedSideBanner(),
+      getSideBanners(),
       getFaqData(),
       getCachedConfig(),
+      getPromotagBanners(),
     ]);
-    return { banner, highlighted, newsRaw, sideBannerRaw, faq, config };
+    return { banner, highlighted, newsRaw, sideBanners, faq, config, promotagBanners };
   }, []);
 
   if (loading || !data) return <div className="min-h-screen bg-white" />;
 
-  const { banner, highlighted, newsRaw, sideBannerRaw, faq, config } = data;
+  const { banner, highlighted, newsRaw, sideBanners, faq, config, promotagBanners } = data;
 
   const footerCfg = config.footerConfig || {};
+  const complaintEnabled =
+    String(config?.generalSettings?.complaint ?? "").toLowerCase() === "on";
 
   const allNews: NewsItem[] = (newsRaw?.dataset ||
     (Array.isArray(newsRaw) ? newsRaw : [])) as unknown as NewsItem[];
 
-  const sideBanners = (
-    sideBannerRaw?.dataset || (Array.isArray(sideBannerRaw) ? sideBannerRaw : [])
-  )
-    .map((b: { files?: { file?: string }[]; url?: string }) => {
-      const file = b.files?.find((f) => f.file && f.file.trim());
-      return file ? { src: file.file as string, url: b.url || "" } : null;
-    })
-    .filter(Boolean) as { src: string; url: string }[];
+  const sideBannerSlides = flattenSideBanners(sideBanners);
 
   const address = [
     footerCfg.address1,
@@ -198,20 +202,20 @@ export default function Template3Marketplace() {
                   Mula Sekarang
                 </Link>
               </div>
-              {sideBanners[0] && (
-                <div className="relative h-[300px] md:h-[400px] rounded-xl overflow-hidden">
-                  <Image
-                    src={sideBanners[0].src}
-                    alt="Featured"
-                    fill
-                    className="object-cover"
-                  />
-                </div>
-              )}
+              <SideBannerColumn slides={sideBannerSlides} />
             </div>
           </div>
         </div>
       </section>
+
+      <Demo7PromotagBanner banners={promotagBanners} />
+
+      {complaintEnabled && (
+        <Demo7ComplaintBanner
+          email={footerCfg.email}
+          phone={footerCfg.phonenum}
+        />
+      )}
 
       {faq && faq.items.length > 0 && (
         <Demo8Faq title={faq.title} items={faq.items} />

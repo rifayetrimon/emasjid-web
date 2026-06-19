@@ -7,14 +7,22 @@ import BannerSlideshow from "@/components/main/BannerSlideshow";
 import TemplateLayout from "@/components/TemplateLayout";
 import Demo2Faq from "@/components/demos/demo2/Faq";
 import Demo2Contact from "@/components/demos/demo2/Contact";
-import { getBannerData } from "@/services/bannerService";
+import {
+  getBannerData,
+  getPromotagBanners,
+  getSideBanners,
+} from "@/services/bannerService";
+import SideBannerColumn, {
+  flattenSideBanners,
+} from "@/components/banner/SideBannerColumn";
+import Demo7PromotagBanner from "@/components/demos/demo7/PromotagBanner";
+import Demo7ComplaintBanner from "@/components/demos/demo7/ComplaintBanner";
 import { getNewsData } from "@/services/newsService";
 import { getFaqData } from "@/services/faqService";
 import { getSiteTheme } from "@/services/themeService";
 import {
   getCachedConfig,
   getCachedNews,
-  getCachedSideBanner,
 } from "@/services/apiCache";
 
 interface NewsItem {
@@ -33,27 +41,30 @@ export default function Template4Corporate() {
       banner,
       highlighted,
       newsRaw,
-      sideBannerRaw,
+      sideBanners,
       faq,
       config,
       theme,
+      promotagBanners,
     ] = await Promise.all([
       getBannerData(),
       getNewsData(),
       getCachedNews(),
-      getCachedSideBanner(),
+      getSideBanners(),
       getFaqData(),
       getCachedConfig(),
       getSiteTheme(),
+      getPromotagBanners(),
     ]);
     return {
       banner,
       highlighted,
       newsRaw,
-      sideBannerRaw,
+      sideBanners,
       faq,
       config,
       theme,
+      promotagBanners,
     };
   }, []);
 
@@ -63,10 +74,11 @@ export default function Template4Corporate() {
     banner,
     highlighted,
     newsRaw,
-    sideBannerRaw,
+    sideBanners,
     faq,
     config,
     theme,
+    promotagBanners,
   } = data;
 
   // Honor admin's maxDisplay; fall back to 9 only when unset.
@@ -77,14 +89,7 @@ export default function Template4Corporate() {
   const allNews: NewsItem[] = (newsRaw?.dataset ||
     (Array.isArray(newsRaw) ? newsRaw : [])) as unknown as NewsItem[];
 
-  const sideBanners = (
-    sideBannerRaw?.dataset || (Array.isArray(sideBannerRaw) ? sideBannerRaw : [])
-  )
-    .map((b: { files?: { file?: string }[]; url?: string }) => {
-      const file = b.files?.find((f) => f.file && f.file.trim());
-      return file ? { src: file.file as string, url: b.url || "" } : null;
-    })
-    .filter(Boolean) as { src: string; url: string }[];
+  const sideBannerSlides = flattenSideBanners(sideBanners);
 
   const address = [
     footerCfg.address1,
@@ -299,24 +304,9 @@ export default function Template4Corporate() {
               ))}
             </div>
 
-            {sideBanners.length > 0 && (
-              <div className="mt-12 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {sideBanners.slice(0, 3).map((b, i) => (
-                  <a
-                    key={i}
-                    href={b.url || "#"}
-                    target={b.url ? "_blank" : undefined}
-                    rel="noopener noreferrer"
-                    className="block relative h-40 overflow-hidden bg-gray-100"
-                  >
-                    <Image
-                      src={b.src}
-                      alt={`Iklan ${i + 1}`}
-                      fill
-                      className="object-cover hover:scale-105 transition-transform duration-500"
-                    />
-                  </a>
-                ))}
+            {sideBannerSlides.length > 0 && (
+              <div className="mt-12">
+                <SideBannerColumn slides={sideBannerSlides} />
               </div>
             )}
 
@@ -330,6 +320,15 @@ export default function Template4Corporate() {
             </div>
           </div>
         </section>
+      )}
+
+      <Demo7PromotagBanner banners={promotagBanners} />
+
+      {theme.complaintEnabled && (
+        <Demo7ComplaintBanner
+          email={footerCfg.email}
+          phone={footerCfg.phonenum}
+        />
       )}
 
       {faq && faq.items.length > 0 && (

@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { FaBars, FaTimes } from "react-icons/fa";
-import { ChevronDown, Share2 } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import Image from "@/components/ui/FallbackImage";
 import Link from "next/link";
 import { MenuItem, NavConfig, NavSocialLink } from "@/types/cms";
@@ -21,11 +21,20 @@ export default function NavbarClient({
   socialLinks,
 }: NavbarClientProps) {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [socialOpen, setSocialOpen] = useState(false);
   const [mobileOpenSubmenu, setMobileOpenSubmenu] = useState<number | null>(null);
-  const socialRef = useRef<HTMLDivElement>(null);
 
   const safeMenuItems = Array.isArray(menuItems) ? menuItems : [];
+
+  // The navbar shows at most 3 social icons, prioritising Facebook, Instagram
+  // and WhatsApp (then any others). The full set is shown in the footer.
+  const NAV_SOCIAL_PRIORITY = ["facebook", "instagram", "whatsapp"];
+  const navSocials = [...(Array.isArray(socialLinks) ? socialLinks : [])]
+    .sort((a, b) => {
+      const ai = NAV_SOCIAL_PRIORITY.indexOf(a.platform.toLowerCase());
+      const bi = NAV_SOCIAL_PRIORITY.indexOf(b.platform.toLowerCase());
+      return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+    })
+    .slice(0, 3);
 
   // Cap the visible navbar to 6 top-level items. Any 7th+ items collapse
   // into a synthetic "More" dropdown so the navbar stays compact. Children
@@ -44,16 +53,6 @@ export default function NavbarClient({
           },
         ]
       : safeMenuItems;
-
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (socialRef.current && !socialRef.current.contains(event.target as Node)) {
-        setSocialOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
 
   // Colors from navConfig
   const itemColor = navConfig.navbarItemColor || "#1f2937";
@@ -162,41 +161,22 @@ export default function NavbarClient({
             ))}
           </ul>
 
-          {/* Social Media Dropdown */}
-          {socialLinks.length > 0 && (
-            <div className="relative" ref={socialRef}>
-              <button
-                onClick={() => setSocialOpen(!socialOpen)}
-                className="flex items-center gap-1 font-medium transition-colors duration-200"
-                style={{ color: itemColor }}
-                onMouseEnter={(e) => { e.currentTarget.style.color = hoverColor; }}
-                onMouseLeave={(e) => { e.currentTarget.style.color = itemColor; }}
-                aria-expanded={socialOpen}
-                aria-haspopup="true"
-              >
-                <Share2 className="w-5 h-5" />
-                <ChevronDown
-                  className={`w-4 h-4 transition-transform duration-200 ${socialOpen ? "rotate-180" : ""}`}
-                />
-              </button>
-
-              {socialOpen && (
-                <div className="absolute top-full right-0 mt-2 min-w-[180px] bg-white rounded-lg shadow-xl py-2 border border-gray-200 z-[100]">
-                  {socialLinks.map((social, idx) => (
-                    <a
-                      key={idx}
-                      href={social.link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-3 px-4 py-2 text-sm text-gray-800 hover:bg-gray-50 transition-colors duration-200 font-medium"
-                      onClick={() => setSocialOpen(false)}
-                    >
-                      <Image src={social.icon} alt={social.platform} width={20} height={20} className="w-5 h-5" />
-                      {social.platform}
-                    </a>
-                  ))}
-                </div>
-              )}
+          {/* Social icons — up to 3 (Facebook, Instagram, WhatsApp first) */}
+          {navSocials.length > 0 && (
+            <div className="flex items-center gap-3">
+              {navSocials.map((social, idx) => (
+                <a
+                  key={idx}
+                  href={social.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title={social.platform}
+                  aria-label={social.platform}
+                  className="transition-opacity duration-200 hover:opacity-70"
+                >
+                  <Image src={social.icon} alt={social.platform} width={20} height={20} className="w-5 h-5" />
+                </a>
+              ))}
             </div>
           )}
         </div>
@@ -262,15 +242,17 @@ export default function NavbarClient({
             ))}
           </ul>
 
-          {socialLinks.length > 0 && (
+          {navSocials.length > 0 && (
             <div className="mt-3 pt-3 border-t border-gray-200">
               <div className="flex items-center gap-3">
-                {socialLinks.map((social, idx) => (
+                {navSocials.map((social, idx) => (
                   <a
                     key={idx}
                     href={social.link}
                     target="_blank"
                     rel="noopener noreferrer"
+                    title={social.platform}
+                    aria-label={social.platform}
                     className="p-2 hover:bg-gray-100 rounded-full transition-colors"
                   >
                     <Image src={social.icon} alt={social.platform} width={24} height={24} className="w-6 h-6" />

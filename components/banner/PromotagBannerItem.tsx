@@ -112,6 +112,7 @@ export default function PromotagBannerItem({
           src={slide.src}
           alt={message || "Promosi"}
           fill
+          showSkeleton
           className={
             mode === "background"
               ? "object-cover group-hover:scale-[1.02] transition-transform duration-700"

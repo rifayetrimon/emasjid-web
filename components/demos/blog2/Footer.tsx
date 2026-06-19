@@ -107,14 +107,16 @@ export default function Blog2Footer({ footer: rawFooter, visitors }: Props) {
         {/* Logo */}
         {footer.image.image && (
           <div className="pb-8">
-            {/* Footer background is dark (bgColor / navy), so render the
-                (black) logo in white via invert — matches the other templates. */}
+            {/* Render the actual uploaded logo as-is (same as the navbar).
+                We intentionally do NOT force brightness-0/invert: that turned
+                any colored logo into a flat white silhouette. There's a single
+                logo in config and it should look identical in navbar + footer. */}
             <Image
               src={footer.image.image}
               alt="Logo"
               width={150}
               height={50}
-              className="h-12 w-auto object-contain brightness-0 invert"
+              className="h-12 w-auto object-contain"
             />
           </div>
         )}

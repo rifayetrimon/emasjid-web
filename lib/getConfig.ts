@@ -28,7 +28,7 @@ export type ResolvedConfig = {
 // Strip JS-style line and block comments so config.json can keep // notes
 // for swapping between tenants. Aware of strings, so // inside a value
 // (e.g., a URL) is preserved.
-function stripJsonComments(input: string): string {
+export function stripJsonComments(input: string): string {
   let out = "";
   let inString = false;
   let inLine = false;

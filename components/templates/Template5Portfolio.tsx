@@ -7,14 +7,22 @@ import BannerSlideshow from "@/components/main/BannerSlideshow";
 import TemplateLayout from "@/components/TemplateLayout";
 import Demo5Faq from "@/components/demos/demo5/Faq";
 import Demo5Contact from "@/components/demos/demo5/Contact";
-import { getBannerData } from "@/services/bannerService";
+import {
+  getBannerData,
+  getPromotagBanners,
+  getSideBanners,
+} from "@/services/bannerService";
+import SideBannerColumn, {
+  flattenSideBanners,
+} from "@/components/banner/SideBannerColumn";
+import Demo7PromotagBanner from "@/components/demos/demo7/PromotagBanner";
+import Demo7ComplaintBanner from "@/components/demos/demo7/ComplaintBanner";
 import { getNewsData } from "@/services/newsService";
 import { getFaqData } from "@/services/faqService";
 import { getSiteTheme } from "@/services/themeService";
 import {
   getCachedConfig,
   getCachedNews,
-  getCachedSideBanner,
 } from "@/services/apiCache";
 
 interface NewsItem {
@@ -59,27 +67,30 @@ export default function Template5Portfolio() {
       banner,
       highlighted,
       newsRaw,
-      sideBannerRaw,
+      sideBanners,
       faq,
       config,
       theme,
+      promotagBanners,
     ] = await Promise.all([
       getBannerData(),
       getNewsData(),
       getCachedNews(),
-      getCachedSideBanner(),
+      getSideBanners(),
       getFaqData(),
       getCachedConfig(),
       getSiteTheme(),
+      getPromotagBanners(),
     ]);
     return {
       banner,
       highlighted,
       newsRaw,
-      sideBannerRaw,
+      sideBanners,
       faq,
       config,
       theme,
+      promotagBanners,
     };
   }, []);
 
@@ -89,10 +100,11 @@ export default function Template5Portfolio() {
     banner,
     highlighted,
     newsRaw,
-    sideBannerRaw,
+    sideBanners,
     faq,
     config,
     theme,
+    promotagBanners,
   } = data;
 
   // Honor admin's maxDisplay; fall back to 6 only when unset.
@@ -103,14 +115,7 @@ export default function Template5Portfolio() {
   const allNews: NewsItem[] = (newsRaw?.dataset ||
     (Array.isArray(newsRaw) ? newsRaw : [])) as unknown as NewsItem[];
 
-  const sideBanners = (
-    sideBannerRaw?.dataset || (Array.isArray(sideBannerRaw) ? sideBannerRaw : [])
-  )
-    .map((b: { files?: { file?: string }[]; url?: string }) => {
-      const file = b.files?.find((f) => f.file && f.file.trim());
-      return file ? { src: file.file as string, url: b.url || "" } : null;
-    })
-    .filter(Boolean) as { src: string; url: string }[];
+  const sideBannerSlides = flattenSideBanners(sideBanners);
 
   const address = [
     footerCfg.address1,
@@ -336,22 +341,7 @@ export default function Template5Portfolio() {
                   </Link>
                 </div>
 
-                {sideBanners.slice(0, 2).map((b, i) => (
-                  <a
-                    key={i}
-                    href={b.url || "#"}
-                    target={b.url ? "_blank" : undefined}
-                    rel="noopener noreferrer"
-                    className="block relative h-72 md:h-80 border-2 border-[var(--primary)] overflow-hidden bg-[#f5e9d0]"
-                  >
-                    <Image
-                      src={b.src}
-                      alt={`Iklan ${i + 1}`}
-                      fill
-                      className="object-cover hover:scale-105 transition-transform duration-500"
-                    />
-                  </a>
-                ))}
+                <SideBannerColumn slides={sideBannerSlides} />
               </aside>
             </div>
 
@@ -366,6 +356,15 @@ export default function Template5Portfolio() {
             </div>
           </div>
         </section>
+      )}
+
+      <Demo7PromotagBanner banners={promotagBanners} />
+
+      {theme.complaintEnabled && (
+        <Demo7ComplaintBanner
+          email={footerCfg.email}
+          phone={footerCfg.phonenum}
+        />
       )}
 
       {faq && faq.items.length > 0 && (

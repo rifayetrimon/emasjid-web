@@ -84,14 +84,16 @@ function normalize(raw: RawStatic): StaticContentItem {
 }
 
 /**
- * Returns all static content items. We don't filter by `status === 1` here
- * because admin sometimes ships static-content with status 0 (the response
- * the team verified uses 0 for live home-page content).
+ * Returns ACTIVE static content items only (status === 1). Deactivated pages
+ * (status 0) must never render anywhere on the public site, so we filter here
+ * at the single source every consumer reads from (page-by-slug, home, etc.).
  */
 export async function getStaticContent(): Promise<StaticContentItem[]> {
   try {
     const raw = await getCachedStaticContent();
-    return readDataset(raw).map(normalize);
+    return readDataset(raw)
+      .map(normalize)
+      .filter((item) => item.status === 1);
   } catch (error) {
     console.error("❌ Error fetching static content:", error);
     return [];
@@ -143,6 +145,8 @@ export async function getStaticContentBySlug(
 ): Promise<StaticContentItem | null> {
   const needle = slugify(slug);
   if (!needle) return null;
+  // getStaticContent() already returns ACTIVE items only, so a deactivated
+  // page won't match here → the route 404s ("page not found").
   const items = await getStaticContent();
 
   for (const item of items) {

@@ -1,5 +1,21 @@
 // services/newsDetailService.ts
-import { getCachedNewsDetail } from "./apiCache";
+import { getCachedNewsDetail, getCachedNews } from "./apiCache";
+
+// All news content IDs — used at build time by the /news/[id] route's
+// generateStaticParams so every article is pre-rendered with its own Open
+// Graph tags (needed for rich Facebook/WhatsApp share cards).
+export async function getAllNewsIds(): Promise<string[]> {
+  try {
+    const raw = await getCachedNews();
+    const ds = ((raw as { dataset?: unknown })?.dataset ||
+      (Array.isArray(raw) ? raw : [])) as Array<{ contentId?: string | number }>;
+    return ds
+      .map((n) => String(n?.contentId ?? "").trim())
+      .filter((id) => id.length > 0);
+  } catch {
+    return [];
+  }
+}
 
 export type DisplayMode = "grid" | "slide" | "full" | "sidebar";
 

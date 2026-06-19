@@ -15,6 +15,7 @@ import NewsCardCarousel from "@/components/news/NewsCardCarousel";
 import PromotagBannerItem from "@/components/banner/PromotagBannerItem";
 import { categoryFor, colorForCategoryName } from "@/lib/blog2Categories";
 import { getBannerData, getSideBanners, getPromotagBanners } from "@/services/bannerService";
+import SideBannerColumn, { flattenSideBanners } from "@/components/banner/SideBannerColumn";
 import { getAllNews } from "@/services/newsService";
 import { getFaqData } from "@/services/faqService";
 import { getFooterData } from "@/services/footerService";
@@ -284,11 +285,8 @@ export default function Template6Blog() {
   const sidebarPluginList = sidebarPlugins;
 
   // Side banner shaping (multi-image, per-slide urls — admin can ship 3 slides
-  // per banner record now).
-  type SideBannerSlide = { src: string; url: string };
-  const sideBannerSlides: SideBannerSlide[] = sideBanners.flatMap((b) =>
-    b.slides.map((s) => ({ src: s.src, url: s.url }))
-  );
+  // per banner record now). Shared across every template via SideBannerColumn.
+  const sideBannerSlides = flattenSideBanners(sideBanners);
 
   return (
     <TemplateLayout templateId="6">
@@ -658,30 +656,7 @@ export default function Template6Blog() {
           )}
 
           {/* Side banners (sta===1 enforced; per-slide urllinks honored) */}
-          {sideBannerSlides.length > 0 && (
-            <div className="max-h-[840px] overflow-y-auto space-y-4 pr-1">
-              {sideBannerSlides.map((b, i) => (
-                <a
-                  key={i}
-                  href={b.url || "#"}
-                  target={b.url ? "_blank" : undefined}
-                  rel="noopener noreferrer"
-                  className="block relative h-64 overflow-hidden bg-gray-100 hover:opacity-95 transition"
-                >
-                  <Image
-                    src={b.src}
-                    alt={`Iklan ${i + 1}`}
-                    fill
-                    className="object-cover"
-                    sizes="300px"
-                  />
-                  <p className="absolute bottom-2 right-2 text-[9px] uppercase tracking-wider text-white bg-black/50 px-2 py-0.5">
-                    Iklan
-                  </p>
-                </a>
-              ))}
-            </div>
-          )}
+          <SideBannerColumn slides={sideBannerSlides} />
         </aside>
       </section>
 
