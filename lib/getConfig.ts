@@ -11,6 +11,8 @@ type ConfigType = {
   NEXT_PUBLIC_DOMAIN: string;
   NEXT_PUBLIC_TOKEN_KEY: string;
   NEXT_PUBLIC_X_ENCRYPTED_KEY: string;
+  /** API key for the backend email service (contact form → company email). */
+  NEXT_PUBLIC_X_API_KEY_EMAIL?: string;
 };
 
 export type ResolvedConfig = {
@@ -23,6 +25,8 @@ export type ResolvedConfig = {
   domain: string;
   token_key: string;
   x_encrypted_key: string;
+  /** API key for the backend email service (empty unless the tenant set it). */
+  x_api_key_email: string;
 };
 
 // Strip JS-style line and block comments so config.json can keep // notes
@@ -166,5 +170,6 @@ export default async function getConfig(): Promise<ResolvedConfig> {
     domain: data.NEXT_PUBLIC_DOMAIN || "",
     token_key: data.NEXT_PUBLIC_TOKEN_KEY || "",
     x_encrypted_key: preview?.key || data.NEXT_PUBLIC_X_ENCRYPTED_KEY || "",
+    x_api_key_email: data.NEXT_PUBLIC_X_API_KEY_EMAIL || "",
   };
 }

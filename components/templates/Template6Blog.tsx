@@ -353,9 +353,9 @@ export default function Template6Blog() {
             {(banner.title?.general ||
               banner.title?.focus?.text ||
               banner.supporting_text) && (
-              <div className="absolute inset-0 flex flex-col justify-end pointer-events-none">
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-                <div className="relative w-full px-6 md:px-10 pb-8 md:pb-12 text-white pointer-events-auto">
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
+                <div className="absolute inset-0 bg-black/35" />
+                <div className="relative w-full px-6 md:px-10 py-8 text-white pointer-events-auto">
                   {(banner.title?.general || banner.title?.focus?.text) && (
                     <h1
                       className="text-2xl md:text-4xl font-extrabold leading-tight drop-shadow-lg"
@@ -373,7 +373,7 @@ export default function Template6Blog() {
                     </h1>
                   )}
                   {banner.supporting_text && (
-                    <p className="mt-3 max-w-2xl text-sm md:text-base text-white/85 leading-relaxed drop-shadow">
+                    <p className="mt-3 mx-auto max-w-2xl text-sm md:text-base text-white/85 leading-relaxed drop-shadow">
                       {banner.supporting_text}
                     </p>
                   )}

@@ -12,18 +12,47 @@ import { withMoreDropdown } from "@/lib/navOverflow";
 // True when `link` points at the page the visitor is currently on, so the nav
 // can highlight it (with the hover colour). Internal links only — external
 // links are never treated as the active page.
-function isActiveNavLink(pathname: string, link?: string): boolean {
+//
+// In the static export, CMS content links are funnelled through query-param
+// routes (`/static/?slug=<id>`, `/news/detail/?id=<id>`). So we compare BOTH
+// the path AND the identifying query param (slug/id) — that's what lets the
+// e.g. "Technology" page light up its own nav item. `search` is the current
+// URL's query string (without the leading "?"); preview-only params are
+// ignored because we only match on slug/id.
+function isActiveNavLink(
+  pathname: string,
+  search: string,
+  link?: string,
+): boolean {
   if (!link || link === "#") return false;
   if (/^[a-z][a-z0-9+.-]*:/i.test(link)) return false; // external (http:, mailto:, …)
-  // Query-param content routes (e.g. /news/detail/?id=…, /static/?slug=…) don't
-  // map cleanly to a single nav entry — don't try to mark them active.
-  if (link.includes("?")) return false;
-  const norm = (s: string) => (s || "").replace(/[#?].*$/, "").replace(/\/+$/, "");
-  const a = norm(link); // "" for home ("/")
-  const b = norm(pathname || "");
-  if (a === "") return b === ""; // home is active only at the site root
-  // Exact match, a nested child, or (base-path tolerant) a suffix match.
-  return b === a || b.startsWith(a + "/") || b.endsWith(a);
+
+  const stripTrail = (s: string) => (s || "").replace(/\/+$/, "");
+  const [rawPath, rawQuery = ""] = link.split("?");
+  const lPath = stripTrail(rawPath.replace(/#.*$/, ""));
+  const cPath = stripTrail((pathname || "").replace(/#.*$/, ""));
+
+  // Path match — exact, nested child, or (base-path tolerant) suffix either
+  // way, since the preview prefixes links/paths with a base path.
+  const samePath =
+    cPath === lPath ||
+    (lPath !== "" && cPath.startsWith(lPath + "/")) ||
+    (lPath !== "" &&
+      cPath !== "" &&
+      (cPath.endsWith(lPath) || lPath.endsWith(cPath)));
+
+  // Query-param content route: require the path AND the slug/id to match, so
+  // each content page highlights only its own entry.
+  if (rawQuery) {
+    const lp = new URLSearchParams(rawQuery);
+    const cp = new URLSearchParams(search || "");
+    const key = lp.has("slug") ? "slug" : lp.has("id") ? "id" : null;
+    if (!key) return samePath;
+    return samePath && !!lp.get(key) && lp.get(key) === cp.get(key);
+  }
+
+  if (lPath === "") return cPath === ""; // home is active only at the site root
+  return samePath;
 }
 
 interface Props {
@@ -112,18 +141,21 @@ function MobileMenuItem({
   item,
   depth = 0,
   hoverColor,
+  currentSearch,
 }: {
   item: MenuItem;
   depth?: number;
   /** Hover/active colour from the nav config (active page uses this). */
   hoverColor: string;
+  /** Current URL query string (no leading "?") for query-route matching. */
+  currentSearch: string;
 }) {
   const [open, setOpen] = useState(false);
   const hasSub = !!item.submenu && item.submenu.length > 0;
   const isExternal = item.targetWindow === "_blank";
   const indent = depth === 0 ? "" : depth === 1 ? "pl-4" : "pl-8";
   const pathname = usePathname();
-  const active = isActiveNavLink(pathname || "/", item.link);
+  const active = isActiveNavLink(pathname || "/", currentSearch, item.link);
 
   if (hasSub) {
     return (
@@ -142,7 +174,7 @@ function MobileMenuItem({
         {open && (
           <div className="pb-2 space-y-1">
             {item.submenu!.map((sub, si) => (
-              <MobileMenuItem key={si} item={sub} depth={depth + 1} hoverColor={hoverColor} />
+              <MobileMenuItem key={si} item={sub} depth={depth + 1} hoverColor={hoverColor} currentSearch={currentSearch} />
             ))}
           </div>
         )}
@@ -187,7 +219,27 @@ export default function Blog2Nav({
   // Highlight the menu item for the page the visitor is currently on, using the
   // hover colour. Internal links only (external links are never "active").
   const pathname = usePathname();
-  const isActiveLink = (link?: string) => isActiveNavLink(pathname || "/", link);
+  // Current URL query string (no leading "?"). Read from the live URL rather
+  // than useSearchParams() — the latter must live inside a <Suspense> boundary
+  // and would break the static-export build from this always-mounted nav. Nav
+  // links are plain <a> (full page loads), so the nav remounts with a fresh
+  // URL on every navigation and this stays correct.
+  const [search, setSearch] = useState<string>(() =>
+    typeof window !== "undefined"
+      ? window.location.search.replace(/^\?/, "")
+      : "",
+  );
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setSearch(window.location.search.replace(/^\?/, ""));
+    }
+  }, [pathname]);
+
+  const isActiveLink = (link?: string) =>
+    isActiveNavLink(pathname || "/", search, link);
+  // A parent (dropdown) entry is "active" when one of its descendant pages is.
+  const itemActive = (item: MenuItem): boolean =>
+    isActiveLink(item.link) || (item.submenu?.some(itemActive) ?? false);
   const navItemFontSize = ns.fontSizePx ? `${ns.fontSizePx}px` : undefined;
 
   // Cap the visible navbar at 7 top-level entries (6 originals + a synthetic
@@ -293,27 +345,40 @@ export default function Blog2Nav({
               return (
                 <div key={i} className="relative group">
                   {hasSub ? (
-                    // Parent with submenu: pure dropdown trigger, no nav.
-                    <span
-                      className="relative text-[12px] font-bold uppercase tracking-[0.15em] transition flex items-center gap-1 cursor-default select-none"
-                      style={{ color: itemColor, fontSize: navItemFontSize }}
-                      onMouseEnter={(e) =>
-                        (e.currentTarget.style.color = hoverColor)
-                      }
-                      onMouseLeave={(e) =>
-                        (e.currentTarget.style.color = itemColor)
-                      }
-                    >
-                      {item.label}
-                      <ChevronDown className="w-3 h-3" />
-                      {ns.showUnderline && (
+                    // Parent with submenu: pure dropdown trigger, no nav. Shows
+                    // the active state when one of its pages is the current one.
+                    (() => {
+                      const active = itemActive(item);
+                      return (
                         <span
-                          aria-hidden
-                          className="absolute left-0 -bottom-1 h-[2px] w-0 group-hover:w-full transition-all duration-300"
-                          style={{ backgroundColor: underlineColor }}
-                        />
-                      )}
-                    </span>
+                          className="relative text-[12px] font-bold uppercase tracking-[0.15em] transition flex items-center gap-1 cursor-default select-none"
+                          style={{
+                            color: active ? hoverColor : itemColor,
+                            fontSize: navItemFontSize,
+                          }}
+                          onMouseEnter={(e) =>
+                            (e.currentTarget.style.color = hoverColor)
+                          }
+                          onMouseLeave={(e) =>
+                            (e.currentTarget.style.color = active
+                              ? hoverColor
+                              : itemColor)
+                          }
+                        >
+                          {item.label}
+                          <ChevronDown className="w-3 h-3" />
+                          {ns.showUnderline && (
+                            <span
+                              aria-hidden
+                              className={`absolute left-0 -bottom-1 h-[2px] transition-all duration-300 ${
+                                active ? "w-full" : "w-0 group-hover:w-full"
+                              }`}
+                              style={{ backgroundColor: underlineColor }}
+                            />
+                          )}
+                        </span>
+                      );
+                    })()
                   ) : (
                     (() => {
                       const active = isActiveLink(item.link);
@@ -434,7 +499,7 @@ export default function Blog2Nav({
         <div className="lg:hidden border-t border-gray-200 bg-white">
           <nav className="px-5 py-3">
             {displayMenuItems.map((item, i) => (
-              <MobileMenuItem key={i} item={item} hoverColor={hoverColor} />
+              <MobileMenuItem key={i} item={item} hoverColor={hoverColor} currentSearch={search} />
             ))}
           </nav>
         </div>

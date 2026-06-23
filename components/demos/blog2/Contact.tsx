@@ -2,6 +2,7 @@
 
 import { useState, FormEvent } from "react";
 import { Mail, MapPin, Phone, Send } from "lucide-react";
+import { sendContactMessage } from "@/services/contactService";
 
 interface Props {
   email: string;
@@ -25,20 +26,52 @@ export default function Blog2Contact({ email, phone, address, state }: Props) {
     tajuk: "",
     penerangan: "",
   });
-  const [status, setStatus] = useState<"idle" | "sending" | "sent">("idle");
+  const [status, setStatus] = useState<
+    "idle" | "sending" | "sent" | "error"
+  >("idle");
 
-  const submit = (e: FormEvent) => {
-    e.preventDefault();
-    setStatus("sending");
+  // Open the visitor's mail client as a last resort, so a message is never
+  // lost if the backend send can't go through.
+  const openMailto = () => {
     const subject = encodeURIComponent(data.tajuk || "Pertanyaan");
     const body = encodeURIComponent(
-      `Nama: ${data.nama}\nTelefon: ${data.telefon}\nEmel: ${data.emel}\nNegeri: ${data.negeri}\n\n${data.penerangan}`
+      `Nama: ${data.nama}\nTelefon: ${data.telefon}\nEmel: ${data.emel}\nNegeri: ${data.negeri}\n\n${data.penerangan}`,
     );
     window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
-    setTimeout(() => {
+  };
+
+  const submit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (status === "sending") return;
+    setStatus("sending");
+    try {
+      // Send the message to the company email configured in the CMS.
+      await sendContactMessage(email, {
+        name: data.nama,
+        phone: data.telefon,
+        email: data.emel,
+        state: data.negeri,
+        subject: data.tajuk,
+        description: data.penerangan,
+      });
       setStatus("sent");
-      setTimeout(() => setStatus("idle"), 3000);
-    }, 500);
+      // Clear the form so it's ready for the next message.
+      setData({
+        nama: "",
+        telefon: "",
+        emel: "",
+        negeri: state?.toUpperCase() || "",
+        tajuk: "",
+        penerangan: "",
+      });
+      setTimeout(() => setStatus("idle"), 4000);
+    } catch {
+      // Backend send failed (e.g. email key not provisioned, network) — fall
+      // back to the mail client so the visitor can still reach the company.
+      openMailto();
+      setStatus("error");
+      setTimeout(() => setStatus("idle"), 4000);
+    }
   };
 
   return (
@@ -122,18 +155,30 @@ export default function Blog2Contact({ email, phone, address, state }: Props) {
                 className="w-full px-4 py-2.5 bg-white border-2 border-gray-200 text-sm focus:border-[var(--primary)] outline-none transition resize-none"
               />
             </div>
-            <button
-              type="submit"
-              disabled={status === "sending"}
-              className="mt-6 inline-flex items-center gap-2 px-7 py-3 bg-gray-900 hover:bg-[var(--primary)] hover:text-gray-900 text-white text-xs font-bold uppercase tracking-[0.15em] transition disabled:opacity-50"
-            >
-              {status === "sending"
-                ? "Menghantar..."
-                : status === "sent"
-                ? "Terima Kasih"
-                : "Hantar Mesej"}
-              <Send className="w-3.5 h-3.5" />
-            </button>
+            <div className="mt-6 flex flex-wrap items-center gap-4">
+              <button
+                type="submit"
+                disabled={status === "sending"}
+                className="inline-flex items-center gap-2 px-7 py-3 bg-gray-900 hover:bg-[var(--primary)] hover:text-gray-900 text-white text-xs font-bold uppercase tracking-[0.15em] transition disabled:opacity-50"
+              >
+                {status === "sending"
+                  ? "Menghantar..."
+                  : status === "sent"
+                  ? "Terima Kasih"
+                  : "Hantar Mesej"}
+                <Send className="w-3.5 h-3.5" />
+              </button>
+              {status === "sent" && (
+                <span className="text-sm font-medium text-green-600">
+                  Mesej anda telah dihantar. Terima kasih!
+                </span>
+              )}
+              {status === "error" && (
+                <span className="text-sm font-medium text-gray-500">
+                  Membuka aplikasi e-mel anda…
+                </span>
+              )}
+            </div>
           </form>
         </div>
       </div>
