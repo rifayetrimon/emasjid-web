@@ -1,6 +1,7 @@
 // services/apiCache.ts
 import getConfig from "@/lib/getConfig";
 import myAxios from "@/lib/myAxios";
+import { isPreviewActive } from "@/lib/previewContext";
 
 // Isomorphic request memoizer — replaces React's server-only `cache()` so
 // these helpers run in the browser too (the app is a static export with no
@@ -25,6 +26,66 @@ function cache<A extends unknown[], R>(
 
 async function getSID(): Promise<string> {
   return (await getConfig()).sid || "";
+}
+
+// ── Persistent (cross-reload) cache ──────────────────────────────────────
+// The site navigates with full page reloads, so the in-memory `cache()` above
+// is wiped on every navigation and each page re-fetches the whole shell
+// (config / nav / footer / news …) from the network — the main cause of slow
+// navigation. This layer additionally stores those slow-changing responses in
+// sessionStorage (keyed by tenant `sid`, with a short TTL), so a navigation
+// reads them instantly instead of hitting the API again. The cache lives only
+// for the tab session, so a fresh visit re-fetches.
+//
+// Disabled in preview mode: the admin preview must always reflect live edits
+// (and can switch tenant/branch), so it never reads/writes the persistent store.
+const PERSIST_TTL_MS = 10 * 60 * 1000; // 10 minutes
+const PERSIST_MAX_BYTES = 2_000_000; // skip very large payloads (quota safety)
+
+function persistKey(label: string, sid: string): string {
+  return `cmsd:${label}:${sid}`;
+}
+
+function readPersist<R>(label: string, sid: string): R | undefined {
+  if (typeof window === "undefined" || isPreviewActive()) return undefined;
+  try {
+    const raw = window.sessionStorage.getItem(persistKey(label, sid));
+    if (!raw) return undefined;
+    const parsed = JSON.parse(raw) as { ts: number; value: R };
+    if (!parsed || Date.now() - parsed.ts > PERSIST_TTL_MS) return undefined;
+    return parsed.value;
+  } catch {
+    return undefined;
+  }
+}
+
+function writePersist<R>(label: string, sid: string, value: R): void {
+  if (typeof window === "undefined" || isPreviewActive()) return;
+  try {
+    const raw = JSON.stringify({ ts: Date.now(), value });
+    if (raw.length > PERSIST_MAX_BYTES) return; // too big for sessionStorage
+    window.sessionStorage.setItem(persistKey(label, sid), raw);
+  } catch {
+    // Quota exceeded / serialization error — skip; the network is used next time.
+  }
+}
+
+// Like `cache()` but for no-arg fetchers, with a sessionStorage layer so the
+// result survives full-reload navigations. `label` MUST be unique & stable.
+function cachePersist<R>(label: string, fn: () => Promise<R>): () => Promise<R> {
+  let mem: Promise<R> | undefined;
+  return () => {
+    if (mem) return mem;
+    mem = (async () => {
+      const sid = await getSID();
+      const cached = readPersist<R>(label, sid);
+      if (cached !== undefined) return cached;
+      const value = await fn();
+      writePersist(label, sid, value);
+      return value;
+    })();
+    return mem;
+  };
 }
 
 // The list endpoints (news / static-content) ship a trimmed record that omits
@@ -52,7 +113,7 @@ function logApiError(label: string, error: unknown): void {
   }
 }
 
-export const getCachedConfig = cache(async () => {
+export const getCachedConfig = cachePersist("config", async () => {
   try {
     const sid = await getSID();
     const res = await myAxios.get(`api/v2/cms/eboss/cms/config?sid=${sid}`);
@@ -66,7 +127,7 @@ export const getCachedConfig = cache(async () => {
   }
 });
 
-export const getCachedNavHeader = cache(async () => {
+export const getCachedNavHeader = cachePersist("navHeader", async () => {
   try {
     const sid = await getSID();
     const res = await myAxios.get(`api/v2/cms/eboss/cms/nav-header?sid=${sid}`);
@@ -77,7 +138,7 @@ export const getCachedNavHeader = cache(async () => {
   }
 });
 
-export const getCachedBanner = cache(async () => {
+export const getCachedBanner = cachePersist("banner", async () => {
   try {
     const sid = await getSID();
     const res = await myAxios.get(`api/v2/cms/eboss/cms/banner?sid=${sid}&type=Banner`);
@@ -95,7 +156,7 @@ export const getCachedBanner = cache(async () => {
  * small tenant still does one request. MAX_PAGES is a hard backstop. Items are
  * dedup'd by `contentId` in case the API ignores pagination.
  */
-export const getCachedNews = cache(async () => {
+export const getCachedNews = cachePersist("news", async () => {
   try {
     const sid = await getSID();
     const PER_PAGE = 100;
@@ -148,7 +209,7 @@ export const getCachedNews = cache(async () => {
   }
 });
 
-export const getCachedFooter = cache(async () => {
+export const getCachedFooter = cachePersist("footer", async () => {
   try {
     const sid = await getSID();
     const res = await myAxios.get(`api/v2/cms/eboss/cms/footer?sid=${sid}`);
@@ -159,7 +220,7 @@ export const getCachedFooter = cache(async () => {
   }
 });
 
-export const getCachedFaq = cache(async () => {
+export const getCachedFaq = cachePersist("faq", async () => {
   try {
     const sid = await getSID();
     const url = `api/v2/cms/eboss/cms/faq?sid=${sid}`;
@@ -178,7 +239,7 @@ export const getCachedFaq = cache(async () => {
   }
 });
 
-export const getCachedSideBanner = cache(async () => {
+export const getCachedSideBanner = cachePersist("sideBanner", async () => {
   try {
     const sid = await getSID();
     const res = await myAxios.get(`api/v2/cms/eboss/cms/banner?sid=${sid}&type=Sider`);
@@ -189,7 +250,7 @@ export const getCachedSideBanner = cache(async () => {
   }
 });
 
-export const getCachedPromotagBanner = cache(async () => {
+export const getCachedPromotagBanner = cachePersist("promotag", async () => {
   try {
     const sid = await getSID();
     const res = await myAxios.get(`api/v2/cms/eboss/cms/banner?sid=${sid}&type=Promotag`);
@@ -232,7 +293,7 @@ export const getCachedStaticContentDetail = cache(async (contentId: string) => {
   }
 });
 
-export const getCachedAddonPlugin = cache(async () => {
+export const getCachedAddonPlugin = cachePersist("addonPlugin", async () => {
   try {
     const sid = await getSID();
     const res = await myAxios.get(`api/v2/cms/eboss/cms/addon-plugin?sid=${sid}`);
@@ -243,7 +304,7 @@ export const getCachedAddonPlugin = cache(async () => {
   }
 });
 
-export const getCachedVisitors = cache(async () => {
+export const getCachedVisitors = cachePersist("visitors", async () => {
   try {
     const sid = await getSID();
     const res = await myAxios.get(`api/v2/cms/eboss/cms/visitors?sid=${sid}`);
@@ -254,7 +315,7 @@ export const getCachedVisitors = cache(async () => {
   }
 });
 
-export const getCachedStaticContent = cache(async () => {
+export const getCachedStaticContent = cachePersist("staticContent", async () => {
   try {
     const sid = await getSID();
     // Walk ALL pages. A fixed `perPage=100` silently dropped any static
@@ -306,7 +367,7 @@ export const getCachedStaticContent = cache(async () => {
   }
 });
 
-export const getCachedGallery = cache(async () => {
+export const getCachedGallery = cachePersist("gallery", async () => {
   try {
     const sid = await getSID();
     const res = await myAxios.get(`api/v2/cms/eboss/cms/gallery?sid=${sid}`);
@@ -317,7 +378,7 @@ export const getCachedGallery = cache(async () => {
   }
 });
 
-export const getCachedGalleryCategory = cache(async () => {
+export const getCachedGalleryCategory = cachePersist("galleryCategory", async () => {
   try {
     const sid = await getSID();
     const res = await myAxios.get(`api/v2/cms/eboss/cms/gallery/category?sid=${sid}`);
@@ -328,7 +389,7 @@ export const getCachedGalleryCategory = cache(async () => {
   }
 });
 
-export const getCachedPlugin = cache(async () => {
+export const getCachedPlugin = cachePersist("plugin", async () => {
   try {
     const sid = await getSID();
     const res = await myAxios.get(`api/v2/cms/eboss/cms/plugin?sid=${sid}`);
@@ -339,7 +400,7 @@ export const getCachedPlugin = cache(async () => {
   }
 });
 
-export const getCachedPluginCategory = cache(async () => {
+export const getCachedPluginCategory = cachePersist("pluginCategory", async () => {
   try {
     const sid = await getSID();
     const res = await myAxios.get(`api/v2/cms/eboss/cms/plugin-category?sid=${sid}`);
