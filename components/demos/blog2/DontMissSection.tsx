@@ -42,8 +42,8 @@ function formatDate(d: string): string {
 }
 
 function resolveLabel(item: NewsItem): string {
-  if (item.category && item.category.trim()) return item.category;
-  return categoryFor(item.contentId).label;
+  // Only real CMS categories — hardcoded fallback tags are disabled for now.
+  return item.category && item.category.trim() ? item.category.trim() : "";
 }
 
 function resolveColor(item: NewsItem): string {
@@ -93,25 +93,27 @@ export default function DontMissSection({
 
   return (
     <>
-      <div className="flex flex-wrap gap-2 mb-6 -mt-2">
-        {tabs.map((t) => {
-          const isActive = active === t;
-          return (
-            <button
-              key={t}
-              type="button"
-              onClick={() => setActive(t)}
-              className={`text-[11px] uppercase tracking-wider font-bold px-3 py-1 transition ${
-                isActive
-                  ? "bg-[var(--primary)] text-gray-900"
-                  : "text-gray-500 hover:text-gray-900"
-              }`}
-            >
-              {t}
-            </button>
-          );
-        })}
-      </div>
+      {tabs.length > 1 && (
+        <div className="flex flex-wrap gap-2 mb-6 -mt-2">
+          {tabs.map((t) => {
+            const isActive = active === t;
+            return (
+              <button
+                key={t}
+                type="button"
+                onClick={() => setActive(t)}
+                className={`text-[11px] uppercase tracking-wider font-bold px-3 py-1 transition ${
+                  isActive
+                    ? "bg-[var(--primary)] text-gray-900"
+                    : "text-gray-500 hover:text-gray-900"
+                }`}
+              >
+                {t}
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {filtered.length === 0 ? (
         <p className="text-sm text-gray-500 py-8 text-center">
@@ -133,6 +135,7 @@ export default function DontMissSection({
                 )}
                 {(() => {
                   const label = resolveLabel(featured);
+                  if (!label) return null; // no real category → no tag
                   const color = resolveColor(featured);
                   return (
                     <span className="absolute top-3 left-3">

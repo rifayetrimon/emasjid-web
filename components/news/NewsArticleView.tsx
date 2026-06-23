@@ -148,8 +148,9 @@ export default function NewsArticleView({ id }: { id: string }) {
               )}
             </nav>
 
-            {/* Category badge (Blog 2 only) */}
-            {isBlog && (
+            {/* Category badge (Blog 2 only) — DISABLED for now: it showed a
+                hardcoded fallback category, not a real CMS one. */}
+            {false && isBlog && (
               <span
                 className={`inline-block px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white mb-4 ${category.color}`}
               >
@@ -299,9 +300,12 @@ export default function NewsArticleView({ id }: { id: string }) {
                           {i + 1}
                         </span>
                         <div className="flex-1 min-w-0">
-                          <span className="text-[9px] uppercase tracking-wider text-[var(--primary)] font-bold">
-                            {categoryFor(p.contentId).label}
-                          </span>
+                          {/* Hardcoded fallback category tag — disabled for now. */}
+                          {false && (
+                            <span className="text-[9px] uppercase tracking-wider text-[var(--primary)] font-bold">
+                              {categoryFor(p.contentId).label}
+                            </span>
+                          )}
                           <Link href={`/news/detail/?id=${p.contentId}`} className="block mt-1">
                             <h4 className="text-xs font-bold text-gray-900 leading-snug line-clamp-2 group-hover:text-[var(--primary)] transition">
                               {p.title}

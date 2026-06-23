@@ -42,8 +42,10 @@ function formatDate(d: string): string {
 }
 
 function categoryLabelFor(item: NewsItem): string {
-  if (item.category && item.category.trim()) return item.category;
-  return categoryFor(item.contentId).label;
+  // Only show a tag when the CMS provides a real category. The hardcoded
+  // fallback (e.g. "Pelajar"/"Tahfiz") is disabled for now — return "" so the
+  // badge renders nothing instead of a placeholder.
+  return item.category && item.category.trim() ? item.category.trim() : "";
 }
 
 function categoryColorFor(item: NewsItem): string {
@@ -97,6 +99,7 @@ function Meta({ date, author = AUTHOR }: { date: string; author?: string }) {
 
 function CategoryBadge({ item }: { item: NewsItem }) {
   const label = categoryLabelFor(item);
+  if (!label) return null; // no real category → no tag
   const color = categoryColorFor(item);
   return (
     <span
