@@ -6,6 +6,21 @@ import VisitorList from "@/components/visitor/VisitorList";
 import type { VisitorStats } from "@/services/visitorService";
 import { useOverlaidFooter } from "@/lib/previewOverlay";
 
+// Real brand colour per social platform, matched from the icon path/label.
+// The icon glyphs ship as white SVGs, so we colour the chip behind them — the
+// familiar "brand-coloured button with a white icon" look.
+function socialBrandColor(src: string): string {
+  const s = (src || "").toLowerCase();
+  if (s.includes("instagram")) return "#E4405F";
+  if (s.includes("facebook") || /\bfb\b|\/fb\./.test(s)) return "#1877F2";
+  if (s.includes("youtube") || s.includes("channel")) return "#FF0000";
+  if (s.includes("linkedin")) return "#0A66C2";
+  if (s.includes("tiktok")) return "#010101";
+  if (s.includes("whatsapp")) return "#25D366";
+  if (s.includes("twitter") || /\/x\./.test(s)) return "#000000";
+  return "var(--primary)";
+}
+
 /**
  * Convert a hex string (#rgb, #rrggbb, or rrggbb) + alpha (0–1) to an
  * `rgba(...)` value usable in CSS. Falls back to a safe black if the
@@ -141,7 +156,7 @@ export default function Blog2Footer({ footer: rawFooter, visitors }: Props) {
             ))}
             {visitorInColumns && (
               <div>
-                <VisitorList stats={visitors!} tone="dark" align="left" />
+                <VisitorList stats={visitors!} tone="dark" align="left" color={footer.textColor || undefined} />
               </div>
             )}
           </div>
@@ -185,14 +200,16 @@ export default function Blog2Footer({ footer: rawFooter, visitors }: Props) {
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label="Social link"
-                    className="w-9 h-9 bg-white/5 hover:bg-[var(--primary)] flex items-center justify-center transition group"
+                    // Chip painted in the platform's real brand colour.
+                    style={{ backgroundColor: socialBrandColor(s.platform) }}
+                    className="w-9 h-9 rounded-md flex items-center justify-center transition group hover:opacity-90 hover:scale-105"
                   >
                     <Image
                       src={s.platform}
                       alt=""
-                      width={14}
-                      height={14}
-                      className="brightness-0 invert opacity-80 group-hover:brightness-0 group-hover:invert-0 transition"
+                      width={16}
+                      height={16}
+                      className="opacity-95 group-hover:opacity-100 transition"
                     />
                   </a>
                 ))}
@@ -200,17 +217,21 @@ export default function Blog2Footer({ footer: rawFooter, visitors }: Props) {
             )}
             {visitorInBottom && (
               <div>
-                <VisitorList stats={visitors!} tone="dark" align="left" />
+                <VisitorList stats={visitors!} tone="dark" align="left" color={footer.textColor || undefined} />
               </div>
             )}
           </div>
         )}
 
-        {/* Copyright — only when the admin provided one (no hardcoded fallback) */}
+        {/* Copyright / terms line — only when the admin provided one. A thin
+            divider line sits above it to separate it from the footer body. */}
         {footer.copyright && (
           <div
-            className="pt-6 text-xs"
-            style={{ color: footer.textColor || "rgba(255,255,255,0.5)" }}
+            className="mt-6 pt-6 border-t text-xs"
+            style={{
+              color: footer.textColor || "rgba(255,255,255,0.5)",
+              borderTopColor: hexToRgba(footer.textColor || "#ffffff", 0.18),
+            }}
           >
             <p>{footer.copyright}</p>
           </div>

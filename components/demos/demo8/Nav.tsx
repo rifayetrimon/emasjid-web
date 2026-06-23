@@ -27,6 +27,8 @@ export default function Demo8Nav({
   const [scrolled, setScrolled] = useState(false);
   const [openSub, setOpenSub] = useState<number | null>(null);
   const ns = resolveNavStyles(navConfig);
+  // Dropdown background from admin config (navbarDropdownBg), else the dark default.
+  const dropdownBg = ns.dropdownBg || "#18181b";
   const itemColor = ns.itemColor || "rgba(255,255,255,0.8)";
   const hoverColor = ns.hoverColor || "var(--primary)";
   const underlineColor = ns.underlineColor || hoverColor;
@@ -108,7 +110,7 @@ export default function Demo8Nav({
               </a>
               {item.submenu && item.submenu.length > 0 && (
                 <div className="absolute top-full left-0 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
-                  <div className="bg-zinc-900 border border-white/10 rounded-lg shadow-2xl py-2 min-w-[220px]">
+                  <div className="border border-white/10 rounded-lg shadow-2xl py-2 min-w-[220px]" style={{ backgroundColor: dropdownBg }}>
                     {item.submenu.map((sub, si) => (
                       <a
                         key={si}

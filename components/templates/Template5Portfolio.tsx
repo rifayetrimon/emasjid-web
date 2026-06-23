@@ -17,9 +17,15 @@ import SideBannerColumn, {
 } from "@/components/banner/SideBannerColumn";
 import Demo7PromotagBanner from "@/components/demos/demo7/PromotagBanner";
 import Demo7ComplaintBanner from "@/components/demos/demo7/ComplaintBanner";
+import Demo7Subheader from "@/components/demos/demo7/Subheader";
+import Demo7DonationBlock from "@/components/demos/demo7/DonationBlock";
+import Demo7GallerySection from "@/components/demos/demo7/GallerySection";
+import Demo7SidebarPlugins from "@/components/demos/demo7/SidebarPlugins";
 import { getNewsData } from "@/services/newsService";
 import { getFaqData } from "@/services/faqService";
-import { getSiteTheme } from "@/services/themeService";
+import { getSiteTheme, getDonationConfig } from "@/services/themeService";
+import { getGalleryPage } from "@/services/galleryService";
+import { getPluginsByCate } from "@/services/pluginService";
 import {
   getCachedConfig,
   getCachedNews,
@@ -72,6 +78,9 @@ export default function Template5Portfolio() {
       config,
       theme,
       promotagBanners,
+      galleryPage,
+      sidebarPlugins,
+      donation,
     ] = await Promise.all([
       getBannerData(),
       getNewsData(),
@@ -81,6 +90,9 @@ export default function Template5Portfolio() {
       getCachedConfig(),
       getSiteTheme(),
       getPromotagBanners(),
+      getGalleryPage(1, 10),
+      getPluginsByCate("sidebar"),
+      getDonationConfig(),
     ]);
     return {
       banner,
@@ -91,6 +103,9 @@ export default function Template5Portfolio() {
       config,
       theme,
       promotagBanners,
+      galleryPage,
+      sidebarPlugins,
+      donation,
     };
   }, []);
 
@@ -105,6 +120,9 @@ export default function Template5Portfolio() {
     config,
     theme,
     promotagBanners,
+    galleryPage,
+    sidebarPlugins,
+    donation,
   } = data;
 
   // Honor admin's maxDisplay; fall back to 6 only when unset.
@@ -129,6 +147,7 @@ export default function Template5Portfolio() {
 
   return (
     <TemplateLayout templateId="5">
+      {theme.subheader && <Demo7Subheader text={theme.subheader} />}
       {banner && banner.background_images?.length > 0 && (
         <section className="relative bg-[#fdfaf3] py-10 md:py-16 px-6 overflow-hidden">
           <div
@@ -144,6 +163,7 @@ export default function Template5Portfolio() {
                 <div className="relative h-[420px] md:h-[560px] overflow-hidden">
                   <BannerSlideshow
                     media={banner.background_images}
+                    links={banner.background_links}
                     interval={7000}
                   />
                   <div className="absolute inset-0 bg-gradient-to-b from-[var(--secondary)]/30 via-[var(--secondary)]/50 to-[var(--secondary)]/85" />
@@ -359,6 +379,12 @@ export default function Template5Portfolio() {
       )}
 
       <Demo7PromotagBanner banners={promotagBanners} />
+
+      <Demo7DonationBlock donation={donation} />
+
+      <Demo7GallerySection initial={galleryPage} />
+
+      <Demo7SidebarPlugins plugins={sidebarPlugins} />
 
       {theme.complaintEnabled && (
         <Demo7ComplaintBanner

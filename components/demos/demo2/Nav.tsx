@@ -30,6 +30,8 @@ export default function Demo2Nav({
   const [open, setOpen] = useState(false);
   const [openSub, setOpenSub] = useState<number | null>(null);
   const ns = resolveNavStyles(navConfig);
+  // Dropdown background from admin config (navbarDropdownBg), else white.
+  const dropdownBg = ns.dropdownBg || "#ffffff";
   const itemColor = ns.itemColor || "#1f2937";
   const hoverColor = ns.hoverColor || "var(--secondary)";
   const underlineColor = ns.underlineColor || hoverColor;
@@ -139,7 +141,7 @@ export default function Demo2Nav({
               </a>
               {item.submenu && item.submenu.length > 0 && (
                 <div className="absolute top-full left-0 pt-3 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
-                  <div className="bg-white border border-gray-200 shadow-xl py-2 min-w-[220px]">
+                  <div className="border border-gray-200 shadow-xl py-2 min-w-[220px]" style={{ backgroundColor: dropdownBg }}>
                     {item.submenu.map((sub, si) => (
                       <a
                         key={si}

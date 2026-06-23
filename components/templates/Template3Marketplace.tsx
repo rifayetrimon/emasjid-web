@@ -17,8 +17,15 @@ import SideBannerColumn, {
 } from "@/components/banner/SideBannerColumn";
 import Demo7PromotagBanner from "@/components/demos/demo7/PromotagBanner";
 import Demo7ComplaintBanner from "@/components/demos/demo7/ComplaintBanner";
+import Demo7Subheader from "@/components/demos/demo7/Subheader";
+import Demo7DonationBlock from "@/components/demos/demo7/DonationBlock";
+import Demo7GallerySection from "@/components/demos/demo7/GallerySection";
+import Demo7SidebarPlugins from "@/components/demos/demo7/SidebarPlugins";
 import { getNewsData } from "@/services/newsService";
 import { getFaqData } from "@/services/faqService";
+import { getSiteTheme, getDonationConfig } from "@/services/themeService";
+import { getGalleryPage } from "@/services/galleryService";
+import { getPluginsByCate } from "@/services/pluginService";
 import {
   getCachedConfig,
   getCachedNews,
@@ -44,6 +51,10 @@ export default function Template3Marketplace() {
       faq,
       config,
       promotagBanners,
+      theme,
+      galleryPage,
+      sidebarPlugins,
+      donation,
     ] = await Promise.all([
       getBannerData(),
       getNewsData(),
@@ -52,13 +63,41 @@ export default function Template3Marketplace() {
       getFaqData(),
       getCachedConfig(),
       getPromotagBanners(),
+      getSiteTheme(),
+      getGalleryPage(1, 10),
+      getPluginsByCate("sidebar"),
+      getDonationConfig(),
     ]);
-    return { banner, highlighted, newsRaw, sideBanners, faq, config, promotagBanners };
+    return {
+      banner,
+      highlighted,
+      newsRaw,
+      sideBanners,
+      faq,
+      config,
+      promotagBanners,
+      theme,
+      galleryPage,
+      sidebarPlugins,
+      donation,
+    };
   }, []);
 
   if (loading || !data) return <div className="min-h-screen bg-white" />;
 
-  const { banner, highlighted, newsRaw, sideBanners, faq, config, promotagBanners } = data;
+  const {
+    banner,
+    highlighted,
+    newsRaw,
+    sideBanners,
+    faq,
+    config,
+    promotagBanners,
+    theme,
+    galleryPage,
+    sidebarPlugins,
+    donation,
+  } = data;
 
   const footerCfg = config.footerConfig || {};
   const complaintEnabled =
@@ -68,6 +107,8 @@ export default function Template3Marketplace() {
     (Array.isArray(newsRaw) ? newsRaw : [])) as unknown as NewsItem[];
 
   const sideBannerSlides = flattenSideBanners(sideBanners);
+  // Show the side banners in a clean light sidebar beside the About card.
+  const hasSide = sideBannerSlides.length > 0;
 
   const address = [
     footerCfg.address1,
@@ -101,7 +142,7 @@ export default function Template3Marketplace() {
     <TemplateLayout templateId="3">
       {banner && banner.background_images?.length > 0 && (
         <section className="relative h-screen min-h-[700px] overflow-hidden -mt-[88px]">
-          <BannerSlideshow media={banner.background_images} interval={8000} />
+          <BannerSlideshow media={banner.background_images} links={banner.background_links} interval={8000} />
           {banner.overlayColor && (banner.overlayOpacity || 0) > 0 && (
             <div
               className="absolute inset-0 pointer-events-none"
@@ -169,46 +210,67 @@ export default function Template3Marketplace() {
         <Demo8Carousel title="Berita Terkini" items={carouselLatest} />
       )}
 
+      {theme.subheader && <Demo7Subheader text={theme.subheader} />}
+
       <section id="about" className="py-20 px-6">
         <div className="max-w-[1400px] mx-auto">
-          <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-zinc-900 to-zinc-950 border border-white/5 p-10 md:p-16">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.08),transparent_50%)] pointer-events-none" />
-            <div className="relative grid md:grid-cols-2 gap-10 items-center">
-              <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-[var(--primary)] font-semibold mb-4">
-                  Tentang Kami
-                </p>
-                <h2 className="text-3xl md:text-5xl font-bold leading-tight tracking-tight mb-5">
-                  {banner?.title?.general || "Selamat Datang"}{" "}
-                  {banner?.title?.focus?.text && (
-                    <span className="text-[var(--primary)] italic">
-                      {banner.title.focus.text}.
-                    </span>
-                  )}
-                </h2>
-                <p className="text-white/70 leading-relaxed mb-8 max-w-md">
-                  {banner?.supporting_text ||
-                    "Terokai koleksi pilihan kami dan dapatkan tawaran terbaik."}
-                </p>
-                <div className="grid grid-cols-3 gap-5 mb-8">
-                  <Stat label="Artikel" value={allNews.length || 0} />
-                  <Stat label="Sorotan" value={highlighted.length || 0} />
-                  <Stat label="Sokongan" value="24/7" />
+          <div
+            className={
+              hasSide ? "grid lg:grid-cols-3 gap-8 items-start" : ""
+            }
+          >
+            {/* About card */}
+            <div className={hasSide ? "lg:col-span-2" : ""}>
+              <div className="relative h-full rounded-2xl overflow-hidden bg-gradient-to-br from-zinc-900 to-zinc-950 border border-white/5 p-10 md:p-16">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.08),transparent_50%)] pointer-events-none" />
+                <div className="relative">
+                  <p className="text-xs uppercase tracking-[0.3em] text-[var(--primary)] font-semibold mb-4">
+                    Tentang Kami
+                  </p>
+                  <h2 className="text-3xl md:text-5xl font-bold leading-tight tracking-tight mb-5">
+                    {banner?.title?.general || "Selamat Datang"}{" "}
+                    {banner?.title?.focus?.text && (
+                      <span className="text-[var(--primary)] italic">
+                        {banner.title.focus.text}.
+                      </span>
+                    )}
+                  </h2>
+                  <p className="text-white/70 leading-relaxed mb-8 max-w-md">
+                    {banner?.supporting_text ||
+                      "Terokai koleksi pilihan kami dan dapatkan tawaran terbaik."}
+                  </p>
+                  <div className="grid grid-cols-3 gap-5 mb-8">
+                    <Stat label="Artikel" value={allNews.length || 0} />
+                    <Stat label="Sorotan" value={highlighted.length || 0} />
+                    <Stat label="Sokongan" value="24/7" />
+                  </div>
+                  <Link
+                    href="/news"
+                    className="inline-flex items-center gap-2 px-6 py-3 rounded bg-[var(--primary)] hover:bg-[var(--primary)]/85 text-black text-sm font-bold transition"
+                  >
+                    Mula Sekarang
+                  </Link>
                 </div>
-                <Link
-                  href="/news"
-                  className="inline-flex items-center gap-2 px-6 py-3 rounded bg-[var(--primary)] hover:bg-[var(--primary)]/85 text-black text-sm font-bold transition"
-                >
-                  Mula Sekarang
-                </Link>
               </div>
-              <SideBannerColumn slides={sideBannerSlides} />
             </div>
+
+            {/* Right sidebar — side banners (clean light column) */}
+            {hasSide && (
+              <aside className="lg:col-span-1 lg:sticky lg:top-24 lg:self-start">
+                <SideBannerColumn slides={sideBannerSlides} />
+              </aside>
+            )}
           </div>
         </div>
       </section>
 
       <Demo7PromotagBanner banners={promotagBanners} />
+
+      <Demo7DonationBlock donation={donation} />
+
+      <Demo7GallerySection initial={galleryPage} />
+
+      <Demo7SidebarPlugins plugins={sidebarPlugins} />
 
       {complaintEnabled && (
         <Demo7ComplaintBanner

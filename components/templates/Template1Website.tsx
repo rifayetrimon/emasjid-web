@@ -106,6 +106,9 @@ export default function Template1Website() {
     (Array.isArray(newsRaw) ? newsRaw : [])) as unknown as NewsItem[];
 
   const sideBannerSlides = flattenSideBanners(sideBanners);
+  // When there are live side banners, the news section becomes a main column +
+  // right sidebar (the banners sit on the SIDE, like the Blog template).
+  const hasSide = sideBannerSlides.length > 0;
 
   const address = [
     footerCfg.address1,
@@ -191,6 +194,7 @@ export default function Template1Website() {
               <div className="relative h-[400px] md:h-[500px] rounded-[40px] overflow-hidden shadow-2xl shadow-rose-200/50 border-4 border-white">
                 <BannerSlideshow
                   media={banner.background_images}
+                  links={banner.background_links}
                   interval={6500}
                 />
                 {banner.overlayColor && (
@@ -303,43 +307,60 @@ export default function Template1Website() {
               </Link>
             </div>
 
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {allNewsCapped.map((item) => (
-                <Link
-                  key={item.contentId}
-                  href={`/news/detail/?id=${item.contentId}`}
-                  className="group block bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-xl hover:-translate-y-1 transition-all"
+            <div
+              className={
+                hasSide
+                  ? "grid grid-cols-1 lg:grid-cols-4 gap-8 items-start"
+                  : ""
+              }
+            >
+              {/* Main column — news cards */}
+              <div className={hasSide ? "lg:col-span-3" : ""}>
+                <div
+                  className={`grid gap-6 ${
+                    hasSide ? "sm:grid-cols-2" : "md:grid-cols-2 lg:grid-cols-3"
+                  }`}
                 >
-                  <div className="relative h-44 overflow-hidden bg-gray-100">
-                    <Image
-                      src={item.file1}
-                      alt={item.altImg1 || item.title}
-                      fill
-                      className="object-cover group-hover:scale-110 transition-transform duration-500"
-                      sizes="(max-width:1024px) 50vw, 33vw"
-                    />
-                    <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-white/90 backdrop-blur text-[10px] uppercase tracking-wider font-bold text-gray-700">
-                      {item.date}
-                    </div>
-                  </div>
-                  <div className="p-5">
-                    <h3 className="text-base font-bold text-gray-900 leading-snug line-clamp-2 mb-2 group-hover:text-[var(--primary)] transition-colors">
-                      {item.title}
-                    </h3>
-                    <div
-                      className="text-sm text-gray-500 leading-relaxed line-clamp-2"
-                      dangerouslySetInnerHTML={{ __html: item.message }}
-                    />
-                  </div>
-                </Link>
-              ))}
-            </div>
-
-            {sideBannerSlides.length > 0 && (
-              <div className="mt-10">
-                <SideBannerColumn slides={sideBannerSlides} />
+                  {allNewsCapped.map((item) => (
+                    <Link
+                      key={item.contentId}
+                      href={`/news/detail/?id=${item.contentId}`}
+                      className="group block bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-xl hover:-translate-y-1 transition-all"
+                    >
+                      <div className="relative h-44 overflow-hidden bg-gray-100">
+                        <Image
+                          src={item.file1}
+                          alt={item.altImg1 || item.title}
+                          fill
+                          className="object-cover group-hover:scale-110 transition-transform duration-500"
+                          sizes="(max-width:1024px) 50vw, 33vw"
+                        />
+                        <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-white/90 backdrop-blur text-[10px] uppercase tracking-wider font-bold text-gray-700">
+                          {item.date}
+                        </div>
+                      </div>
+                      <div className="p-5">
+                        <h3 className="text-base font-bold text-gray-900 leading-snug line-clamp-2 mb-2 group-hover:text-[var(--primary)] transition-colors">
+                          {item.title}
+                        </h3>
+                        <div
+                          className="text-sm text-gray-500 leading-relaxed line-clamp-2"
+                          dangerouslySetInnerHTML={{ __html: item.message }}
+                        />
+                      </div>
+                    </Link>
+                  ))}
+                </div>
               </div>
-            )}
+
+              {/* Right sidebar — side banners (it's a "side" banner, so it
+                  lives on the side next to the content). */}
+              {hasSide && (
+                <aside className="lg:col-span-1 lg:sticky lg:top-24 lg:self-start">
+                  <SideBannerColumn slides={sideBannerSlides} />
+                </aside>
+              )}
+            </div>
           </div>
         </section>
       )}

@@ -50,6 +50,8 @@ export default function Demo5Nav({
   const [open, setOpen] = useState(false);
   const [openSub, setOpenSub] = useState<number | null>(null);
   const ns = resolveNavStyles(navConfig);
+  // Dropdown background from admin config (navbarDropdownBg), else the cream default.
+  const dropdownBg = ns.dropdownBg || "#fdfaf3";
   const itemColor = ns.itemColor || "var(--secondary)";
   const hoverColor = ns.hoverColor || "var(--primary)";
   const underlineColor = ns.underlineColor || hoverColor;
@@ -130,7 +132,7 @@ export default function Demo5Nav({
               </a>
               {item.submenu && item.submenu.length > 0 && (
                 <div className="absolute top-full left-0 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-[100]">
-                  <div className="bg-[#fdfaf3] border-2 border-[#d4b88a] py-2 min-w-[220px] shadow-xl">
+                  <div className="border-2 border-[#d4b88a] py-2 min-w-[220px] shadow-xl" style={{ backgroundColor: dropdownBg }}>
                     {item.submenu.map((sub, si) => (
                       <a
                         key={si}

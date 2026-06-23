@@ -143,6 +143,12 @@ export async function getBannerData(): Promise<BannerProps["banner"] | null> {
 
     const finalImages = allImages.length > 0 ? allImages : [DEMO_BANNER_IMAGE];
     const bannerBgImage = getImageUrl(finalImages[0]);
+    // Per-image click-through links, index-aligned with finalImages. Only when
+    // the tenant has real banner images; the demo fallback has no link.
+    const bannerLinks =
+      allImages.length > 0
+        ? (firstLive?.slides || []).map((s) => (s.url || "").trim())
+        : [""];
     const bannerFocusLink = firstLive?.slides[0]?.url || "";
 
     const general = configData.generalSettings || {};
@@ -164,6 +170,7 @@ export async function getBannerData(): Promise<BannerProps["banner"] | null> {
       logo: logoUrl,
       background_image: bannerBgImage,
       background_images: finalImages,
+      background_links: bannerLinks,
       menu_items: [],
       title: userProvidedBanner
         ? {
@@ -197,6 +204,7 @@ export async function getBannerData(): Promise<BannerProps["banner"] | null> {
       logo: "",
       background_image: DEMO_BANNER_IMAGE,
       background_images: [DEMO_BANNER_IMAGE],
+      background_links: [""],
       menu_items: [],
       title: DEMO_BANNER.title,
       supporting_text: DEMO_BANNER.supporting_text,

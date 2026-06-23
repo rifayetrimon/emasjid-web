@@ -17,9 +17,15 @@ import SideBannerColumn, {
 } from "@/components/banner/SideBannerColumn";
 import Demo7PromotagBanner from "@/components/demos/demo7/PromotagBanner";
 import Demo7ComplaintBanner from "@/components/demos/demo7/ComplaintBanner";
+import Demo7Subheader from "@/components/demos/demo7/Subheader";
+import Demo7DonationBlock from "@/components/demos/demo7/DonationBlock";
+import Demo7GallerySection from "@/components/demos/demo7/GallerySection";
+import Demo7SidebarPlugins from "@/components/demos/demo7/SidebarPlugins";
 import { getNewsData } from "@/services/newsService";
 import { getFaqData } from "@/services/faqService";
-import { getSiteTheme } from "@/services/themeService";
+import { getSiteTheme, getDonationConfig } from "@/services/themeService";
+import { getGalleryPage } from "@/services/galleryService";
+import { getPluginsByCate } from "@/services/pluginService";
 import {
   getCachedConfig,
   getCachedNews,
@@ -46,6 +52,9 @@ export default function Template4Corporate() {
       config,
       theme,
       promotagBanners,
+      galleryPage,
+      sidebarPlugins,
+      donation,
     ] = await Promise.all([
       getBannerData(),
       getNewsData(),
@@ -55,6 +64,9 @@ export default function Template4Corporate() {
       getCachedConfig(),
       getSiteTheme(),
       getPromotagBanners(),
+      getGalleryPage(1, 10),
+      getPluginsByCate("sidebar"),
+      getDonationConfig(),
     ]);
     return {
       banner,
@@ -65,6 +77,9 @@ export default function Template4Corporate() {
       config,
       theme,
       promotagBanners,
+      galleryPage,
+      sidebarPlugins,
+      donation,
     };
   }, []);
 
@@ -79,6 +94,9 @@ export default function Template4Corporate() {
     config,
     theme,
     promotagBanners,
+    galleryPage,
+    sidebarPlugins,
+    donation,
   } = data;
 
   // Honor admin's maxDisplay; fall back to 9 only when unset.
@@ -90,6 +108,9 @@ export default function Template4Corporate() {
     (Array.isArray(newsRaw) ? newsRaw : [])) as unknown as NewsItem[];
 
   const sideBannerSlides = flattenSideBanners(sideBanners);
+  // With live side banners, the news grid + a right sidebar share the row so
+  // the "side" banner sits on the side (like the Blog template).
+  const hasSide = sideBannerSlides.length > 0;
 
   const address = [
     footerCfg.address1,
@@ -106,6 +127,7 @@ export default function Template4Corporate() {
 
   return (
     <TemplateLayout templateId="4">
+      {theme.subheader && <Demo7Subheader text={theme.subheader} />}
       {banner && banner.background_images?.length > 0 && (
         <section className="relative">
           <div className="grid lg:grid-cols-12 gap-0">
@@ -144,6 +166,7 @@ export default function Template4Corporate() {
             <div className="lg:col-span-7 relative h-[400px] lg:h-[640px]">
               <BannerSlideshow
                 media={banner.background_images}
+                links={banner.background_links}
                 interval={6500}
               />
               {banner.overlayColor && (
@@ -271,44 +294,56 @@ export default function Template4Corporate() {
               </h2>
             </div>
 
-            <div className="grid lg:grid-cols-3 gap-px bg-gray-200">
-              {allNews.slice(0, cap).map((item) => (
-                <Link
-                  key={item.contentId}
-                  href={`/news/detail/?id=${item.contentId}`}
-                  className="group bg-white p-6 hover:bg-gray-50 transition-colors"
-                >
-                  <div className="relative w-full h-44 mb-4 overflow-hidden bg-gray-100">
-                    <Image
-                      src={item.file1}
-                      alt={item.altImg1 || item.title}
-                      fill
-                      className="object-cover group-hover:scale-105 transition-transform duration-500"
-                      sizes="(max-width:1024px) 100vw, 33vw"
-                    />
-                  </div>
-                  <p className="text-[10px] uppercase tracking-wider text-[var(--secondary)] mb-2 font-bold">
-                    {item.date}
-                  </p>
-                  <h3
-                    className="text-lg font-bold text-gray-900 leading-snug mb-2 line-clamp-2 group-hover:text-[var(--secondary)] transition-colors"
-                    style={{ fontFamily: "Georgia, serif" }}
+            <div
+              className={
+                hasSide ? "grid grid-cols-1 lg:grid-cols-4 gap-8 items-start" : ""
+              }
+            >
+              {/* Main column — news grid */}
+              <div
+                className={`grid gap-px bg-gray-200 ${
+                  hasSide ? "lg:col-span-3 sm:grid-cols-2" : "lg:grid-cols-3"
+                }`}
+              >
+                {allNews.slice(0, cap).map((item) => (
+                  <Link
+                    key={item.contentId}
+                    href={`/news/detail/?id=${item.contentId}`}
+                    className="group bg-white p-6 hover:bg-gray-50 transition-colors"
                   >
-                    {item.title}
-                  </h3>
-                  <div
-                    className="text-sm text-gray-600 leading-relaxed line-clamp-3"
-                    dangerouslySetInnerHTML={{ __html: item.message }}
-                  />
-                </Link>
-              ))}
-            </div>
-
-            {sideBannerSlides.length > 0 && (
-              <div className="mt-12">
-                <SideBannerColumn slides={sideBannerSlides} />
+                    <div className="relative w-full h-44 mb-4 overflow-hidden bg-gray-100">
+                      <Image
+                        src={item.file1}
+                        alt={item.altImg1 || item.title}
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-500"
+                        sizes="(max-width:1024px) 100vw, 33vw"
+                      />
+                    </div>
+                    <p className="text-[10px] uppercase tracking-wider text-[var(--secondary)] mb-2 font-bold">
+                      {item.date}
+                    </p>
+                    <h3
+                      className="text-lg font-bold text-gray-900 leading-snug mb-2 line-clamp-2 group-hover:text-[var(--secondary)] transition-colors"
+                      style={{ fontFamily: "Georgia, serif" }}
+                    >
+                      {item.title}
+                    </h3>
+                    <div
+                      className="text-sm text-gray-600 leading-relaxed line-clamp-3"
+                      dangerouslySetInnerHTML={{ __html: item.message }}
+                    />
+                  </Link>
+                ))}
               </div>
-            )}
+
+              {/* Right sidebar — side banners */}
+              {hasSide && (
+                <aside className="lg:col-span-1 lg:sticky lg:top-24 lg:self-start">
+                  <SideBannerColumn slides={sideBannerSlides} />
+                </aside>
+              )}
+            </div>
 
             <div className="mt-12 text-center">
               <Link
@@ -323,6 +358,12 @@ export default function Template4Corporate() {
       )}
 
       <Demo7PromotagBanner banners={promotagBanners} />
+
+      <Demo7DonationBlock donation={donation} />
+
+      <Demo7GallerySection initial={galleryPage} />
+
+      <Demo7SidebarPlugins plugins={sidebarPlugins} />
 
       {theme.complaintEnabled && (
         <Demo7ComplaintBanner

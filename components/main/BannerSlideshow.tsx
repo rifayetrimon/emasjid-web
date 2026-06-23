@@ -4,6 +4,9 @@ import { useState, useEffect, useCallback, useRef } from "react";
 
 interface BannerSlideshowProps {
   media: string[];
+  /** Optional click-through links, index-aligned with `media`. When a slide
+   *  has a non-empty link, the (active) slide becomes clickable. */
+  links?: string[];
   interval?: number;
   /** "cover" (default) crops to fill; "contain" shows the full image. */
   fit?: "cover" | "contain";
@@ -28,6 +31,7 @@ function isVideo(url: string): boolean {
 
 export default function BannerSlideshow({
   media,
+  links = [],
   interval = 7000,
   fit = "cover",
   showControls = true,
@@ -136,6 +140,9 @@ export default function BannerSlideshow({
           );
         }
 
+        const link = (links[index] || "").trim();
+        const isExternal = /^https?:\/\//i.test(link);
+
         return (
           <div
             key={index}
@@ -144,7 +151,22 @@ export default function BannerSlideshow({
               backgroundImage: `url(${url})`,
               opacity: active ? 1 : 0,
             }}
-          />
+          >
+            {/* Click-through link for this banner image. Sits above the image
+                but below the arrows/dots (z-20). Only the active slide is
+                clickable so hidden slides don't intercept clicks. */}
+            {link && (
+              <a
+                href={link}
+                aria-label="Banner link"
+                {...(isExternal
+                  ? { target: "_blank", rel: "noopener noreferrer" }
+                  : {})}
+                className="absolute inset-0 z-10"
+                style={{ pointerEvents: active ? "auto" : "none" }}
+              />
+            )}
+          </div>
         );
       })}
 

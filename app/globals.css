@@ -66,3 +66,89 @@ body {
 .faq-answer a:hover {
   color: #1d4ed8; /* Tailwind blue-700 */
 }
+
+/*
+ * ── Page transitions (scroll reveal) ─────────────────────────────────
+ * chip-in.asia-style reveal: page content starts hidden and animates in AS
+ * IT SCROLLS INTO VIEW. Driven by the CMS `pageTransition` config field —
+ * app/template.tsx puts `.cms-reveal-N` on a wrapper, marks the reveal
+ * targets with `.cms-rv` (which targets depend on the tier), and toggles
+ * `.is-visible` on each as the visitor scrolls.
+ *
+ * The THREE tiers differ in BOTH scope (how much animates) and intensity:
+ *
+ *   1 = Simple   — only big sections, gentle fade + small rise
+ *   2 = Advanced — sections + the cards inside grids cascade (staggered)
+ *   3 = Extreme  — EVERYTHING (headings, cards, images, blocks) reveals
+ *                  with a dramatic rise + zoom + de-blur, longer & staggered
+ *
+ * Per-item stagger comes from `--rv-delay` (set by the JS). The visible
+ * state ends on `transform: none` so no lingering transform can break the
+ * site's sticky/fixed elements — and the JS never marks sticky/fixed nodes.
+ * The whole site is client-rendered (static export + client fetch), so it
+ * already requires JS; hiding until JS reveals adds no no-JS regression.
+ * prefers-reduced-motion shows everything immediately.
+ */
+.cms-reveal-1 .cms-rv,
+.cms-reveal-2 .cms-rv,
+.cms-reveal-3 .cms-rv {
+  opacity: 0;
+  transition-delay: var(--rv-delay, 0s);
+}
+
+/* Tier 1 — Simple: a quiet, quick FADE. Barely any movement. */
+.cms-reveal-1 .cms-rv {
+  transform: translateY(8px);
+  transition-property: opacity, transform;
+  transition-duration: 0.45s;
+  transition-timing-function: ease-out;
+}
+
+/* Tier 2 — Advanced: a pronounced SLIDE-UP with a springy overshoot. */
+.cms-reveal-2 .cms-rv {
+  transform: translateY(64px);
+  transition-property: opacity, transform;
+  transition-duration: 0.75s;
+  /* "back" easing → overshoots slightly past, then settles (a spring). */
+  transition-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Tier 3 — Extreme: CINEMATIC — zoom in from small with a subtle 3D tilt.
+   Pure transform + opacity (GPU-composited) so it stays smooth even when many
+   elements reveal at once. No filter:blur here — animating blur on lots of
+   nodes is the main cause of stutter. */
+.cms-reveal-3 .cms-rv {
+  transform: perspective(1200px) translateY(72px) scale(0.88) rotateX(8deg);
+  transform-origin: center top;
+  transition-property: opacity, transform;
+  transition-duration: 0.9s;
+  transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.cms-reveal-1 .cms-rv.is-visible,
+.cms-reveal-2 .cms-rv.is-visible,
+.cms-reveal-3 .cms-rv.is-visible {
+  opacity: 1;
+  transform: none;
+  filter: none;
+}
+
+/*
+ * NOTE: there is intentionally NO whole-page (wrapper) animation. Animating the
+ * wrapper also animated the navbar/footer on every navigation, which read as
+ * the navbar "reloading". Instead, only the CONTENT animates — the scroll-reveal
+ * above targets `<main>`'s elements, so the nav and footer stay perfectly
+ * still while the page content cascades in on navigation and on scroll.
+ */
+
+/* Respect users who ask the OS to minimise motion — show everything. */
+@media (prefers-reduced-motion: reduce) {
+  .cms-reveal-1 .cms-rv,
+  .cms-reveal-2 .cms-rv,
+  .cms-reveal-3 .cms-rv {
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+    transition: none !important;
+  }
+}

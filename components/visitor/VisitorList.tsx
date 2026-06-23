@@ -9,6 +9,9 @@ interface Props {
   titleClass?: string;
   /** Content alignment within the block. Defaults to "right" for footer placement. */
   align?: "left" | "right";
+  /** Explicit text colour for the title/labels (e.g. the footer area text
+   *  colour). When set it overrides the tone's default label colour. */
+  color?: string;
 }
 
 // Mirrors the four time windows the visitors API returns today. When the
@@ -26,10 +29,15 @@ export default function VisitorList({
   tone = "dark",
   titleClass,
   align = "right",
+  color,
 }: Props) {
   const items = ITEMS(stats);
   const labelColor = tone === "dark" ? "text-white" : "text-gray-900";
   const isRight = align === "right";
+  // When the footer area text colour is configured, it overrides the tone's
+  // default (white/black) for the title, labels and colon. Inline style wins
+  // over the Tailwind colour class, so the class stays as a fallback.
+  const textStyle = color ? { color } : undefined;
 
   return (
     <div className={isRight ? "text-right" : "text-left"}>
@@ -38,6 +46,7 @@ export default function VisitorList({
           titleClass ||
           `text-2xl font-extrabold uppercase tracking-wider mb-4 ${labelColor}`
         }
+        style={textStyle}
       >
         Pengunjung
       </h4>
@@ -54,8 +63,12 @@ export default function VisitorList({
               isRight ? "justify-end" : "justify-start"
             }`}
           >
-            <span className={`${labelColor} font-medium`}>{item.label}</span>
-            <span className={`${labelColor} font-medium`}>:</span>
+            <span className={`${labelColor} font-medium`} style={textStyle}>
+              {item.label}
+            </span>
+            <span className={`${labelColor} font-medium`} style={textStyle}>
+              :
+            </span>
             <span className="text-[var(--primary)] font-semibold tabular-nums">
               <AnimatedCount value={item.value} />
             </span>

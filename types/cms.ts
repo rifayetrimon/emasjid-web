@@ -43,6 +43,9 @@ export interface Banner {
   logo: string;
   background_image: string;
   background_images: string[];
+  /** Per-image click-through links, index-aligned with background_images.
+   *  Empty string = that image isn't clickable. */
+  background_links: string[];
   menu_items: MenuItem[];
   title: BannerTitle;
   supporting_text: string;

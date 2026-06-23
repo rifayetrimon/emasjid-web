@@ -17,9 +17,15 @@ import SideBannerColumn, {
 } from "@/components/banner/SideBannerColumn";
 import Demo7PromotagBanner from "@/components/demos/demo7/PromotagBanner";
 import Demo7ComplaintBanner from "@/components/demos/demo7/ComplaintBanner";
+import Demo7Subheader from "@/components/demos/demo7/Subheader";
+import Demo7DonationBlock from "@/components/demos/demo7/DonationBlock";
+import Demo7GallerySection from "@/components/demos/demo7/GallerySection";
+import Demo7SidebarPlugins from "@/components/demos/demo7/SidebarPlugins";
 import { getNewsData } from "@/services/newsService";
 import { getFaqData } from "@/services/faqService";
-import { getSiteTheme } from "@/services/themeService";
+import { getSiteTheme, getDonationConfig } from "@/services/themeService";
+import { getGalleryPage } from "@/services/galleryService";
+import { getPluginsByCate } from "@/services/pluginService";
 import {
   getCachedConfig,
   getCachedNews,
@@ -46,6 +52,9 @@ export default function Template2Donation() {
       config,
       theme,
       promotagBanners,
+      galleryPage,
+      sidebarPlugins,
+      donation,
     ] = await Promise.all([
       getBannerData(),
       getNewsData(),
@@ -55,6 +64,9 @@ export default function Template2Donation() {
       getCachedConfig(),
       getSiteTheme(),
       getPromotagBanners(),
+      getGalleryPage(1, 10),
+      getPluginsByCate("sidebar"),
+      getDonationConfig(),
     ]);
     return {
       banner,
@@ -65,6 +77,9 @@ export default function Template2Donation() {
       config,
       theme,
       promotagBanners,
+      galleryPage,
+      sidebarPlugins,
+      donation,
     };
   }, []);
 
@@ -79,6 +94,9 @@ export default function Template2Donation() {
     config,
     theme,
     promotagBanners,
+    galleryPage,
+    sidebarPlugins,
+    donation,
   } = data;
 
   // Honor admin's maxDisplay; fall back to 6 only when unset.
@@ -103,11 +121,12 @@ export default function Template2Donation() {
 
   return (
     <TemplateLayout templateId="2">
+      {theme.subheader && <Demo7Subheader text={theme.subheader} />}
       <main className="max-w-[1400px] mx-auto px-6 py-6">
         {banner && banner.background_images?.length > 0 && (
           <section className="mb-4">
             <div className="relative rounded-3xl overflow-hidden h-[420px] lg:h-[520px]">
-              <BannerSlideshow media={banner.background_images} interval={6500} />
+              <BannerSlideshow media={banner.background_images} links={banner.background_links} interval={6500} />
               <div className="absolute inset-0 bg-gradient-to-tr from-black/80 via-black/40 to-transparent" />
               {banner.overlayColor && (
                 <div
@@ -221,7 +240,7 @@ export default function Template2Donation() {
         )}
 
         {allNews.length > 0 && (
-          <section className="grid grid-cols-1 lg:grid-cols-12 gap-4 mb-4">
+          <section className="grid grid-cols-1 lg:grid-cols-12 gap-4 mb-4 items-start">
             <div className="lg:col-span-8 rounded-3xl bg-white border border-gray-100 p-6 md:p-8">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-bold text-gray-900">
@@ -267,7 +286,7 @@ export default function Template2Donation() {
               </div>
             </div>
 
-            <div className="lg:col-span-4 space-y-4">
+            <div className="lg:col-span-4 space-y-4 lg:sticky lg:top-24 lg:self-start">
               <div className="rounded-3xl bg-gradient-to-br from-gray-900 to-gray-700 p-6 text-white">
                 <p className="text-xs uppercase tracking-wider text-white/60 font-bold mb-2">
                   Tentang Kami
@@ -295,6 +314,12 @@ export default function Template2Donation() {
       </main>
 
       <Demo7PromotagBanner banners={promotagBanners} />
+
+      <Demo7DonationBlock donation={donation} />
+
+      <Demo7GallerySection initial={galleryPage} />
+
+      <Demo7SidebarPlugins plugins={sidebarPlugins} />
 
       {theme.complaintEnabled && (
         <Demo7ComplaintBanner

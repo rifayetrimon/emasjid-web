@@ -2,12 +2,29 @@
 
 import { useState, useRef, useEffect, FormEvent } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import Image from "@/components/ui/FallbackImage";
 import { MenuItem, NavConfig, NavSocialLink } from "@/types/cms";
 import { Menu, X, ChevronDown, ChevronRight, Search } from "lucide-react";
 import { resolveNavStyles } from "@/lib/navStyles";
 import { withMoreDropdown } from "@/lib/navOverflow";
+
+// True when `link` points at the page the visitor is currently on, so the nav
+// can highlight it (with the hover colour). Internal links only — external
+// links are never treated as the active page.
+function isActiveNavLink(pathname: string, link?: string): boolean {
+  if (!link || link === "#") return false;
+  if (/^[a-z][a-z0-9+.-]*:/i.test(link)) return false; // external (http:, mailto:, …)
+  // Query-param content routes (e.g. /news/detail/?id=…, /static/?slug=…) don't
+  // map cleanly to a single nav entry — don't try to mark them active.
+  if (link.includes("?")) return false;
+  const norm = (s: string) => (s || "").replace(/[#?].*$/, "").replace(/\/+$/, "");
+  const a = norm(link); // "" for home ("/")
+  const b = norm(pathname || "");
+  if (a === "") return b === ""; // home is active only at the site root
+  // Exact match, a nested child, or (base-path tolerant) a suffix match.
+  return b === a || b.startsWith(a + "/") || b.endsWith(a);
+}
 
 interface Props {
   menuItems: MenuItem[];
@@ -28,7 +45,7 @@ const NESTED_SUBMENU_WIDTH = 240;
  * parent sits too close to the viewport's right edge, in which case the
  * fly-out flips to the left so it doesn't get clipped.
  */
-function DesktopSubmenuItem({ item }: { item: MenuItem }) {
+function DesktopSubmenuItem({ item, bg }: { item: MenuItem; bg: string }) {
   const hasChildren = !!item.submenu && item.submenu.length > 0;
   const isExternal = item.targetWindow === "_blank";
   const triggerRef = useRef<HTMLSpanElement>(null);
@@ -63,9 +80,12 @@ function DesktopSubmenuItem({ item }: { item: MenuItem }) {
             openLeft ? "right-full" : "left-full"
           } opacity-0 invisible group-hover/sub:opacity-100 group-hover/sub:visible transition-all z-50`}
         >
-          <div className="bg-white border border-gray-200 shadow-xl py-2 min-w-[220px]">
+          <div
+            className="border border-gray-200 shadow-xl py-2 min-w-[220px]"
+            style={{ backgroundColor: bg }}
+          >
             {item.submenu!.map((sub, si) => (
-              <DesktopSubmenuItem key={si} item={sub} />
+              <DesktopSubmenuItem key={si} item={sub} bg={bg} />
             ))}
           </div>
         </div>
@@ -91,14 +111,19 @@ function DesktopSubmenuItem({ item }: { item: MenuItem }) {
 function MobileMenuItem({
   item,
   depth = 0,
+  hoverColor,
 }: {
   item: MenuItem;
   depth?: number;
+  /** Hover/active colour from the nav config (active page uses this). */
+  hoverColor: string;
 }) {
   const [open, setOpen] = useState(false);
   const hasSub = !!item.submenu && item.submenu.length > 0;
   const isExternal = item.targetWindow === "_blank";
   const indent = depth === 0 ? "" : depth === 1 ? "pl-4" : "pl-8";
+  const pathname = usePathname();
+  const active = isActiveNavLink(pathname || "/", item.link);
 
   if (hasSub) {
     return (
@@ -117,7 +142,7 @@ function MobileMenuItem({
         {open && (
           <div className="pb-2 space-y-1">
             {item.submenu!.map((sub, si) => (
-              <MobileMenuItem key={si} item={sub} depth={depth + 1} />
+              <MobileMenuItem key={si} item={sub} depth={depth + 1} hoverColor={hoverColor} />
             ))}
           </div>
         )}
@@ -130,7 +155,11 @@ function MobileMenuItem({
       href={item.link || "#"}
       target={isExternal ? "_blank" : undefined}
       rel={isExternal ? "noopener noreferrer" : undefined}
-      className={`block py-2.5 text-sm font-bold uppercase tracking-wider text-gray-700 ${indent} border-b border-gray-100 last:border-0`}
+      aria-current={active ? "page" : undefined}
+      className={`block py-2.5 text-sm font-bold uppercase tracking-wider ${indent} border-b border-gray-100 last:border-0 ${
+        active ? "" : "text-gray-700"
+      }`}
+      style={active ? { color: hoverColor } : undefined}
     >
       {item.label}
     </a>
@@ -148,10 +177,17 @@ export default function Blog2Nav({
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
   const ns = resolveNavStyles(navConfig);
+  // Dropdown background from admin config (navbarDropdownBg), else white.
+  const dropdownBg = ns.dropdownBg || "#ffffff";
   // Resolved colors with sane fallbacks for the blog template's defaults.
   const itemColor = ns.itemColor || "#374151";
   const hoverColor = ns.hoverColor || "var(--primary)";
   const underlineColor = ns.underlineColor || hoverColor;
+
+  // Highlight the menu item for the page the visitor is currently on, using the
+  // hover colour. Internal links only (external links are never "active").
+  const pathname = usePathname();
+  const isActiveLink = (link?: string) => isActiveNavLink(pathname || "/", link);
   const navItemFontSize = ns.fontSizePx ? `${ns.fontSizePx}px` : undefined;
 
   // Cap the visible navbar at 7 top-level entries (6 originals + a synthetic
@@ -279,34 +315,51 @@ export default function Blog2Nav({
                       )}
                     </span>
                   ) : (
-                    <a
-                      href={item.link || "#"}
-                      target={isExternal ? "_blank" : undefined}
-                      rel={isExternal ? "noopener noreferrer" : undefined}
-                      className="relative text-[12px] font-bold uppercase tracking-[0.15em] transition flex items-center gap-1"
-                      style={{ color: itemColor, fontSize: navItemFontSize }}
-                      onMouseEnter={(e) =>
-                        (e.currentTarget.style.color = hoverColor)
-                      }
-                      onMouseLeave={(e) =>
-                        (e.currentTarget.style.color = itemColor)
-                      }
-                    >
-                      {item.label}
-                      {ns.showUnderline && (
-                        <span
-                          aria-hidden
-                          className="absolute left-0 -bottom-1 h-[2px] w-0 group-hover:w-full transition-all duration-300"
-                          style={{ backgroundColor: underlineColor }}
-                        />
-                      )}
-                    </a>
+                    (() => {
+                      const active = isActiveLink(item.link);
+                      return (
+                        <a
+                          href={item.link || "#"}
+                          target={isExternal ? "_blank" : undefined}
+                          rel={isExternal ? "noopener noreferrer" : undefined}
+                          aria-current={active ? "page" : undefined}
+                          className="relative text-[12px] font-bold uppercase tracking-[0.15em] transition flex items-center gap-1"
+                          // Active page uses the hover colour.
+                          style={{
+                            color: active ? hoverColor : itemColor,
+                            fontSize: navItemFontSize,
+                          }}
+                          onMouseEnter={(e) =>
+                            (e.currentTarget.style.color = hoverColor)
+                          }
+                          onMouseLeave={(e) =>
+                            (e.currentTarget.style.color = active
+                              ? hoverColor
+                              : itemColor)
+                          }
+                        >
+                          {item.label}
+                          {ns.showUnderline && (
+                            <span
+                              aria-hidden
+                              className={`absolute left-0 -bottom-1 h-[2px] transition-all duration-300 ${
+                                active ? "w-full" : "w-0 group-hover:w-full"
+                              }`}
+                              style={{ backgroundColor: underlineColor }}
+                            />
+                          )}
+                        </a>
+                      );
+                    })()
                   )}
                   {hasSub && (
                     <div className="absolute top-full left-0 pt-3 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
-                      <div className="bg-white border border-gray-200 shadow-xl py-2 min-w-[220px]">
+                      <div
+                        className="border border-gray-200 shadow-xl py-2 min-w-[220px]"
+                        style={{ backgroundColor: dropdownBg }}
+                      >
                         {item.submenu!.map((sub, si) => (
-                          <DesktopSubmenuItem key={si} item={sub} />
+                          <DesktopSubmenuItem key={si} item={sub} bg={dropdownBg} />
                         ))}
                       </div>
                     </div>
@@ -381,7 +434,7 @@ export default function Blog2Nav({
         <div className="lg:hidden border-t border-gray-200 bg-white">
           <nav className="px-5 py-3">
             {displayMenuItems.map((item, i) => (
-              <MobileMenuItem key={i} item={item} />
+              <MobileMenuItem key={i} item={item} hoverColor={hoverColor} />
             ))}
           </nav>
         </div>

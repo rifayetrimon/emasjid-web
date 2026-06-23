@@ -333,6 +333,7 @@ export default function Template6Blog() {
           <div className="relative w-full overflow-hidden bg-gray-100">
             <BannerSlideshow
               media={banner.background_images}
+              links={banner.background_links}
               interval={6500}
               fit="cover"
               naturalAspect
@@ -353,7 +354,10 @@ export default function Template6Blog() {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
                 <div className="relative w-full px-6 md:px-10 pb-8 md:pb-12 text-white pointer-events-auto">
                   {(banner.title?.general || banner.title?.focus?.text) && (
-                    <h1 className="text-2xl md:text-4xl font-extrabold leading-tight drop-shadow-lg">
+                    <h1
+                      className="text-2xl md:text-4xl font-extrabold leading-tight drop-shadow-lg"
+                      style={{ color: "var(--primary)" }}
+                    >
                       {banner.title?.general}
                       {banner.title?.focus?.text && (
                         <>
