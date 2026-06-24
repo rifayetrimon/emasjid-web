@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "@/components/ui/FallbackImage";
+import { socialBrand } from "@/lib/socialBrand";
 import { MenuItem, NavConfig, NavSocialLink } from "@/types/cms";
 import { Menu, X, ChevronDown } from "lucide-react";
 import { resolveNavStyles } from "@/lib/navStyles";
@@ -152,24 +153,22 @@ export default function Demo5Nav({
         </nav>
 
         <div className="hidden lg:flex items-center gap-2">
-          {socialLinks.slice(0, 4).map((s, i) => (
-            <a
-              key={i}
-              href={s.link}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label={s.platform}
-              className="group w-9 h-9 rounded-full border border-[#d4b88a] bg-[#f5e9d0] hover:bg-[#e8d5a8] hover:border-[var(--primary)] flex items-center justify-center transition"
-            >
-              <Image
-                src={s.icon}
-                alt={s.platform}
-                width={14}
-                height={14}
-                className="brightness-0 opacity-70 group-hover:opacity-100 transition-opacity"
-              />
-            </a>
-          ))}
+          {socialLinks.slice(0, 4).map((s, i) => {
+            const { Icon, label } = socialBrand(s.platform || s.icon);
+            return (
+              <a
+                key={i}
+                href={s.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={label}
+                title={label}
+                className="group w-9 h-9 rounded-full border border-[#d4b88a] bg-[#f5e9d0] hover:bg-[#e8d5a8] hover:border-[var(--primary)] flex items-center justify-center transition"
+              >
+                <Icon className="w-[14px] h-[14px] text-gray-800 opacity-70 group-hover:opacity-100 transition-opacity" aria-hidden />
+              </a>
+            );
+          })}
         </div>
 
         <button

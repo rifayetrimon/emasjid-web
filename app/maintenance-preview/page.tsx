@@ -4,8 +4,10 @@ import Link from "next/link";
 import { MAINTENANCE_DESIGN_OPTIONS } from "@/components/MaintenancePage";
 import { getCachedConfig } from "@/services/apiCache";
 import { useCmsData } from "@/lib/useCmsData";
+import { useContentReady } from "@/lib/contentReady";
 
 export default function MaintenancePreviewIndex() {
+  useContentReady(); // this page renders immediately — complete the progress bar
   const { data } = useCmsData(() => getCachedConfig(), []);
   const config = (data || {}) as Record<string, unknown>;
   const general = (config?.generalSettings as Record<string, unknown>) || {};

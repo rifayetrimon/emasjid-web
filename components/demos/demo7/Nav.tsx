@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "@/components/ui/FallbackImage";
+import { socialBrand } from "@/lib/socialBrand";
 import { MenuItem, NavConfig, NavSocialLink } from "@/types/cms";
 import { Menu, X, ChevronDown, Sparkles } from "lucide-react";
 import { resolveNavStyles } from "@/lib/navStyles";
@@ -130,24 +131,22 @@ export default function Demo7Nav({
 
         <div className="hidden lg:flex items-center gap-2">
           <div className="flex items-center gap-1.5 mr-2">
-            {socialLinks.slice(0, 3).map((s, i) => (
-              <a
-                key={i}
-                href={s.link}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={s.platform}
-                className="group w-9 h-9 rounded-full bg-gray-100/60 hover:bg-rose-100 flex items-center justify-center transition-all"
-              >
-                <Image
-                  src={s.icon}
-                  alt={s.platform}
-                  width={15}
-                  height={15}
-                  className="brightness-0 opacity-60 group-hover:opacity-100 transition-opacity"
-                />
-              </a>
-            ))}
+            {socialLinks.slice(0, 3).map((s, i) => {
+              const { Icon, label } = socialBrand(s.platform || s.icon);
+              return (
+                <a
+                  key={i}
+                  href={s.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={label}
+                  title={label}
+                  className="group w-9 h-9 rounded-full bg-gray-100/60 hover:bg-rose-100 flex items-center justify-center transition-all"
+                >
+                  <Icon className="w-[15px] h-[15px] text-gray-700 opacity-60 group-hover:opacity-100 group-hover:text-rose-500 transition" aria-hidden />
+                </a>
+              );
+            })}
           </div>
           <Link
             href="/news"

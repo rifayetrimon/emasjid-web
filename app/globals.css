@@ -188,3 +188,42 @@ body {
     transition: none !important;
   }
 }
+
+/*
+ * ── Navigation freeze overlay ─────────────────────────────────────────
+ * A visual snapshot of the current page, held on top during a client-side
+ * navigation so the visitor STAYS on the current page while the progress bar
+ * runs — instead of seeing the next page's blank loading frame. NavProgress
+ * builds it from a DOM clone (offset to the current scroll) and fades it out
+ * (`is-leaving`) once the new page signals it's ready, revealing the new
+ * content directly. Sits just below the progress bar (9999) so the bar stays
+ * visible on top of the frozen page.
+ */
+.cms-navfreeze {
+  position: fixed;
+  inset: 0;
+  z-index: 9990;
+  overflow: hidden;
+  background: var(--background, #ffffff);
+  opacity: 1;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.cms-navfreeze.is-leaving {
+  opacity: 0;
+}
+
+.cms-navfreeze__inner {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cms-navfreeze {
+    transition: none !important;
+  }
+}
+

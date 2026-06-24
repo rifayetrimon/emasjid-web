@@ -1,8 +1,10 @@
 import Link from "next/link";
+import ContentReadyBeacon from "@/components/ContentReadyBeacon";
 
 export default function NotFoundPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <ContentReadyBeacon />
       <div className="text-center p-8">
         <h1 className="text-6xl font-bold text-gray-300 mb-4">404</h1>
         <h2 className="text-2xl font-semibold text-gray-700 mb-4">

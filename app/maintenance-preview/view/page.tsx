@@ -8,6 +8,7 @@ import {
 } from "@/components/MaintenancePage";
 import { getCachedConfig } from "@/services/apiCache";
 import { useCmsData } from "@/lib/useCmsData";
+import ContentReadyBeacon from "@/components/ContentReadyBeacon";
 
 const VALID: MaintenanceDesignId[] = ["1", "2", "3", "4"];
 
@@ -20,6 +21,7 @@ function MaintenancePreviewInner() {
   if (!VALID.includes(id)) {
     return (
       <main className="min-h-screen flex items-center justify-center bg-gray-50 text-gray-700 px-6">
+        <ContentReadyBeacon />
         <p className="text-sm">Unknown maintenance design id.</p>
       </main>
     );

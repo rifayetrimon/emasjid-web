@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, FormEvent } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import Image from "@/components/ui/FallbackImage";
+import { socialBrand } from "@/lib/socialBrand";
 import { MenuItem, NavConfig, NavSocialLink } from "@/types/cms";
 import { Menu, X, ChevronDown, ChevronRight, Search } from "lucide-react";
 import { resolveNavStyles } from "@/lib/navStyles";
@@ -279,23 +280,24 @@ export default function Blog2Nav({
           <span className="text-white">{today}</span>
           {socialLinks.length > 0 && (
             <div className="hidden md:flex items-center gap-3">
-              {socialLinks.slice(0, 5).map((s, i) => (
-                <a
-                  key={i}
-                  href={s.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={s.platform}
-                  className="opacity-90 hover:opacity-100 transition"
-                >
-                  <Image
-                    src={s.icon}
-                    alt={s.platform}
-                    width={13}
-                    height={13}
-                  />
-                </a>
-              ))}
+              {socialLinks.slice(0, 5).map((s, i) => {
+                // Official brand glyph (react-icons), white to match the dark
+                // utility bar — no dependency on /icons/*.svg (those 403 live).
+                const { Icon, label } = socialBrand(s.platform || s.icon);
+                return (
+                  <a
+                    key={i}
+                    href={s.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={label}
+                    title={label}
+                    className="opacity-90 hover:opacity-100 transition"
+                  >
+                    <Icon className="w-[13px] h-[13px] text-white" aria-hidden />
+                  </a>
+                );
+              })}
             </div>
           )}
         </div>

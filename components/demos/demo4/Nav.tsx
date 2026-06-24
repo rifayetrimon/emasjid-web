@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "@/components/ui/FallbackImage";
+import { socialBrand } from "@/lib/socialBrand";
 import { MenuItem, NavConfig, NavSocialLink } from "@/types/cms";
 import { Menu, X, ChevronDown } from "lucide-react";
 import { resolveNavStyles } from "@/lib/navStyles";
@@ -110,24 +111,22 @@ export default function Demo4Nav({
 
         <div className="hidden lg:flex items-center gap-3 flex-shrink-0">
           <div className="flex items-center gap-1.5">
-            {socialLinks.slice(0, 3).map((s, i) => (
-              <a
-                key={i}
-                href={s.link}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={s.platform}
-                className="group w-9 h-9 rounded-lg bg-gray-50 hover:bg-gray-100 flex items-center justify-center transition"
-              >
-                <Image
-                  src={s.icon}
-                  alt={s.platform}
-                  width={16}
-                  height={16}
-                  className="brightness-0 opacity-70 group-hover:opacity-100"
-                />
-              </a>
-            ))}
+            {socialLinks.slice(0, 3).map((s, i) => {
+              const { Icon, label } = socialBrand(s.platform || s.icon);
+              return (
+                <a
+                  key={i}
+                  href={s.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={label}
+                  title={label}
+                  className="group w-9 h-9 rounded-lg bg-gray-50 hover:bg-gray-100 flex items-center justify-center transition"
+                >
+                  <Icon className="w-4 h-4 text-gray-700 opacity-70 group-hover:opacity-100" aria-hidden />
+                </a>
+              );
+            })}
           </div>
           <Link
             href="/news"

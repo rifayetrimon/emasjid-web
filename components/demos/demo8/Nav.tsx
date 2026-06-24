@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "@/components/ui/FallbackImage";
+import { socialBrand } from "@/lib/socialBrand";
 import { MenuItem, NavConfig, NavSocialLink } from "@/types/cms";
 import { Menu, X, ChevronDown, Search } from "lucide-react";
 import { resolveNavStyles } from "@/lib/navStyles";
@@ -138,24 +139,22 @@ export default function Demo8Nav({
           </button>
           <div className="w-[1px] h-6 bg-white/10" />
           <div className="flex items-center gap-1.5">
-            {socialLinks.slice(0, 3).map((s, i) => (
-              <a
-                key={i}
-                href={s.link}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={s.platform}
-                className="w-9 h-9 rounded-full hover:bg-white/10 flex items-center justify-center transition"
-              >
-                <Image
-                  src={s.icon}
-                  alt={s.platform}
-                  width={15}
-                  height={15}
-                  className="brightness-0 invert opacity-70 hover:opacity-100"
-                />
-              </a>
-            ))}
+            {socialLinks.slice(0, 3).map((s, i) => {
+              const { Icon, label } = socialBrand(s.platform || s.icon);
+              return (
+                <a
+                  key={i}
+                  href={s.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={label}
+                  title={label}
+                  className="group w-9 h-9 rounded-full hover:bg-white/10 flex items-center justify-center transition"
+                >
+                  <Icon className="w-[15px] h-[15px] text-white/70 group-hover:text-white" aria-hidden />
+                </a>
+              );
+            })}
           </div>
           <Link
             href="/news"

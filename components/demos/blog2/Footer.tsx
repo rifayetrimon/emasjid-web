@@ -5,39 +5,14 @@ import { FooterProps } from "@/types/cms";
 import VisitorList from "@/components/visitor/VisitorList";
 import type { VisitorStats } from "@/services/visitorService";
 import { useOverlaidFooter } from "@/lib/previewOverlay";
-import type { IconType } from "react-icons";
-import {
-  FaFacebookF,
-  FaInstagram,
-  FaXTwitter,
-  FaLinkedinIn,
-  FaYoutube,
-  FaTiktok,
-  FaWhatsapp,
-  FaLink,
-} from "react-icons/fa6";
+import { socialBrand } from "@/lib/socialBrand";
 
 // The footer shows the OFFICIAL brand mark for each platform — the recognisable
 // logo (FB's "f", WhatsApp's phone, etc.) rendered in white on a chip painted
-// in that brand's real colour. We use react-icons rather than the local white
-// SVGs so the footer never depends on those image files (which is what broke
-// the live site: fb.svg was served 403). The navbar keeps the plain white
-// SVGs — per design, only the footer uses the full-colour official treatment.
-//
-// `src` here is the value stored in social_links[].platform — which is actually
-// the icon PATH the API resolved (e.g. "/icons/fb.svg"), so we detect the
-// platform from it the same way for both the colour and the glyph.
-function socialBrand(src: string): { color: string; Icon: IconType; label: string } {
-  const s = (src || "").toLowerCase();
-  if (s.includes("instagram")) return { color: "#E4405F", Icon: FaInstagram, label: "Instagram" };
-  if (s.includes("facebook") || /\bfb\b|\/fb\./.test(s)) return { color: "#1877F2", Icon: FaFacebookF, label: "Facebook" };
-  if (s.includes("youtube") || s.includes("channel")) return { color: "#FF0000", Icon: FaYoutube, label: "YouTube" };
-  if (s.includes("linkedin")) return { color: "#0A66C2", Icon: FaLinkedinIn, label: "LinkedIn" };
-  if (s.includes("tiktok")) return { color: "#010101", Icon: FaTiktok, label: "TikTok" };
-  if (s.includes("whatsapp")) return { color: "#25D366", Icon: FaWhatsapp, label: "WhatsApp" };
-  if (s.includes("twitter") || /\/x\./.test(s)) return { color: "#000000", Icon: FaXTwitter, label: "Twitter / X" };
-  return { color: "var(--primary)", Icon: FaLink, label: "Link" };
-}
+// in that brand's real colour, resolved via the shared lib/socialBrand helper
+// (react-icons → never depends on the local /icons/*.svg files, which 403 on
+// the live server). social_links[].platform here is actually the icon PATH the
+// API resolved (e.g. "/icons/fb.svg"), and socialBrand() matches on it fine.
 
 /**
  * Convert a hex string (#rgb, #rrggbb, or rrggbb) + alpha (0–1) to an

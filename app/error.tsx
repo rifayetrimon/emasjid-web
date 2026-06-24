@@ -1,5 +1,6 @@
 "use client";
 import { useEffect } from "react";
+import { useContentReady } from "@/lib/contentReady";
 
 export default function Error({
   error,
@@ -8,6 +9,7 @@ export default function Error({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  useContentReady(); // complete the progress bar once the error UI is shown
   useEffect(() => {
     console.error("Page error:", error);
   }, [error]);

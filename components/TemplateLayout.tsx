@@ -2,6 +2,7 @@
 
 import { ReactNode } from "react";
 import { useCmsData } from "@/lib/useCmsData";
+import { useContentReady } from "@/lib/contentReady";
 import { getNavData } from "@/services/navService";
 import { getFooterData } from "@/services/footerService";
 import { getCachedConfig, getCachedNews } from "@/services/apiCache";
@@ -98,9 +99,15 @@ export default function TemplateLayout({
     [templateId],
   );
 
+  // Tell the navigation progress bar the page is ready the moment the shell +
+  // content data resolves, so it completes on a real signal (not a guess).
+  useContentReady(!loading && !!data);
+
   // Hold a blank frame until the shell data (nav/footer/theme) is loaded —
   // the CSS theme vars set by ThemedShell wrap everything, so rendering
-  // children before they exist would flash an unthemed page.
+  // children before they exist would flash an unthemed page. With client-side
+  // navigation the previous page stays on screen until this resolves, so the
+  // visitor never sees this bare frame.
   if (loading || !data) {
     return <div className="min-h-screen bg-white" />;
   }

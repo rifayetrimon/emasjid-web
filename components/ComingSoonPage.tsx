@@ -10,6 +10,7 @@
  */
 
 import { useEffect, useState } from "react";
+import { useContentReady } from "@/lib/contentReady";
 
 type DesignId = "1" | "2" | "3" | "4" | string;
 
@@ -29,6 +30,7 @@ export function ComingSoonPage({
   message,
   launchDate,
 }: Props) {
+  useContentReady(); // complete the progress bar — this full-screen page is the content
   const t = title?.trim() || DEFAULT_TITLE;
   const m = message?.trim() || DEFAULT_MESSAGE;
 

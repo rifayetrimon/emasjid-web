@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "@/components/ui/FallbackImage";
+import { socialBrand } from "@/lib/socialBrand";
 import { MenuItem, NavConfig, NavSocialLink } from "@/types/cms";
 import { Menu, X, ChevronDown } from "lucide-react";
 import { resolveNavStyles } from "@/lib/navStyles";
@@ -68,24 +69,22 @@ export default function Demo2Nav({
               </a>
             )}
             <div className="flex items-center gap-2.5">
-              {socialLinks.slice(0, 4).map((s, i) => (
-                <a
-                  key={i}
-                  href={s.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={s.platform}
-                  className="opacity-70 hover:opacity-100 transition"
-                >
-                  <Image
-                    src={s.icon}
-                    alt={s.platform}
-                    width={14}
-                    height={14}
-                    className="brightness-0 invert"
-                  />
-                </a>
-              ))}
+              {socialLinks.slice(0, 4).map((s, i) => {
+                const { Icon, label } = socialBrand(s.platform || s.icon);
+                return (
+                  <a
+                    key={i}
+                    href={s.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={label}
+                    title={label}
+                    className="opacity-70 hover:opacity-100 transition"
+                  >
+                    <Icon className="w-[14px] h-[14px] text-white" aria-hidden />
+                  </a>
+                );
+              })}
             </div>
           </div>
         </div>

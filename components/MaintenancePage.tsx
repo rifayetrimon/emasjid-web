@@ -11,6 +11,8 @@
  * inline (Tailwind built-ins + SVG <animate>) so no extra CSS files needed.
  */
 
+import { useContentReady } from "@/lib/contentReady";
+
 type DesignId = "1" | "2" | "3" | "4" | string;
 
 type Props = {
@@ -23,6 +25,7 @@ const DEFAULT_TITLE = "This site is under maintenance";
 const DEFAULT_MESSAGE = "We're preparing to serve you better.";
 
 export function MaintenancePage({ design = "1", title, message }: Props) {
+  useContentReady(); // complete the progress bar — this full-screen page is the content
   const t = title?.trim() || DEFAULT_TITLE;
   const m = message?.trim() || DEFAULT_MESSAGE;
 
