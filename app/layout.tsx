@@ -7,6 +7,7 @@ import { getImageUrl } from "@/services/utils";
 import { PreviewOverlayProvider } from "@/lib/previewOverlay";
 import VisitorTracker from "@/components/VisitorTracker";
 import RuntimeGate from "@/components/RuntimeGate";
+import NavProgress from "@/components/NavProgress";
 
 // Inline globe SVG used as the favicon whenever the CMS has no logo.
 // Kept as a data URL so the site has no separate file to ship — and so
@@ -92,6 +93,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white`}
       >
         <PreviewOverlayProvider>
+          <NavProgress />
           <RuntimeGate>
             <CMSProvider>
               <VisitorTracker />

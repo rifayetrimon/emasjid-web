@@ -152,3 +152,39 @@ body {
     transition: none !important;
   }
 }
+
+/*
+ * ── Navigation progress bar ──────────────────────────────────────────
+ * A thin bar pinned to the very top of the viewport. It signals progress
+ * during the (full page reload) gap between clicking a link and the next
+ * page rendering — the standard, low-overhead MPA pattern. See
+ * components/NavProgress.tsx for the behaviour. Sits above the sticky nav
+ * (z-50) so it's never covered. Pure width/opacity → GPU-cheap, no layout
+ * shift (it's fixed and overlays the page).
+ */
+.cms-navprogress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  z-index: 9999;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.cms-navprogress__bar {
+  height: 100%;
+  border-radius: 0 2px 2px 0;
+  /* Width is driven inline by JS; ease the growth so trickle steps glide. */
+  transition: width 0.24s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Honour reduced-motion: keep the indicator (it's useful feedback) but drop
+   the animated easing so it snaps without motion. */
+@media (prefers-reduced-motion: reduce) {
+  .cms-navprogress,
+  .cms-navprogress__bar {
+    transition: none !important;
+  }
+}

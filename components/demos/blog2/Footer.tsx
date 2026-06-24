@@ -5,20 +5,38 @@ import { FooterProps } from "@/types/cms";
 import VisitorList from "@/components/visitor/VisitorList";
 import type { VisitorStats } from "@/services/visitorService";
 import { useOverlaidFooter } from "@/lib/previewOverlay";
+import type { IconType } from "react-icons";
+import {
+  FaFacebookF,
+  FaInstagram,
+  FaXTwitter,
+  FaLinkedinIn,
+  FaYoutube,
+  FaTiktok,
+  FaWhatsapp,
+  FaLink,
+} from "react-icons/fa6";
 
-// Real brand colour per social platform, matched from the icon path/label.
-// The icon glyphs ship as white SVGs, so we colour the chip behind them — the
-// familiar "brand-coloured button with a white icon" look.
-function socialBrandColor(src: string): string {
+// The footer shows the OFFICIAL brand mark for each platform — the recognisable
+// logo (FB's "f", WhatsApp's phone, etc.) rendered in white on a chip painted
+// in that brand's real colour. We use react-icons rather than the local white
+// SVGs so the footer never depends on those image files (which is what broke
+// the live site: fb.svg was served 403). The navbar keeps the plain white
+// SVGs — per design, only the footer uses the full-colour official treatment.
+//
+// `src` here is the value stored in social_links[].platform — which is actually
+// the icon PATH the API resolved (e.g. "/icons/fb.svg"), so we detect the
+// platform from it the same way for both the colour and the glyph.
+function socialBrand(src: string): { color: string; Icon: IconType; label: string } {
   const s = (src || "").toLowerCase();
-  if (s.includes("instagram")) return "#E4405F";
-  if (s.includes("facebook") || /\bfb\b|\/fb\./.test(s)) return "#1877F2";
-  if (s.includes("youtube") || s.includes("channel")) return "#FF0000";
-  if (s.includes("linkedin")) return "#0A66C2";
-  if (s.includes("tiktok")) return "#010101";
-  if (s.includes("whatsapp")) return "#25D366";
-  if (s.includes("twitter") || /\/x\./.test(s)) return "#000000";
-  return "var(--primary)";
+  if (s.includes("instagram")) return { color: "#E4405F", Icon: FaInstagram, label: "Instagram" };
+  if (s.includes("facebook") || /\bfb\b|\/fb\./.test(s)) return { color: "#1877F2", Icon: FaFacebookF, label: "Facebook" };
+  if (s.includes("youtube") || s.includes("channel")) return { color: "#FF0000", Icon: FaYoutube, label: "YouTube" };
+  if (s.includes("linkedin")) return { color: "#0A66C2", Icon: FaLinkedinIn, label: "LinkedIn" };
+  if (s.includes("tiktok")) return { color: "#010101", Icon: FaTiktok, label: "TikTok" };
+  if (s.includes("whatsapp")) return { color: "#25D366", Icon: FaWhatsapp, label: "WhatsApp" };
+  if (s.includes("twitter") || /\/x\./.test(s)) return { color: "#000000", Icon: FaXTwitter, label: "Twitter / X" };
+  return { color: "var(--primary)", Icon: FaLink, label: "Link" };
 }
 
 /**
@@ -193,26 +211,25 @@ export default function Blog2Footer({ footer: rawFooter, visitors }: Props) {
           >
             {hasSocial && (
               <div className="flex flex-wrap gap-2 items-start content-start">
-                {footer.social_links.map((s, i) => (
-                  <a
-                    key={i}
-                    href={s.link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label="Social link"
-                    // Chip painted in the platform's real brand colour.
-                    style={{ backgroundColor: socialBrandColor(s.platform) }}
-                    className="w-9 h-9 rounded-md flex items-center justify-center transition group hover:opacity-90 hover:scale-105"
-                  >
-                    <Image
-                      src={s.platform}
-                      alt=""
-                      width={16}
-                      height={16}
-                      className="opacity-95 group-hover:opacity-100 transition"
-                    />
-                  </a>
-                ))}
+                {footer.social_links.map((s, i) => {
+                  // Official brand logo + brand colour, resolved from the link.
+                  const { color, Icon, label } = socialBrand(s.platform);
+                  return (
+                    <a
+                      key={i}
+                      href={s.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={label}
+                      title={label}
+                      // Chip painted in the platform's real brand colour.
+                      style={{ backgroundColor: color }}
+                      className="w-9 h-9 rounded-md flex items-center justify-center transition group hover:opacity-90 hover:scale-105"
+                    >
+                      <Icon className="w-[18px] h-[18px] text-white" aria-hidden />
+                    </a>
+                  );
+                })}
               </div>
             )}
             {visitorInBottom && (

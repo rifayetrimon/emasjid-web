@@ -46,8 +46,42 @@ function persistKey(label: string, sid: string): string {
   return `cmsd:${label}:${sid}`;
 }
 
+// True when THIS page load is a user-initiated refresh (F5 / reload button) as
+// opposed to a normal link navigation. Both are full document loads in this
+// static export, but a refresh should always go back to the API for fresh data
+// — only link-to-link navigation reads the persisted cache for speed.
+// Computed once per page load (the navigation type can't change mid-life).
+let reloadFlag: boolean | undefined;
+function isReloadNavigation(): boolean {
+  if (reloadFlag !== undefined) return reloadFlag;
+  reloadFlag = false;
+  if (typeof window === "undefined" || typeof performance === "undefined") {
+    return reloadFlag;
+  }
+  try {
+    const [nav] = performance.getEntriesByType(
+      "navigation",
+    ) as PerformanceNavigationTiming[];
+    if (nav && typeof nav.type === "string") {
+      reloadFlag = nav.type === "reload";
+    } else {
+      // Legacy fallback (older Safari): performance.navigation.type === 1.
+      const legacy = (
+        performance as unknown as { navigation?: { type?: number } }
+      ).navigation;
+      reloadFlag = legacy?.type === 1;
+    }
+  } catch {
+    reloadFlag = false;
+  }
+  return reloadFlag;
+}
+
 function readPersist<R>(label: string, sid: string): R | undefined {
   if (typeof window === "undefined" || isPreviewActive()) return undefined;
+  // On a hard refresh, skip the cache so the page calls the API for fresh data.
+  // (We still write the fresh result below, so subsequent navigations are fast.)
+  if (isReloadNavigation()) return undefined;
   try {
     const raw = window.sessionStorage.getItem(persistKey(label, sid));
     if (!raw) return undefined;
